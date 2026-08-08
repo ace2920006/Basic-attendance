@@ -45,7 +45,7 @@ export default function TeacherReports() {
       <div className="glass-panel p-6 border-rose-500/30 bg-rose-950/10 space-y-4">
         <div className="flex items-center gap-2 text-rose-400">
           <FiAlertTriangle className="w-5 h-5" />
-          <h3 className="text-base font-bold text-white">At-Risk Students (< 75% Attendance)</h3>
+          <h3 className="text-base font-bold text-white">At-Risk Students (&lt; 75% Attendance)</h3>
         </div>
 
         <p className="text-xs text-slate-300">
