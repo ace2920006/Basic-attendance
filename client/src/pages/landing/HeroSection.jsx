@@ -32,7 +32,7 @@ export default function HeroSection() {
 
             {/* CTAs */}
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2">
-              <Link to="/register" className="btn btn-primary px-7 py-3 text.base shadow-xl shadow-indigo-600/30 group">
+              <Link to="/register" className="btn btn-primary px-7 py-3 text-base shadow-xl shadow-indigo-600/30 group">
                 <span>Start Free Demo</span>
                 <FiArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
