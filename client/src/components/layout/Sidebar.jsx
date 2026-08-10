@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { 
   FiHome, 
   FiCalendar, 
@@ -16,10 +16,22 @@ import {
   FiChevronLeft
 } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
+import { useAuth } from '../../context/AuthContext';
 
-export default function Sidebar({ role, user }) {
+export default function Sidebar({ role, user: userProp }) {
+  const { user: authUser, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const activeUser = authUser || userProp;
+  const activeRole = role || activeUser?.role || 'student';
+
+  const handleSignOut = async () => {
+    await logout();
+    navigate('/login');
+  };
+
   const getNavLinks = () => {
-    switch (role) {
+    switch (activeRole) {
       case 'student':
         return [
           { to: '/student', label: 'Dashboard Overview', icon: FiHome, end: true },
@@ -63,7 +75,7 @@ export default function Sidebar({ role, user }) {
           <div>
             <span className="text-lg font-bold text-white tracking-tight">Attend<span className="gradient-text">Pro</span></span>
             <span className="block text-[9px] text-slate-400 uppercase font-semibold tracking-wider">
-              {role} Portal
+              {activeRole} Portal
             </span>
           </div>
         </Link>
@@ -76,13 +88,13 @@ export default function Sidebar({ role, user }) {
       <div className="p-4 border-b border-slate-800/60 bg-slate-950/40">
         <div className="flex items-center gap-3">
           <img 
-            src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'} 
-            alt={user?.name} 
+            src={activeUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'} 
+            alt={activeUser?.name || 'User'} 
             className="w-10 h-10 rounded-xl object-cover border border-indigo-500/30"
           />
           <div className="overflow-hidden">
-            <div className="text-sm font-semibold text-white truncate">{user?.name}</div>
-            <div className="text-[11px] text-slate-400 truncate">{user?.email}</div>
+            <div className="text-sm font-semibold text-white truncate">{activeUser?.name || 'User'}</div>
+            <div className="text-[11px] text-slate-400 truncate">{activeUser?.email || ''}</div>
           </div>
         </div>
       </div>
@@ -120,14 +132,17 @@ export default function Sidebar({ role, user }) {
           Role Switcher
         </div>
         <div className="grid grid-cols-3 gap-1 px-1">
-          <Link to="/student" className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${role === 'student' ? 'bg-indigo-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Student</Link>
-          <Link to="/teacher" className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${role === 'teacher' ? 'bg-cyan-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Teacher</Link>
-          <Link to="/admin" className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${role === 'admin' ? 'bg-emerald-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Admin</Link>
+          <Link to="/student" className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${activeRole === 'student' ? 'bg-indigo-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Student</Link>
+          <Link to="/teacher" className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${activeRole === 'teacher' ? 'bg-cyan-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Teacher</Link>
+          <Link to="/admin" className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${activeRole === 'admin' ? 'bg-emerald-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Admin</Link>
         </div>
-        <Link to="/login" className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 transition-colors w-full font-medium">
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-rose-400 hover:bg-rose-500/10 transition-colors w-full font-medium"
+        >
           <FiLogOut className="w-4 h-4" />
           <span>Sign Out</span>
-        </Link>
+        </button>
       </div>
 
     </aside>
