@@ -1,7 +1,11 @@
 import React from 'react';
 import { FiSearch, FiBell, FiCalendar } from 'react-icons/fi';
+import { useAuth } from '../../context/AuthContext';
 
-export default function Header({ title, subtitle, user }) {
+export default function Header({ title, subtitle, user: userProp }) {
+  const { user: authUser } = useAuth();
+  const activeUser = authUser || userProp;
+
   const currentDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
     year: 'numeric',
@@ -44,13 +48,13 @@ export default function Header({ title, subtitle, user }) {
         {/* User Mini Avatar */}
         <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
           <img 
-            src={user?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'} 
-            alt={user?.name}
+            src={activeUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'} 
+            alt={activeUser?.name || 'User'}
             className="w-8 h-8 rounded-lg object-cover border border-slate-700"
           />
           <div className="hidden sm:block text-left">
-            <span className="block text-xs font-semibold text-white leading-tight">{user?.name?.split(' ')[0]}</span>
-            <span className="block text-[10px] text-slate-400 capitalize">{user?.role}</span>
+            <span className="block text-xs font-semibold text-white leading-tight">{activeUser?.name?.split(' ')[0] || 'User'}</span>
+            <span className="block text-[10px] text-slate-400 capitalize">{activeUser?.role || 'User'}</span>
           </div>
         </div>
       </div>

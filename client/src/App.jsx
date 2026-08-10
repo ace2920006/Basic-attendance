@@ -1,6 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/common/ProtectedRoute';
+
 // Landing Page & Auth
 import LandingPage from './pages/landing/LandingPage';
 import LoginPage from './pages/auth/LoginPage';
@@ -33,45 +36,68 @@ import AdminSettings from './pages/admin/AdminSettings';
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        {/* Public & Authentication */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
+    <AuthProvider>
+      <Router>
+        <Routes>
+          {/* Public & Authentication */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
 
-        {/* Student Portal Routes */}
-        <Route path="/student" element={<StudentLayout />}>
-          <Route index element={<StudentDashboard />} />
-          <Route path="classes" element={<TodaysClasses />} />
-          <Route path="graph" element={<AttendanceGraph />} />
-          <Route path="notifications" element={<NotificationsList />} />
-        </Route>
+          {/* Student Portal Routes */}
+          <Route 
+            path="/student" 
+            element={
+              <ProtectedRoute allowedRoles={['student', 'admin']}>
+                <StudentLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<StudentDashboard />} />
+            <Route path="classes" element={<TodaysClasses />} />
+            <Route path="graph" element={<AttendanceGraph />} />
+            <Route path="notifications" element={<NotificationsList />} />
+          </Route>
 
-        {/* Teacher Portal Routes */}
-        <Route path="/teacher" element={<TeacherLayout />}>
-          <Route index element={<TeacherDashboard />} />
-          <Route path="classes" element={<TeacherDashboard />} />
-          <Route path="take-attendance" element={<TakeAttendance />} />
-          <Route path="history" element={<AttendanceHistory />} />
-          <Route path="students" element={<StudentsList />} />
-          <Route path="reports" element={<TeacherReports />} />
-        </Route>
+          {/* Teacher Portal Routes */}
+          <Route 
+            path="/teacher" 
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<TeacherDashboard />} />
+            <Route path="classes" element={<TeacherDashboard />} />
+            <Route path="take-attendance" element={<TakeAttendance />} />
+            <Route path="history" element={<AttendanceHistory />} />
+            <Route path="students" element={<StudentsList />} />
+            <Route path="reports" element={<TeacherReports />} />
+          </Route>
 
-        {/* Admin Portal Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<AdminAnalytics />} />
-          <Route path="departments" element={<AdminDepartments />} />
-          <Route path="teachers" element={<AdminTeachers />} />
-          <Route path="students" element={<AdminStudents />} />
-          <Route path="settings" element={<AdminSettings />} />
-        </Route>
+          {/* Admin Portal Routes */}
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route index element={<AdminAnalytics />} />
+            <Route path="departments" element={<AdminDepartments />} />
+            <Route path="teachers" element={<AdminTeachers />} />
+            <Route path="students" element={<AdminStudents />} />
+            <Route path="settings" element={<AdminSettings />} />
+          </Route>
 
-        {/* Fallback to Home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+          {/* Fallback to Home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </AuthProvider>
   );
 }
