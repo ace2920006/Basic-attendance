@@ -1,15 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiLock, FiMail, FiArrowRight, FiShield, FiUserCheck } from 'react-icons/fi';
+import { FiLock, FiMail, FiArrowRight, FiShield, FiUserCheck, FiAlertCircle } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
+import { useAuth } from '../../context/AuthContext';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [role, setRole] = useState('student');
   const [email, setEmail] = useState('alex.rivera@university.edu');
   const [password, setPassword] = useState('password123');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleRoleChange = (newRole) => {
     setRole(newRole);
@@ -18,10 +22,22 @@ export default function LoginPage() {
     else if (newRole === 'admin') setEmail('admin.marcus@university.edu');
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    // Direct navigate to chosen role dashboard
-    navigate(`/${role}`);
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await login(email, password, role);
+      if (res?.success) {
+        const destRole = res.user?.role || role;
+        navigate(`/${destRole}`);
+      }
+    } catch (err) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,9 +58,17 @@ export default function LoginPage() {
             <p className="text-xs text-slate-400 mt-1">Sign in to access your AttendPro portal</p>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs flex items-center gap-2">
+              <FiAlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
           {/* Role Switcher Pills */}
           <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 mb-6">
             <button
+              type="button"
               onClick={() => handleRoleChange('student')}
               className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                 role === 'student' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
@@ -54,6 +78,7 @@ export default function LoginPage() {
               <span>Student</span>
             </button>
             <button
+              type="button"
               onClick={() => handleRoleChange('teacher')}
               className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                 role === 'teacher' ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
@@ -63,6 +88,7 @@ export default function LoginPage() {
               <span>Teacher</span>
             </button>
             <button
+              type="button"
               onClick={() => handleRoleChange('admin')}
               className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
                 role === 'admin' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
@@ -116,9 +142,19 @@ export default function LoginPage() {
               </label>
             </div>
 
-            <button type="submit" className="btn btn-primary w-full py-3 text-xs font-semibold shadow-lg shadow-indigo-600/30">
-              <span>Sign In to {role.charAt(0).toUpperCase() + role.slice(1)} Portal</span>
-              <FiArrowRight className="w-4 h-4" />
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary w-full py-3 text-xs font-semibold shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <span>Signing in...</span>
+              ) : (
+                <>
+                  <span>Sign In to {role.charAt(0).toUpperCase() + role.slice(1)} Portal</span>
+                  <FiArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
 

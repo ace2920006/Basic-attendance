@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiUser, FiMail, FiLock, FiBook, FiHash, FiCheckCircle } from 'react-icons/fi';
+import { FiUser, FiMail, FiLock, FiBook, FiHash, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
+import { useAuth } from '../../context/AuthContext';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [role, setRole] = useState('student');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,9 +21,43 @@ export default function RegisterPage() {
     confirmPassword: ''
   });
 
-  const handleRegister = (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
-    navigate(`/${role}`);
+    setError('');
+
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role,
+        department: formData.department,
+        rollNo: role === 'student' ? formData.idNumber : '',
+        designation: role === 'teacher' ? 'Assistant Professor' : ''
+      };
+
+      const res = await register(payload);
+      if (res?.success) {
+        const destRole = res.user?.role || role;
+        navigate(`/${destRole}`);
+      }
+    } catch (err) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -38,6 +76,13 @@ export default function RegisterPage() {
             <h2 className="text-2xl font-extrabold text-white">Create Your Account</h2>
             <p className="text-xs text-slate-400 mt-1">Register for AttendPro access as a Student or Faculty member</p>
           </div>
+
+          {error && (
+            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs flex items-center gap-2">
+              <FiAlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
 
           {/* Role Selection */}
           <div className="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800 mb-6">
@@ -160,9 +205,19 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <button type="submit" className="btn btn-primary w-full py-3 text-xs font-semibold shadow-lg shadow-indigo-600/30">
-              <FiCheckCircle className="w-4 h-4" />
-              <span>Complete Registration</span>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary w-full py-3 text-xs font-semibold shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <span>Creating Account...</span>
+              ) : (
+                <>
+                  <FiCheckCircle className="w-4 h-4" />
+                  <span>Complete Registration</span>
+                </>
+              )}
             </button>
           </form>
 
