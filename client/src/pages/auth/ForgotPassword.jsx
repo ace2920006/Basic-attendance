@@ -1,17 +1,37 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { FiMail, FiArrowLeft, FiCheckCircle } from 'react-icons/fi';
+import { FiMail, FiArrowLeft, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
+import { useAuth } from '../../context/AuthContext';
 
 export default function ForgotPassword() {
+  const { forgotPassword } = useAuth();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [resetData, setResetData] = useState(null);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setError('');
+    setLoading(true);
+
+    try {
+      const res = await forgotPassword(email);
+      if (res?.success) {
+        setResetData(res);
+        setSubmitted(true);
+      } else {
+        setError(res?.message || 'Failed to send password reset request.');
+      }
+    } catch (err) {
+      setError(err.message || 'An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -29,6 +49,13 @@ export default function ForgotPassword() {
             <p className="text-xs text-slate-400 mt-1">Enter your registered email to receive recovery instructions</p>
           </div>
 
+          {error && (
+            <div className="mb-4 p-3 bg-rose-500/10 border border-rose-500/30 rounded-xl text-rose-400 text-xs flex items-center gap-2">
+              <FiAlertCircle className="w-4 h-4 shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+
           {submitted ? (
             <div className="p-6 bg-indigo-500/10 border border-indigo-500/30 rounded-xl text-center space-y-4">
               <FiCheckCircle className="w-10 h-10 text-indigo-400 mx-auto" />
@@ -36,7 +63,18 @@ export default function ForgotPassword() {
                 <h4 className="text-base font-bold text-white">Recovery Link Sent</h4>
                 <p className="text-xs text-slate-300 mt-1">We sent a reset link to <strong className="text-indigo-300">{email}</strong>.</p>
               </div>
-              <Link to="/reset-password" className="btn btn-primary w-full py-2.5 text-xs font-semibold">
+
+              {resetData?.resetToken && (
+                <div className="p-3 bg-slate-900 border border-slate-800 rounded-lg text-left text-[11px] font-mono text-slate-400 break-all space-y-1">
+                  <div className="text-indigo-400 font-semibold">Demo Reset Token:</div>
+                  <div>{resetData.resetToken}</div>
+                </div>
+              )}
+
+              <Link
+                to={resetData?.resetToken ? `/reset-password?token=${resetData.resetToken}` : '/reset-password'}
+                className="btn btn-primary w-full py-2.5 text-xs font-semibold block text-center"
+              >
                 Proceed to Reset Password Page
               </Link>
             </div>
@@ -57,8 +95,12 @@ export default function ForgotPassword() {
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-primary w-full py-3 text-xs font-semibold">
-                Send Reset Link
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-primary w-full py-3 text-xs font-semibold flex items-center justify-center gap-2"
+              >
+                {loading ? <span>Generating Reset Link...</span> : <span>Send Reset Link</span>}
               </button>
             </form>
           )}
