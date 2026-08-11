@@ -129,3 +129,116 @@ export const resetPasswordApi = async (token, password) => {
 export const getMeApi = async () => {
   return apiRequest('/auth/me', { method: 'GET' });
 };
+
+// --- Admin Analytics API ---
+export const getAdminAnalyticsApi = async () => {
+  return apiRequest('/attendance/analytics', { method: 'GET' });
+};
+
+// --- Department API ---
+export const getDepartmentsApi = async () => {
+  return apiRequest('/departments', { method: 'GET' });
+};
+
+export const createDepartmentApi = async (deptData) => {
+  return apiRequest('/departments', {
+    method: 'POST',
+    body: JSON.stringify(deptData)
+  });
+};
+
+export const deleteDepartmentApi = async (id) => {
+  return apiRequest(`/departments/${id}`, { method: 'DELETE' });
+};
+
+// --- Course API ---
+export const getCoursesApi = async (department) => {
+  const query = department ? `?department=${encodeURIComponent(department)}` : '';
+  return apiRequest(`/courses${query}`, { method: 'GET' });
+};
+
+export const createCourseApi = async (courseData) => {
+  return apiRequest('/courses', {
+    method: 'POST',
+    body: JSON.stringify(courseData)
+  });
+};
+
+export const deleteCourseApi = async (id) => {
+  return apiRequest(`/courses/${id}`, { method: 'DELETE' });
+};
+
+// --- Subject API ---
+export const getSubjectsApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.department) queryParams.append('department', params.department);
+  if (params.course) queryParams.append('course', params.course);
+  if (params.teacherId) queryParams.append('teacherId', params.teacherId);
+  if (params.search) queryParams.append('search', params.search);
+
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/subjects${queryStr}`, { method: 'GET' });
+};
+
+export const createSubjectApi = async (subjectData) => {
+  return apiRequest('/subjects', {
+    method: 'POST',
+    body: JSON.stringify(subjectData)
+  });
+};
+
+export const assignTeacherToSubjectApi = async (subjectId, teacherId) => {
+  return apiRequest(`/subjects/${subjectId}/assign-teacher`, {
+    method: 'POST',
+    body: JSON.stringify({ teacherId })
+  });
+};
+
+export const assignStudentsToSubjectApi = async (subjectId, studentIds) => {
+  return apiRequest(`/subjects/${subjectId}/assign-students`, {
+    method: 'POST',
+    body: JSON.stringify({ studentIds })
+  });
+};
+
+export const deleteSubjectApi = async (id) => {
+  return apiRequest(`/subjects/${id}`, { method: 'DELETE' });
+};
+
+// --- User Management API (Teachers & Students) ---
+export const getUsersApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.role) queryParams.append('role', params.role);
+  if (params.department) queryParams.append('department', params.department);
+  if (params.status) queryParams.append('status', params.status);
+  if (params.search) queryParams.append('search', params.search);
+
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/users${queryStr}`, { method: 'GET' });
+};
+
+export const createUserApi = async (userData) => {
+  return apiRequest('/users', {
+    method: 'POST',
+    body: JSON.stringify(userData)
+  });
+};
+
+export const updateUserApi = async (id, userData) => {
+  return apiRequest(`/users/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(userData)
+  });
+};
+
+export const assignSubjectsToUserApi = async (userId, subjectIds) => {
+  return apiRequest(`/users/${userId}/assign-subjects`, {
+    method: 'POST',
+    body: JSON.stringify({ subjectIds })
+  });
+};
+
+export const deleteUserApi = async (id) => {
+  return apiRequest(`/users/${id}`, { method: 'DELETE' });
+};
+
