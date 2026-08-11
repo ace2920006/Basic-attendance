@@ -42,6 +42,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: 'Computer Science & Engineering'
     },
+    course: {
+      type: String,
+      default: ''
+    },
     designation: {
       type: String,
       default: ''
@@ -50,6 +54,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
+    assignedSubjects: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Subject'
+      }
+    ],
     status: {
       type: String,
       enum: ['Active', 'Inactive', 'Warning'],

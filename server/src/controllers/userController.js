@@ -19,7 +19,10 @@ const getUsers = asyncHandler(async (req, res) => {
     ];
   }
 
-  const users = await User.find(filter).select('-password').sort({ createdAt: -1 });
+  const users = await User.find(filter)
+    .select('-password')
+    .populate('assignedSubjects', 'name code department color')
+    .sort({ createdAt: -1 });
 
   res.json({
     success: true,
@@ -32,7 +35,9 @@ const getUsers = asyncHandler(async (req, res) => {
 // @route   GET /api/users/:id
 // @access  Private
 const getUserById = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.params.id).select('-password');
+  const user = await User.findById(req.params.id)
+    .select('-password')
+    .populate('assignedSubjects', 'name code department color');
 
   if (user) {
     res.json({
@@ -49,7 +54,7 @@ const getUserById = asyncHandler(async (req, res) => {
 // @route   POST /api/users
 // @access  Private/Admin
 const createUser = asyncHandler(async (req, res) => {
-  const { name, email, password, role, rollNo, department, designation, semester } = req.body;
+  const { name, email, password, role, rollNo, department, course, designation, semester } = req.body;
 
   const userExists = await User.findOne({ email });
 
@@ -65,6 +70,7 @@ const createUser = asyncHandler(async (req, res) => {
     role: role || 'student',
     rollNo: rollNo || '',
     department: department || 'Computer Science & Engineering',
+    course: course || '',
     designation: designation || '',
     semester: semester || ''
   });
@@ -86,6 +92,7 @@ const updateUser = asyncHandler(async (req, res) => {
     user.email = req.body.email || user.email;
     user.role = req.body.role || user.role;
     user.department = req.body.department || user.department;
+    user.course = req.body.course !== undefined ? req.body.course : user.course;
     user.rollNo = req.body.rollNo || user.rollNo;
     user.designation = req.body.designation || user.designation;
     user.semester = req.body.semester || user.semester;
@@ -105,6 +112,37 @@ const updateUser = asyncHandler(async (req, res) => {
     res.status(404);
     throw new Error('User not found');
   }
+});
+
+// @desc    Assign Subjects to User (Student/Teacher)
+// @route   POST /api/users/:id/assign-subjects
+// @access  Private/Admin
+const assignSubjectsToUser = asyncHandler(async (req, res) => {
+  const { subjectIds } = req.body; // Array of Subject ObjectIds
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  if (!Array.isArray(subjectIds)) {
+    res.status(400);
+    throw new Error('subjectIds must be an array');
+  }
+
+  user.assignedSubjects = subjectIds;
+  await user.save();
+
+  const updatedUser = await User.findById(user._id)
+    .select('-password')
+    .populate('assignedSubjects', 'name code department color');
+
+  res.json({
+    success: true,
+    message: 'Subjects assigned successfully',
+    data: updatedUser
+  });
 });
 
 // @desc    Delete user
@@ -130,5 +168,6 @@ module.exports = {
   getUserById,
   createUser,
   updateUser,
+  assignSubjectsToUser,
   deleteUser
 };

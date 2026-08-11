@@ -18,6 +18,10 @@ const subjectSchema = new mongoose.Schema(
       type: String,
       default: 'Computer Science'
     },
+    course: {
+      type: String,
+      default: ''
+    },
     instructor: {
       type: String,
       default: ''
@@ -26,6 +30,12 @@ const subjectSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     },
+    assignedStudents: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }
+    ],
     totalClasses: {
       type: Number,
       default: 30
