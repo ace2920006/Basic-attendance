@@ -5,6 +5,7 @@ const {
   getUserById,
   createUser,
   updateUser,
+  assignSubjectsToUser,
   deleteUser
 } = require('../controllers/userController');
 const { protect, authorize } = require('../middleware/authMiddleware');
@@ -15,6 +16,8 @@ router
   .route('/')
   .get(authorize('admin', 'teacher'), getUsers)
   .post(authorize('admin'), createUser);
+
+router.post('/:id/assign-subjects', authorize('admin'), assignSubjectsToUser);
 
 router
   .route('/:id')

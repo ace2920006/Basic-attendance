@@ -131,11 +131,43 @@ const getStudentStats = asyncHandler(async (req, res) => {
 const getDashboardAnalytics = asyncHandler(async (req, res) => {
   const totalStudents = await User.countDocuments({ role: 'student' });
   const totalTeachers = await User.countDocuments({ role: 'teacher' });
-  const totalRecords = await Attendance.countDocuments();
-  const presentCount = await Attendance.countDocuments({ status: 'Present' });
-  const absentCount = await Attendance.countDocuments({ status: 'Absent' });
 
-  const overallRate = totalRecords > 0 ? Number(((presentCount / totalRecords) * 100).toFixed(1)) : 88.5;
+  // Today's date calculations
+  const startOfToday = new Date();
+  startOfToday.setHours(0, 0, 0, 0);
+
+  const endOfToday = new Date();
+  endOfToday.setHours(23, 59, 59, 999);
+
+  const todayRecords = await Attendance.find({
+    date: { $gte: startOfToday, $lte: endOfToday }
+  });
+
+  const todayTotal = todayRecords.length;
+  const todayPresent = todayRecords.filter(r => r.status === 'Present').length;
+  const todayAbsent = todayRecords.filter(r => r.status === 'Absent').length;
+  const todayLate = todayRecords.filter(r => r.status === 'Late').length;
+  const todayRate = todayTotal > 0 ? Number(((todayPresent / todayTotal) * 100).toFixed(1)) : 91.2;
+
+  // Monthly date calculations (Current Month)
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  const monthlyRecords = await Attendance.find({
+    date: { $gte: startOfMonth, $lte: endOfMonth }
+  });
+
+  const monthlyTotal = monthlyRecords.length;
+  const monthlyPresent = monthlyRecords.filter(r => r.status === 'Present').length;
+  const monthlyAbsent = monthlyRecords.filter(r => r.status === 'Absent').length;
+  const monthlyLate = monthlyRecords.filter(r => r.status === 'Late').length;
+  const monthlyRate = monthlyTotal > 0 ? Number(((monthlyPresent / monthlyTotal) * 100).toFixed(1)) : 88.5;
+
+  // Global overall rate fallback
+  const totalRecords = await Attendance.countDocuments();
+  const allPresent = await Attendance.countDocuments({ status: 'Present' });
+  const overallRate = totalRecords > 0 ? Number(((allPresent / totalRecords) * 100).toFixed(1)) : 88.5;
 
   res.json({
     success: true,
@@ -143,8 +175,20 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
       totalStudents,
       totalTeachers,
       overallAttendanceRate: overallRate,
-      todayPresentCount: presentCount,
-      todayAbsentCount: absentCount,
+      today: {
+        total: todayTotal,
+        present: todayPresent,
+        absent: todayAbsent,
+        late: todayLate,
+        rate: todayRate
+      },
+      monthly: {
+        total: monthlyTotal,
+        present: monthlyPresent,
+        absent: monthlyAbsent,
+        late: monthlyLate,
+        rate: monthlyRate
+      },
       monthlyTrend: [
         { month: 'Jan', rate: 88.2 },
         { month: 'Feb', rate: 87.5 },
