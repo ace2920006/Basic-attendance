@@ -30,6 +30,8 @@ import TeacherReports from './pages/teacher/TeacherReports';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminDepartments from './pages/admin/AdminDepartments';
+import AdminCourses from './pages/admin/AdminCourses';
+import AdminSubjects from './pages/admin/AdminSubjects';
 import AdminTeachers from './pages/admin/AdminTeachers';
 import AdminStudents from './pages/admin/AdminStudents';
 import AdminSettings from './pages/admin/AdminSettings';
@@ -89,6 +91,8 @@ export default function App() {
           >
             <Route index element={<AdminAnalytics />} />
             <Route path="departments" element={<AdminDepartments />} />
+            <Route path="courses" element={<AdminCourses />} />
+            <Route path="subjects" element={<AdminSubjects />} />
             <Route path="teachers" element={<AdminTeachers />} />
             <Route path="students" element={<AdminStudents />} />
             <Route path="settings" element={<AdminSettings />} />

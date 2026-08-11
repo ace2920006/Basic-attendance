@@ -10,6 +10,8 @@ import {
   FiUsers, 
   FiFileText, 
   FiGrid, 
+  FiBookOpen,
+  FiBook,
   FiUserCheck, 
   FiSettings, 
   FiLogOut,
@@ -52,6 +54,8 @@ export default function Sidebar({ role, user: userProp }) {
         return [
           { to: '/admin', label: 'Analytics Console', icon: FiBarChart2, end: true },
           { to: '/admin/departments', label: 'Departments', icon: FiGrid },
+          { to: '/admin/courses', label: 'Courses Management', icon: FiBookOpen },
+          { to: '/admin/subjects', label: 'Subjects & Assignments', icon: FiBook },
           { to: '/admin/teachers', label: 'Teachers Management', icon: FiUserCheck },
           { to: '/admin/students', label: 'Students Directory', icon: FiUsers },
           { to: '/admin/settings', label: 'System Settings', icon: FiSettings },
