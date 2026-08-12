@@ -242,3 +242,28 @@ export const deleteUserApi = async (id) => {
   return apiRequest(`/users/${id}`, { method: 'DELETE' });
 };
 
+// --- Leave Management API ---
+export const applyLeaveApi = async (leaveData) => {
+  return apiRequest('/leaves', {
+    method: 'POST',
+    body: JSON.stringify(leaveData)
+  });
+};
+
+export const getMyLeavesApi = async () => {
+  return apiRequest('/leaves/my', { method: 'GET' });
+};
+
+export const getAllLeavesApi = async (status) => {
+  const query = status ? `?status=${encodeURIComponent(status)}` : '';
+  return apiRequest(`/leaves${query}`, { method: 'GET' });
+};
+
+export const updateLeaveStatusApi = async (id, statusData) => {
+  return apiRequest(`/leaves/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(statusData)
+  });
+};
+
+
