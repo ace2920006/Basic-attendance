@@ -135,6 +135,36 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 6 – Student Module
+
+### Core Requirements & Features
+- **Student Dashboard Overview**:
+  - **Attendance %**: Real-time overall percentage score, total sessions, present, absent count, and exam eligibility badge (>75%).
+  - **Today's Lecture**: Full daily timetable with timings, room numbers, instructors, and status badges.
+  - **Upcoming Lecture**: Dedicated next-lecture highlight banner showing live countdown, topic, room, and instructor.
+  - **Notifications**: Feed showing system alerts, low attendance warnings, and timetable changes.
+  - **Leave Status**: Quick leave status card showcasing active/past applications.
+- **Attendance Calendar**: Monthly interactive grid view with color-coded day markers (`Present`, `Absent`, `Late`, `Leave`, `Holiday`) and day inspector panel.
+- **Attendance History**: Searchable and filterable table log of past lecture attendance sessions with date range and status filters.
+- **Attendance Graph**: Monthly attendance trend charts with 75% benchmark threshold line, subject-wise comparisons, and weekday pattern analytics.
+- **Download Report**: Printable official attendance transcript and downloadable CSV report generator.
+- **Apply Leave**: Leave application form (Medical, Emergency, Event, Duty Leave), supporting document upload simulation, and tracking log (`Pending`, `Approved`, `Rejected`).
+- **Profile**: Student personal details, contact info editor, enrolled subjects grid, and account security password change.
+
+### File Mapping
+- Student Portal Layout: `client/src/pages/student/StudentLayout.jsx`
+- Student Dashboard: `client/src/pages/student/StudentDashboard.jsx`
+- Attendance Calendar: `client/src/pages/student/StudentCalendar.jsx`
+- Attendance History: `client/src/pages/student/StudentHistory.jsx`
+- Attendance Graph: `client/src/pages/student/AttendanceGraph.jsx`
+- Download Report: `client/src/pages/student/StudentReport.jsx`
+- Apply Leave: `client/src/pages/student/StudentLeave.jsx`
+- Profile: `client/src/pages/student/StudentProfile.jsx`
+- Notifications: `client/src/pages/student/NotificationsList.jsx`
+- Leave Backend: `server/src/models/Leave.js`, `server/src/controllers/leaveController.js`, `server/src/routes/leaveRoutes.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -142,7 +172,7 @@ This document provides a single, unified reference for all project implementatio
 | **Authentication & Profile Reset** | ✅ | ✅ | ✅ | Phase 1 |
 | **User Role Access Control (RBAC)** | ✅ | ✅ | ✅ | Phase 1 |
 | **Database Schemas & Models** | — | — | — | Phase 2 |
-| **View Personal Dashboard & Graph** | ✅ | ❌ | ❌ | Phase 3 |
+| **View Personal Dashboard & Graph** | ✅ | ❌ | ❌ | Phase 3 & 6 |
 | **View Today's Classes Schedule** | ✅ | ✅ | ❌ | Phase 3 & 4 |
 | **Receive Low Attendance Alerts** | ✅ | ❌ | ❌ | Phase 3 |
 | **Take Class Attendance & Notes** | ❌ | ✅ | ✅ | Phase 4 |
@@ -155,7 +185,12 @@ This document provides a single, unified reference for all project implementatio
 | **Add & Manage Students** | ❌ | ❌ | ✅ | Phase 5 |
 | **Assign Teachers to Subjects** | ❌ | ❌ | ✅ | Phase 5 |
 | **Assign Subjects to Students/Teachers** | ❌ | ❌ | ✅ | Phase 5 |
-| **View Executive Dashboard Stats (Students, Teachers, Today & Monthly Attendance)** | ❌ | ❌ | ✅ | Phase 5 |
+| **View Executive Dashboard Stats** | ❌ | ❌ | ✅ | Phase 5 |
+| **View Attendance Calendar** | ✅ | ❌ | ❌ | Phase 6 |
+| **Download Official Report & Transcript** | ✅ | ✅ | ✅ | Phase 6 |
+| **Apply for Absence / Medical Leave** | ✅ | ❌ | ❌ | Phase 6 |
+| **Manage Profile & Security Settings** | ✅ | ✅ | ✅ | Phase 6 |
 
 ---
 *Last Updated: August 2026*
+
