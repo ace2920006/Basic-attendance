@@ -1,19 +1,27 @@
-// Mock Data for Attendance App Phase 2 UI
+// Mock Data for Attendance App Phase 2 UI & Phase 6 Student Module
 
 export const currentUser = {
   student: {
     id: 'STU-2024-001',
     name: 'Alex Rivera',
     email: 'alex.rivera@university.edu',
+    phone: '+1 (555) 234-5678',
+    address: '42 Academic Drive, Innovation City, CA',
     role: 'student',
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250',
     rollNo: 'CS-2024-089',
     department: 'Computer Science & Engineering',
+    course: 'B.Tech Computer Science',
     semester: 'Semester 4',
+    batch: '2024-2028',
+    section: 'Sec A',
+    advisor: 'Dr. Sarah Jenkins',
     overallAttendance: 88.5,
     totalClasses: 120,
     attendedClasses: 106,
     absentClasses: 14,
+    lateClasses: 5,
+    leavesTaken: 3,
   },
   teacher: {
     id: 'TCH-1002',
@@ -50,10 +58,70 @@ export const studentTodaysClasses = [
   { id: 3, subject: 'Computer Networks', code: 'CS404', time: '02:00 PM - 03:30 PM', room: 'Hall B', instructor: 'Prof. Alan Turing', status: 'Upcoming', attendance: 'Pending' }
 ];
 
+export const studentUpcomingLecture = {
+  id: 3,
+  subject: 'Computer Networks',
+  code: 'CS404',
+  time: '02:00 PM - 03:30 PM',
+  room: 'Hall B',
+  instructor: 'Prof. Alan Turing',
+  topic: 'TCP/IP Protocol Suite & Subnetting',
+  startsIn: '1 hour 30 mins'
+};
+
 export const studentNotifications = [
   { id: 1, title: 'Attendance Alert', message: 'Your attendance in Operating Systems (CS405) has fallen below 70%.', time: '2 hours ago', type: 'warning', unread: true },
   { id: 2, title: 'Leave Request Approved', message: 'Medical leave for 2026-08-01 has been approved by Dr. Jenkins.', time: '1 day ago', type: 'success', unread: true },
   { id: 3, title: 'Timetable Rescheduled', message: 'CS403 class on Friday will be conducted at 11:00 AM in Room 102.', time: '2 days ago', type: 'info', unread: false }
+];
+
+export const studentLeaves = [
+  { 
+    id: 'LV-101', 
+    leaveType: 'Medical', 
+    startDate: '2026-08-01', 
+    endDate: '2026-08-02', 
+    reason: 'Severe viral fever and physician recommended bed rest.', 
+    status: 'Approved', 
+    appliedOn: '2026-07-31', 
+    reviewedBy: 'Dr. Sarah Jenkins', 
+    remarks: 'Medical certificate verified. Granted duty leave.' 
+  },
+  { 
+    id: 'LV-102', 
+    leaveType: 'Official Event', 
+    startDate: '2026-08-15', 
+    endDate: '2026-08-16', 
+    reason: 'Representing university in Inter-College Hackathon Finals.', 
+    status: 'Pending', 
+    appliedOn: '2026-08-10', 
+    reviewedBy: 'Pending Review', 
+    remarks: 'Awaiting department head authorization.' 
+  },
+  { 
+    id: 'LV-103', 
+    leaveType: 'Personal Emergency', 
+    startDate: '2026-07-12', 
+    endDate: '2026-07-12', 
+    reason: 'Family emergency, traveling out of state.', 
+    status: 'Approved', 
+    appliedOn: '2026-07-11', 
+    reviewedBy: 'Marcus Vance', 
+    remarks: 'Approved per department guidelines.' 
+  }
+];
+
+export const studentAttendanceHistory = [
+  { id: 'REC-001', date: '2026-08-12', subject: 'Database Management Systems', code: 'CS401', timeSlot: '09:00 AM - 10:30 AM', status: 'Present', arrivalTime: '08:58 AM', instructor: 'Dr. John Smith', notes: 'On time' },
+  { id: 'REC-002', date: '2026-08-12', subject: 'Web Application Development', code: 'CS403', timeSlot: '11:00 AM - 12:30 PM', status: 'Present', arrivalTime: '11:02 AM', instructor: 'Dr. Sarah Jenkins', notes: 'On time' },
+  { id: 'REC-003', date: '2026-08-11', subject: 'Operating Systems', code: 'CS405', timeSlot: '01:30 PM - 03:00 PM', status: 'Absent', arrivalTime: '--', instructor: 'Dr. Linus Torvalds', notes: 'Unexcused absence' },
+  { id: 'REC-004', date: '2026-08-11', subject: 'Data Structures & Algorithms', code: 'CS402', timeSlot: '10:00 AM - 11:30 AM', status: 'Present', arrivalTime: '09:59 AM', instructor: 'Prof. Sarah Connor', notes: 'Lab evaluation passed' },
+  { id: 'REC-005', date: '2026-08-10', subject: 'Computer Networks', code: 'CS404', timeSlot: '02:00 PM - 03:30 PM', status: 'Late', arrivalTime: '02:18 PM', instructor: 'Prof. Alan Turing', notes: 'Arrived 18 mins late' },
+  { id: 'REC-006', date: '2026-08-08', subject: 'Web Application Development', code: 'CS403', timeSlot: '11:00 AM - 12:30 PM', status: 'Present', arrivalTime: '10:55 AM', instructor: 'Dr. Sarah Jenkins', notes: 'Quiz 2 completed' },
+  { id: 'REC-007', date: '2026-08-07', subject: 'Database Management Systems', code: 'CS401', timeSlot: '09:00 AM - 10:30 AM', status: 'Present', arrivalTime: '08:59 AM', instructor: 'Dr. John Smith', notes: 'Active participation' },
+  { id: 'REC-008', date: '2026-08-05', subject: 'Operating Systems', code: 'CS405', timeSlot: '01:30 PM - 03:00 PM', status: 'Absent', arrivalTime: '--', instructor: 'Dr. Linus Torvalds', notes: 'Sick leave requested' },
+  { id: 'REC-009', date: '2026-08-04', subject: 'Data Structures & Algorithms', code: 'CS402', timeSlot: '10:00 AM - 11:30 AM', status: 'Present', arrivalTime: '09:57 AM', instructor: 'Prof. Sarah Connor', notes: 'Good' },
+  { id: 'REC-010', date: '2026-08-01', subject: 'Computer Networks', code: 'CS404', timeSlot: '02:00 PM - 03:30 PM', status: 'Leave', arrivalTime: '--', instructor: 'Prof. Alan Turing', notes: 'Approved Medical Leave' }
 ];
 
 export const teacherTodaysClasses = [

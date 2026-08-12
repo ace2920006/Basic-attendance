@@ -12,6 +12,7 @@ const uploadRoutes = require('./routes/uploadRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
+const leaveRoutes = require('./routes/leaveRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -43,6 +44,7 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/departments', departmentRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/subjects', subjectRoutes);
+app.use('/api/leaves', leaveRoutes);
 
 // Error Handling Middlewares
 app.use(notFound);
