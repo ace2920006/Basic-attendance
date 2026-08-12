@@ -17,6 +17,11 @@ import StudentDashboard from './pages/student/StudentDashboard';
 import TodaysClasses from './pages/student/TodaysClasses';
 import AttendanceGraph from './pages/student/AttendanceGraph';
 import NotificationsList from './pages/student/NotificationsList';
+import StudentCalendar from './pages/student/StudentCalendar';
+import StudentHistory from './pages/student/StudentHistory';
+import StudentReport from './pages/student/StudentReport';
+import StudentLeave from './pages/student/StudentLeave';
+import StudentProfile from './pages/student/StudentProfile';
 
 // Teacher Portal
 import TeacherLayout from './pages/teacher/TeacherLayout';
@@ -59,8 +64,13 @@ export default function App() {
           >
             <Route index element={<StudentDashboard />} />
             <Route path="classes" element={<TodaysClasses />} />
+            <Route path="calendar" element={<StudentCalendar />} />
+            <Route path="history" element={<StudentHistory />} />
             <Route path="graph" element={<AttendanceGraph />} />
+            <Route path="report" element={<StudentReport />} />
+            <Route path="leave" element={<StudentLeave />} />
             <Route path="notifications" element={<NotificationsList />} />
+            <Route path="profile" element={<StudentProfile />} />
           </Route>
 
           {/* Teacher Portal Routes */}

@@ -12,7 +12,8 @@ import {
   FiGrid, 
   FiBookOpen,
   FiBook,
-  FiUserCheck, 
+  FiUserCheck,
+  FiUser, 
   FiSettings, 
   FiLogOut,
   FiChevronLeft
@@ -38,8 +39,13 @@ export default function Sidebar({ role, user: userProp }) {
         return [
           { to: '/student', label: 'Dashboard Overview', icon: FiHome, end: true },
           { to: '/student/classes', label: "Today's Classes", icon: FiCalendar },
+          { to: '/student/calendar', label: 'Attendance Calendar', icon: FiGrid },
+          { to: '/student/history', label: 'Attendance History', icon: FiClock },
           { to: '/student/graph', label: 'Attendance Graph', icon: FiBarChart2 },
+          { to: '/student/report', label: 'Download Report', icon: FiFileText },
+          { to: '/student/leave', label: 'Apply Leave', icon: FiCheckSquare },
           { to: '/student/notifications', label: 'Notifications', icon: FiBell },
+          { to: '/student/profile', label: 'Student Profile', icon: FiUser },
         ];
       case 'teacher':
         return [
