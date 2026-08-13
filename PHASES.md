@@ -168,6 +168,36 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 7 – Teacher Module
+
+### Core Requirements & Features
+- **Teacher Dashboard**:
+  - **Create Class**: Modal dialog interface (`CreateClassModal.jsx`) allowing faculty to schedule and create active class sessions with subject name, subject code, room venue, time slot, section, and enrolled capacity.
+  - **View Students**: Enrolled course student directory showing student roll numbers, attendance rates, status badges (>75% active, <75% warning), and advisory notification tools.
+  - **Take Attendance**: Direct launcher to active class attendance roster sheet.
+  - **Edit Attendance**: Access to past session logs with inline modal editor to modify student status and remarks.
+  - **Generate Reports**: Class attendance reports analytics and downloadable CSV export generator.
+- **Attendance Screen**:
+  - **Student List**: Full interactive student roster table with roll numbers, names, and current attendance averages.
+  - **Present Button**: Green toggle action button per student for marking Present.
+  - **Absent Button**: Red toggle action button per student for marking Absent.
+  - **Late Button**: Amber toggle action button per student for marking Late.
+  - **Remarks**: Text input per student to attach custom session notes (e.g. "Medical note", "15 mins late", "Permission granted").
+  - **Batch Actions & Real-Time Counters**: One-click "Mark All Present" & "Mark All Absent" with real-time Present/Absent/Late counter badges.
+
+### File Mapping
+- Dashboard & Class Creator: `client/src/pages/teacher/TeacherDashboard.jsx`, `client/src/components/teacher/CreateClassModal.jsx`
+- Attendance Screen: `client/src/pages/teacher/TakeAttendance.jsx`
+- History & Edit Attendance: `client/src/pages/teacher/AttendanceHistory.jsx`
+- Enrolled Students Roster: `client/src/pages/teacher/StudentsList.jsx`
+- Class Reports & CSV Export: `client/src/pages/teacher/TeacherReports.jsx`
+- Backend Infrastructure:
+  - Model: `server/src/models/Class.js`
+  - Controller: `server/src/controllers/classController.js`, `server/src/controllers/attendanceController.js`
+  - Routes: `server/src/routes/classRoutes.js`, `server/src/routes/attendanceRoutes.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -178,9 +208,9 @@ This document provides a single, unified reference for all project implementatio
 | **View Personal Dashboard & Graph** | ✅ | ❌ | ❌ | Phase 3 & 6 |
 | **View Today's Classes Schedule** | ✅ | ✅ | ❌ | Phase 3 & 4 |
 | **Receive Low Attendance Alerts** | ✅ | ❌ | ❌ | Phase 3 |
-| **Take Class Attendance & Notes** | ❌ | ✅ | ✅ | Phase 4 |
-| **View & Edit Attendance History** | ❌ | ✅ | ✅ | Phase 4 |
-| **Export Class Attendance CSV** | ❌ | ✅ | ✅ | Phase 4 |
+| **Take Class Attendance & Notes** | ❌ | ✅ | ✅ | Phase 4 & 7 |
+| **View & Edit Attendance History** | ❌ | ✅ | ✅ | Phase 4 & 7 |
+| **Export Class Attendance CSV** | ❌ | ✅ | ✅ | Phase 4 & 7 |
 | **Create Academic Departments** | ❌ | ❌ | ✅ | Phase 5 |
 | **Create Degree Courses** | ❌ | ❌ | ✅ | Phase 5 |
 | **Add Academic Subjects** | ❌ | ❌ | ✅ | Phase 5 |
@@ -193,7 +223,11 @@ This document provides a single, unified reference for all project implementatio
 | **Download Official Report & Transcript** | ✅ | ✅ | ✅ | Phase 6 |
 | **Apply for Absence / Medical Leave** | ✅ | ❌ | ❌ | Phase 6 |
 | **Manage Profile & Security Settings** | ✅ | ✅ | ✅ | Phase 6 |
+| **Create Class Sessions (Faculty)** | ❌ | ✅ | ✅ | Phase 7 |
+| **Interactive Attendance Screen & Remarks** | ❌ | ✅ | ✅ | Phase 7 |
+| **Edit Attendance Status & Remarks** | ❌ | ✅ | ✅ | Phase 7 |
 
 ---
 *Last Updated: August 2026*
+
 
