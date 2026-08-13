@@ -10,6 +10,9 @@ This document provides a single, unified reference for all project implementatio
 3. [Phase 3 – Student Module](#-phase-3--student-module)
 4. [Phase 4 – Teacher Module](#-phase-4--teacher-module)
 5. [Phase 5 – Admin Module](#-phase-5--admin-module)
+6. [Phase 6 – Student Module](#-phase-6--student-module)
+7. [Phase 7 – Teacher Module](#-phase-7--teacher-module)
+
 
 ---
 
