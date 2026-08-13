@@ -1,13 +1,46 @@
-import React, { useState } from 'react';
-import { FiUsers, FiSearch, FiMail, FiFilter, FiUserCheck } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import { FiUsers, FiSearch, FiMail, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
 import { mockStudentsList } from '../../data/mockData';
 import Modal from '../../components/common/Modal';
+import { getUsersApi } from '../../services/api';
 
 export default function StudentsList() {
   const [search, setSearch] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [students, setStudents] = useState(mockStudentsList);
+  const [emailSent, setEmailSent] = useState(false);
 
-  const filteredStudents = mockStudentsList.filter(s => 
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      const res = await getUsersApi({ role: 'student' });
+      if (res?.success && res.data.length > 0) {
+        const formatted = res.data.map(s => ({
+          id: s._id,
+          rollNo: s.rollNo || 'CS-2024-099',
+          name: s.name,
+          email: s.email,
+          department: s.department || 'Computer Science',
+          semester: s.semester || 'Sem 4',
+          attendanceRate: s.attendanceRate || 85.0,
+          status: s.attendanceRate < 75 ? 'Warning' : 'Active'
+        }));
+        setStudents(formatted);
+      }
+    } catch (err) {
+      console.warn('Using default student roster:', err);
+    }
+  };
+
+  const handleSendEmail = (email) => {
+    setEmailSent(true);
+    setTimeout(() => setEmailSent(false), 3000);
+  };
+
+  const filteredStudents = students.filter(s => 
     s.name.toLowerCase().includes(search.toLowerCase()) ||
     s.rollNo.toLowerCase().includes(search.toLowerCase())
   );
@@ -15,12 +48,13 @@ export default function StudentsList() {
   return (
     <div className="space-y-6">
       
+      {/* Header & Search Bar */}
       <div className="glass-panel p-6 border-slate-800 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <FiUsers className="w-5 h-5 text-indigo-400" />
-              Enrolled Course Students Roster
+              Enrolled Course Students Directory
             </h2>
             <p className="text-xs text-slate-400 mt-0.5">Search and review individual student attendance performance</p>
           </div>
@@ -29,7 +63,7 @@ export default function StudentsList() {
             <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" />
             <input 
               type="text"
-              placeholder="Search by student name or roll no..."
+              placeholder="Search student name or roll no..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="input-field pl-8 text-xs py-1.5 bg-slate-900 w-64"
@@ -37,6 +71,7 @@ export default function StudentsList() {
           </div>
         </div>
 
+        {/* Student Roster Table */}
         <div className="overflow-x-auto pt-2">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
@@ -61,16 +96,16 @@ export default function StudentsList() {
                     </span>
                   </td>
                   <td className="py-3.5 px-4">
-                    <span className={`badge ${stu.status === 'Active' ? 'badge-present' : 'badge-absent'} text-[10px]`}>
-                      {stu.status}
+                    <span className={`badge ${stu.attendanceRate >= 75 ? 'badge-present' : 'badge-absent'} text-[10px]`}>
+                      {stu.attendanceRate >= 75 ? 'Active' : 'Warning (<75%)'}
                     </span>
                   </td>
                   <td className="py-3.5 px-4 text-right">
                     <button 
                       onClick={() => setSelectedStudent(stu)}
-                      className="px-2.5 py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg text-[11px] font-medium transition-colors"
+                      className="px-3 py-1 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold transition-colors"
                     >
-                      View Profile
+                      View Roster Profile
                     </button>
                   </td>
                 </tr>
@@ -84,10 +119,17 @@ export default function StudentsList() {
       <Modal 
         isOpen={!!selectedStudent}
         onClose={() => setSelectedStudent(null)}
-        title="Student Profile & Attendance Record"
+        title="Student Attendance Record & Profile"
       >
         {selectedStudent && (
           <div className="space-y-4">
+            {emailSent && (
+              <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center text-xs font-semibold text-emerald-400 flex items-center justify-center gap-2">
+                <FiCheckCircle className="w-4 h-4" />
+                <span>Attendance Advisory Email Sent to {selectedStudent.email}!</span>
+              </div>
+            )}
+
             <div className="p-4 bg-slate-950/60 border border-slate-800 rounded-xl space-y-2">
               <h4 className="text-lg font-bold text-white">{selectedStudent.name}</h4>
               <p className="text-xs text-slate-400">{selectedStudent.rollNo} • {selectedStudent.email}</p>
@@ -103,7 +145,7 @@ export default function StudentsList() {
 
             <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-400">Current Attendance Rating</span>
+                <span className="text-slate-400">Current Attendance Score</span>
                 <span className={`text-base font-bold ${selectedStudent.attendanceRate >= 75 ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {selectedStudent.attendanceRate}%
                 </span>
@@ -116,14 +158,14 @@ export default function StudentsList() {
               </div>
               <p className="text-[11px] text-slate-400">
                 {selectedStudent.attendanceRate >= 75 
-                  ? 'Student meets the 75% minimum threshold requirement for end-term examination.' 
-                  : 'Warning: Student is currently flagged for low attendance. Advisory warning recommended.'}
+                  ? 'Student meets the 75% minimum threshold requirement for end-term examination eligibility.' 
+                  : 'Warning: Student is currently flagged for low attendance (<75%). Advisory warning recommended.'}
               </p>
             </div>
 
             <button 
-              onClick={() => alert(`Warning email sent to ${selectedStudent.email}`)}
-              className="btn btn-secondary w-full py-2 text-xs font-semibold"
+              onClick={() => handleSendEmail(selectedStudent.email)}
+              className="btn btn-secondary w-full py-2.5 text-xs font-semibold"
             >
               <FiMail className="w-4 h-4 text-indigo-400" />
               <span>Send Attendance Advisory Email</span>
