@@ -201,10 +201,59 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Update / Edit single attendance record
+// @route   PUT /api/attendance/:id
+// @access  Private (Teacher/Admin)
+const updateAttendance = asyncHandler(async (req, res) => {
+  const { status, notes, arrivalTime, departureTime, date } = req.body;
+
+  let record = await Attendance.findById(req.params.id);
+
+  if (!record) {
+    res.status(404);
+    throw new Error('Attendance record not found');
+  }
+
+  if (status) record.status = status;
+  if (notes !== undefined) record.notes = notes;
+  if (arrivalTime !== undefined) record.arrivalTime = arrivalTime;
+  if (departureTime !== undefined) record.departureTime = departureTime;
+  if (date) record.date = new Date(date);
+
+  const updatedRecord = await record.save();
+
+  res.json({
+    success: true,
+    data: updatedRecord
+  });
+});
+
+// @desc    Delete attendance record
+// @route   DELETE /api/attendance/:id
+// @access  Private (Teacher/Admin)
+const deleteAttendance = asyncHandler(async (req, res) => {
+  const record = await Attendance.findById(req.params.id);
+
+  if (!record) {
+    res.status(404);
+    throw new Error('Attendance record not found');
+  }
+
+  await record.deleteOne();
+
+  res.json({
+    success: true,
+    message: 'Attendance record deleted successfully'
+  });
+});
+
 module.exports = {
   markAttendance,
   markBulkAttendance,
   getAttendanceRecords,
   getStudentStats,
-  getDashboardAnalytics
+  getDashboardAnalytics,
+  updateAttendance,
+  deleteAttendance
 };
+
