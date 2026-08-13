@@ -13,6 +13,7 @@ const departmentRoutes = require('./routes/departmentRoutes');
 const courseRoutes = require('./routes/courseRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
+const classRoutes = require('./routes/classRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -45,6 +46,8 @@ app.use('/api/departments', departmentRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/leaves', leaveRoutes);
+app.use('/api/classes', classRoutes);
+
 
 // Error Handling Middlewares
 app.use(notFound);

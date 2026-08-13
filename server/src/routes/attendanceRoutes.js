@@ -5,7 +5,9 @@ const {
   markBulkAttendance,
   getAttendanceRecords,
   getStudentStats,
-  getDashboardAnalytics
+  getDashboardAnalytics,
+  updateAttendance,
+  deleteAttendance
 } = require('../controllers/attendanceController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -20,4 +22,10 @@ router.post('/bulk', authorize('teacher', 'admin'), markBulkAttendance);
 router.get('/stats/:studentId', getStudentStats);
 router.get('/analytics', authorize('admin', 'teacher'), getDashboardAnalytics);
 
+router
+  .route('/:id')
+  .put(authorize('teacher', 'admin'), updateAttendance)
+  .delete(authorize('teacher', 'admin'), deleteAttendance);
+
 module.exports = router;
+

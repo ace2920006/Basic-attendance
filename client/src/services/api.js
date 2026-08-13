@@ -266,4 +266,65 @@ export const updateLeaveStatusApi = async (id, statusData) => {
   });
 };
 
+// --- Class Management API ---
+export const getClassesApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.instructorId) queryParams.append('instructorId', params.instructorId);
+  if (params.department) queryParams.append('department', params.department);
+  if (params.search) queryParams.append('search', params.search);
+
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/classes${queryStr}`, { method: 'GET' });
+};
+
+export const createClassApi = async (classData) => {
+  return apiRequest('/classes', {
+    method: 'POST',
+    body: JSON.stringify(classData)
+  });
+};
+
+export const deleteClassApi = async (id) => {
+  return apiRequest(`/classes/${id}`, { method: 'DELETE' });
+};
+
+// --- Attendance Management API ---
+export const markAttendanceApi = async (attendanceData) => {
+  return apiRequest('/attendance', {
+    method: 'POST',
+    body: JSON.stringify(attendanceData)
+  });
+};
+
+export const markBulkAttendanceApi = async (bulkData) => {
+  return apiRequest('/attendance/bulk', {
+    method: 'POST',
+    body: JSON.stringify(bulkData)
+  });
+};
+
+export const getAttendanceRecordsApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.studentId) queryParams.append('studentId', params.studentId);
+  if (params.subject) queryParams.append('subject', params.subject);
+  if (params.status) queryParams.append('status', params.status);
+  if (params.startDate) queryParams.append('startDate', params.startDate);
+  if (params.endDate) queryParams.append('endDate', params.endDate);
+
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/attendance${queryStr}`, { method: 'GET' });
+};
+
+export const updateAttendanceApi = async (id, attendanceData) => {
+  return apiRequest(`/attendance/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(attendanceData)
+  });
+};
+
+export const deleteAttendanceApi = async (id) => {
+  return apiRequest(`/attendance/${id}`, { method: 'DELETE' });
+};
+
+
 
