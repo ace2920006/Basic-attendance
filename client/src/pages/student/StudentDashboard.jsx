@@ -14,9 +14,11 @@ import {
   FiFileText,
   FiActivity
 } from 'react-icons/fi';
+import { QrCode } from 'lucide-react';
 
 import AttendanceCard from './AttendanceCard';
 import NotificationsList from './NotificationsList';
+import StudentQRScannerModal from '../../components/student/StudentQRScannerModal';
 import { 
   currentUser, 
   studentTodaysClasses, 
@@ -31,6 +33,7 @@ export default function StudentDashboard() {
   const user = authUser || currentUser.student;
   const upcoming = studentUpcomingLecture;
   const leaves = studentLeaves;
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   return (
     <div className="space-y-6">

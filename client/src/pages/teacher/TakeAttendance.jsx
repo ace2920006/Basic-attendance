@@ -281,6 +281,13 @@ export default function TakeAttendance() {
 
       </div>
 
+      {/* Dynamic 30-Second QR Attendance Modal */}
+      <QRAttendanceModal
+        isOpen={isQrModalOpen}
+        onClose={() => setIsQrModalOpen(false)}
+        classSession={activeClassMock}
+      />
+
     </div>
   );
 }
