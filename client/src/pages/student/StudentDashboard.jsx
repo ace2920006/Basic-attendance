@@ -63,6 +63,13 @@ export default function StudentDashboard() {
 
         {/* Quick Action Navigation Buttons */}
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setIsScannerOpen(true)}
+            className="flex items-center space-x-2 px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-600/20 transition-all border border-emerald-400/30"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>Scan QR Attendance</span>
+          </button>
           <Link to="/student/calendar" className="btn btn-secondary py-2 px-3.5 text-xs flex items-center gap-2">
             <FiCalendar className="w-4 h-4 text-cyan-400" />
             <span>Calendar</span>
@@ -223,6 +230,12 @@ export default function StudentDashboard() {
         </div>
 
       </div>
+
+      {/* Student QR Scanner Modal */}
+      <StudentQRScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+      />
 
     </div>
   );
