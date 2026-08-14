@@ -69,6 +69,17 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
+    lastDeviceFingerprint: {
+      type: String,
+      default: ''
+    },
+    lastBrowserId: {
+      type: String,
+      default: ''
+    },
+    lastLoginAt: {
+      type: Date
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date
   },

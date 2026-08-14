@@ -41,6 +41,27 @@ const attendanceSchema = new mongoose.Schema(
     markedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
+    },
+    verificationMethod: {
+      type: String,
+      enum: ['Manual', 'QR', 'GPS'],
+      default: 'Manual'
+    },
+    classId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Class'
+    },
+    location: {
+      latitude: { type: Number },
+      longitude: { type: Number },
+      distanceMeters: { type: Number },
+      isWithinBounds: { type: Boolean, default: true }
+    },
+    deviceInfo: {
+      browserId: { type: String, default: '' },
+      deviceFingerprint: { type: String, default: '' },
+      ipAddress: { type: String, default: '' },
+      userAgent: { type: String, default: '' }
     }
   },
   {

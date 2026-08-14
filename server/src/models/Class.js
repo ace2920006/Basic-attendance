@@ -59,6 +59,31 @@ const classSchema = new mongoose.Schema(
     late: {
       type: Number,
       default: 0
+    },
+    qrActive: {
+      type: Boolean,
+      default: false
+    },
+    qrSecretToken: {
+      type: String,
+      default: ''
+    },
+    qrExpiresAt: {
+      type: Date
+    },
+    campusLocation: {
+      latitude: {
+        type: Number,
+        default: 28.6139 // Default campus latitude (e.g. New Delhi / configurable)
+      },
+      longitude: {
+        type: Number,
+        default: 77.2090 // Default campus longitude
+      },
+      maxRadiusMeters: {
+        type: Number,
+        default: 500 // 500 meters campus radius boundary
+      }
     }
   },
   {

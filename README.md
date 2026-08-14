@@ -187,7 +187,11 @@ cd Basic-attendance
 
 ### 📋 Attendance & Classes
 - `GET / POST /api/classes` — Create active class session & list classes
-- `POST /api/attendance/mark` — Record session attendance for students
+- `POST /api/classes/:id/start-qr` — Start dynamic 30-second expiring QR attendance session
+- `GET /api/classes/:id/qr-token` — Fetch or auto-rotate active 30s QR session token
+- `POST /api/classes/:id/stop-qr` — Stop active QR attendance session
+- `POST /api/attendance/scan-qr` — Student scans QR code with GPS coordinates & device fingerprint
+- `POST /api/attendance/mark` — Record manual session attendance for students
 - `GET /api/attendance/history` — Fetch attendance records with filters
 - `PUT /api/attendance/:id` — Edit past attendance record status & notes
 - `GET /api/attendance/export` — Download class attendance report as CSV
