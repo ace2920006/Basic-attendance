@@ -1,170 +1,213 @@
-# Enhanced Attendance Management System
+# 🎓 Multi-Role Attendance Management System
 
-A comprehensive desktop attendance application built with Python, Tkinter, and SQLite, featuring advanced analytics, bulk operations, and automated alerts.
+[![Stack](https://img.shields.io/badge/Stack-MERN-blue.svg)](https://mongodb.com)
+[![React](https://img.shields.io/badge/React-18.3-61DAFB.svg?logo=react)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-5.3-646CFF.svg?logo=vite)](https://vitejs.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.3-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
+[![Node.js](https://img.shields.io/badge/Node.js-Express-339933.svg?logo=node.js)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248.svg?logo=mongodb)](https://www.mongodb.com/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## 🚀 Features
+A modern, full-stack **Multi-Role Attendance Management System** designed for educational institutions. Built using **React 18, Vite, Tailwind CSS, Node.js, Express, and MongoDB**, it features tailored dashboards and workflows for **Students**, **Teachers (Faculty)**, and **Administrators**.
 
-### Core Features
-- **Student Management**: Add, edit, and manage student information with contact details
-- **Attendance Marking**: Mark attendance with present/absent/late status
-- **Records Viewing**: View and export attendance records
-- **Database Backup**: Automatic database backup functionality
+---
 
-### Enhanced Features
-- **Analytics Dashboard**: Comprehensive attendance statistics with charts and trends
-- **Enhanced Attendance Marking**: Detailed attendance tracking with arrival/departure times and notes
-- **Bulk Operations**: Import/export students, bulk attendance marking, class-specific operations
-- **Alerts & Notifications**: Automated alerts for low attendance, consecutive absences, and late arrivals
-- **Advanced Reporting**: Date range filtering, class comparisons, and detailed statistics
+## 🌟 Key Highlights
 
-### Analytics & Reporting
-- **Attendance Statistics**: Individual and class-wide attendance percentages
-- **Trend Analysis**: Visual charts showing attendance patterns over time
-- **Class Comparisons**: Compare attendance rates across different classes
-- **Export Capabilities**: CSV export for all data and reports
-- **Parent Notifications**: Automated alerts for low attendance
+- 🎨 **Modern UI/UX**: Built with React 18, Tailwind CSS v4, Lucide icons, and modern glassmorphism dark/light design aesthetics.
+- 🔐 **Role-Based Access Control (RBAC)**: Secure JWT authentication with role-protected client routes (`ProtectedRoute.jsx`) and backend authorization middleware.
+- 👑 **Admin Control Center**: Complete management of academic hierarchy (Departments, Courses, Subjects), faculty profiles, student enrollments, and executive analytics.
+- 👩‍🏫 **Faculty Attendance Suite**: Quick active class scheduling, interactive roster marking (Present / Absent / Late), session notes/remarks, history log editor, and CSV report export.
+- 🎓 **Student Portal**: Real-time attendance percentage tracking, >75% exam eligibility status badges, interactive monthly attendance calendar, upcoming class timetable, visual analytics graphs, medical leave application system, and transcript PDF/CSV download.
+- 📂 **File Uploads & Documents**: Integrated Multer storage for student leave supporting documents and avatar uploads.
 
-### Bulk Operations
-- **CSV Import/Export**: Bulk student import/export with templates
-- **Date Range Operations**: Mark attendance for multiple days at once
-- **Class-Specific Actions**: Operations targeted at specific classes
-- **Student ID Generation**: Automatic generation of student IDs
+---
 
-## 📁 Structure
+## 👥 Role Capabilities & Feature Matrix
+
+| Feature / Capability | Student | Teacher | Admin |
+| :--- | :---: | :---: | :---: |
+| **User Authentication & Token Refresh** | ✅ | ✅ | ✅ |
+| **Role-Based Access Control (RBAC)** | ✅ | ✅ | ✅ |
+| **Executive Dashboard & Global Analytics** | ❌ | ❌ | ✅ |
+| **Department, Course & Subject Management** | ❌ | ❌ | ✅ |
+| **Faculty & Student Account Management** | ❌ | ❌ | ✅ |
+| **Subject Assignment (Teachers & Students)** | ❌ | ❌ | ✅ |
+| **Class Session Creator & Active Roster** | ❌ | ✅ | ✅ |
+| **Mark & Edit Attendance with Remarks** | ❌ | ✅ | ✅ |
+| **Export Class Attendance CSV** | ❌ | ✅ | ✅ |
+| **Student Roster & Low Attendance Alerts** | ❌ | ✅ | ✅ |
+| **Student Attendance Dashboard & Graph** | ✅ | ❌ | ❌ |
+| **Interactive Monthly Attendance Calendar** | ✅ | ❌ | ❌ |
+| **Today's & Upcoming Class Timetable** | ✅ | ✅ | ❌ |
+| **Apply for Medical / Absence Leave** | ✅ | ❌ | ❌ |
+| **Download Official Attendance Transcript** | ✅ | ✅ | ✅ |
+
+---
+
+## 📁 Repository Structure
+
 ```
-attendance_app/
-├── main.py                          # Application entry point
-├── requirements.txt                 # Python dependencies
-├── README.md                        # This file
-├── gui/                            # User interface modules
-│   ├── main_window.py              # Main application window
-│   ├── student_manager.py          # Student management interface
-│   ├── attendance_marker.py        # Basic attendance marking
-│   ├── enhanced_attendance_marker.py # Advanced attendance features
-│   ├── records_viewer.py           # Attendance records viewer
-│   ├── analytics_dashboard.py     # Analytics and reporting
-│   ├── bulk_operations.py         # Bulk operations interface
-│   └── attendance_alerts.py        # Alerts and notifications
-├── data/                           # Data management
-│   ├── database.py                 # Database operations
-│   └── csv_handler.py              # CSV import/export utilities
-└── utils/                          # Utility modules
-    ├── helpers.py                  # Helper functions
-    └── logger.py                   # Logging utilities
+Basic-attendance/
+├── client/                      # Frontend Application (React + Vite + Tailwind CSS)
+│   ├── src/
+│   │   ├── components/          # Reusable UI Components & Role Modals
+│   │   │   ├── layout/          # Navbar, Sidebar, Header layout wrappers
+│   │   │   ├── student/         # Student-specific components & widgets
+│   │   │   ├── teacher/         # Teacher class creator modal & components
+│   │   │   └── ui/              # Buttons, Cards, Inputs, Badges, Modals
+│   │   ├── context/             # React AuthContext for state & token management
+│   │   ├── pages/
+│   │   │   ├── admin/           # Admin Dashboard, Departments, Courses, Subjects, Users
+│   │   │   ├── auth/            # Login, Register, Forgot Password, Reset Password
+│   │   │   ├── landing/         # Public Landing Page
+│   │   │   ├── student/         # Student Dashboard, Calendar, History, Leave, Profile
+│   │   │   └── teacher/         # Teacher Dashboard, Take Attendance, History, Reports
+│   │   ├── services/            # Axios API client modules
+│   │   ├── App.jsx              # React Router route configurations
+│   │   ├── index.css            # Global CSS & Tailwind imports
+│   │   └── main.jsx             # React DOM entry point
+│   ├── index.html
+│   ├── vite.config.js           # Vite server configuration & API proxy setup
+│   └── package.json
+│
+├── server/                      # Backend REST API (Node.js + Express + MongoDB)
+│   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
+│   ├── src/
+│   │   ├── config/              # MongoDB Mongoose database connection
+│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, etc.)
+│   │   ├── middleware/          # JWT auth middleware, RBAC guards, Error handlers
+│   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Notification)
+│   │   ├── routes/              # Express API Route definitions
+│   │   ├── utils/               # JWT generator, Async handler wrappers
+│   │   ├── app.js               # Express application initialization & middleware setup
+│   │   └── server.js            # Node HTTP server launcher
+│   ├── .env.example             # Server environment variables configuration template
+│   └── package.json
+│
+├── PHASES.md                    # Detailed consolidated specification across implementation phases
+└── README.md                    # Master documentation file (This document)
 ```
 
-## 🛠️ Installation & Setup
+---
+
+## 🛠️ Installation & Setup Guide
 
 ### Prerequisites
-- Python 3.7 or higher
-- pip (Python package installer)
+- **Node.js**: v18.x or higher
+- **npm**: v9.x or higher
+- **MongoDB**: Local MongoDB instance (`mongodb://127.0.0.1:27017`) or MongoDB Atlas URI
 
-### Installation Steps
-1. **Clone or download** the attendance app to your local machine
-2. **Navigate** to the attendance_app directory:
+---
+
+### 1. Clone the Repository
+```bash
+git clone <repository-url>
+cd Basic-attendance
+```
+
+---
+
+### 2. Backend Setup (`server`)
+
+1. Navigate to the server directory:
    ```bash
-   cd attendance_app
+   cd server
    ```
-3. **Install dependencies**:
+
+2. Install dependencies:
    ```bash
-   pip install -r requirements.txt
+   npm install
    ```
-4. **Run the application**:
+
+3. Create environment configuration:
+   Create a `.env` file in the `server` directory (or copy from `.env.example`):
+   ```env
+   PORT=5000
+   NODE_ENV=development
+   MONGODB_URI=mongodb://127.0.0.1:27017/attendance_db
+   JWT_SECRET=your_jwt_secret_key_here
+   JWT_EXPIRE=30d
+   UPLOAD_PATH=uploads
+   ```
+
+4. Start the backend development server:
    ```bash
-   python main.py
+   npm run dev
+   ```
+   *The server will start listening at `http://localhost:5000`.*
+
+---
+
+### 3. Frontend Setup (`client`)
+
+1. Open a new terminal window and navigate to the client directory:
+   ```bash
+   cd client
    ```
 
-## 📊 Usage Guide
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-### Getting Started
-1. **Launch the application** using `python main.py`
-2. **Add students** using the "Students" tab
-3. **Mark attendance** using either "Mark Attendance" or "Enhanced Attendance" tabs
-4. **View records** and generate reports using the "Records" tab
+3. Start the Vite development server:
+   ```bash
+   npm run dev
+   ```
+   *The frontend application will be available at `http://localhost:3000` (API requests are automatically proxied to port `5000`).*
 
-### Key Features Usage
+---
 
-#### Analytics Dashboard
-- Select date ranges and class filters
-- View attendance statistics and trends
-- Generate charts and reports
-- Export data to CSV
+## 📡 API Endpoint Reference
 
-#### Enhanced Attendance Marking
-- Set late arrival thresholds
-- Track arrival and departure times
-- Add notes for individual students
-- Auto-mark late arrivals
+### 🔐 Authentication (`/api/auth`)
+- `POST /api/auth/register` — Register a new user (`student`, `teacher`, or `admin`)
+- `POST /api/auth/login` — Authenticate user & return JWT token
+- `POST /api/auth/forgotpassword` — Request password reset link
+- `PUT /api/auth/resetpassword/:resettoken` — Reset password using token
 
-#### Bulk Operations
-- Import students from CSV files
-- Export attendance data
-- Perform bulk attendance marking
-- Generate class-specific reports
+### 👤 User Management (`/api/users`)
+- `GET /api/users` — Fetch all users (Admin only)
+- `GET /api/users/profile` — Get current logged-in user profile
+- `PUT /api/users/profile` — Update user profile details
+- `DELETE /api/users/:id` — Remove a user account (Admin only)
 
-#### Alerts & Notifications
-- Set attendance thresholds
-- Enable automated monitoring
-- Configure alert frequencies
-- Send parent notifications
+### 🏢 Departments, Courses & Subjects
+- `GET / POST / PUT / DELETE /api/departments` — Department CRUD operations
+- `GET / POST / PUT / DELETE /api/courses` — Course & degree program CRUD
+- `GET / POST / PUT / DELETE /api/subjects` — Subject CRUD & enrollment management
 
-## 🔧 Configuration
+### 📋 Attendance & Classes
+- `GET / POST /api/classes` — Create active class session & list classes
+- `POST /api/attendance/mark` — Record session attendance for students
+- `GET /api/attendance/history` — Fetch attendance records with filters
+- `PUT /api/attendance/:id` — Edit past attendance record status & notes
+- `GET /api/attendance/export` — Download class attendance report as CSV
 
-### Database
-- SQLite database automatically created in `data/attendance.db`
-- Automatic backups stored in `data/backups/`
-- Database schema supports extended student information
+### 📝 Leave Application Workflow (`/api/leaves`)
+- `POST /api/leaves` — Submit new leave application (Medical, Emergency, Event) with file attachment
+- `GET /api/leaves/student` — View personal leave application history and approval status
+- `PUT /api/leaves/:id/status` — Approve or reject leave application (Teacher / Admin)
 
-### Settings
-- **Late Threshold**: Default 09:00 AM
-- **Alert Threshold**: Default 75% attendance
-- **Check Frequency**: Default 30 minutes
+### 🏥 System Health (`/api/health`)
+- `GET /api/health` — Check backend status, connected database, and API uptime
 
-## 📈 Advanced Features
+---
 
-### Analytics Capabilities
-- **Individual Statistics**: Track each student's attendance percentage
-- **Class Comparisons**: Compare attendance rates across classes
-- **Trend Analysis**: Visual representation of attendance patterns
-- **Date Range Filtering**: Analyze specific time periods
+## 🧪 Technology Stack Breakdown
 
-### Bulk Operations
-- **CSV Templates**: Download templates for student import
-- **Batch Processing**: Handle multiple students simultaneously
-- **Class Management**: Operations specific to class sections
-- **Data Export**: Comprehensive data export options
+- **Frontend Core**: React 18, React Router DOM v7, Vite
+- **Styling**: Tailwind CSS v4, Lucide React Icons, Custom Glassmorphism UI
+- **Backend Framework**: Node.js, Express.js
+- **Database Layer**: MongoDB, Mongoose ODM
+- **Authentication**: JSON Web Tokens (JWT), bcryptjs password hashing
+- **File System**: Multer static file upload handler
 
-### Alert System
-- **Low Attendance Alerts**: Automatic detection of students below threshold
-- **Consecutive Absence Tracking**: Monitor students with multiple absences
-- **Late Arrival Notifications**: Track and alert on late arrivals
-- **Parent Communication**: Automated parent notification system
+---
 
-## 🔒 Data Security
-- **Automatic Backups**: Regular database backups
-- **Data Validation**: Input validation and error handling
-- **Export Controls**: Secure data export options
+## 📄 License & Contribution
 
-## 🐛 Troubleshooting
+This project is open-source and available under the [MIT License](LICENSE).
 
-### Common Issues
-1. **Import Errors**: Ensure CSV files match the template format
-2. **Chart Display**: Install matplotlib and pandas for analytics features
-3. **Database Issues**: Check file permissions in the data directory
-
-### Support
-- Check the application logs for detailed error messages
-- Ensure all dependencies are properly installed
-- Verify database file permissions
-
-## 🔄 Updates & Maintenance
-- Regular database backups are automatically created
-- Export data before major updates
-- Monitor alert logs for system health
-
-## 📝 License
-This project is open source and available under the MIT License.
-
-## 🤝 Contributing
-Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
-
+Contributions, issue reports, and feature suggestions are welcome! Feel free to open a Pull Request or Issue.
