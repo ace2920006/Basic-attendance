@@ -12,6 +12,7 @@ This document provides a single, unified reference for all project implementatio
 5. [Phase 5 – Admin Module](#-phase-5--admin-module)
 6. [Phase 6 – Student Module](#-phase-6--student-module)
 7. [Phase 7 – Teacher Module](#-phase-7--teacher-module)
+8. [Phase 8 – Attendance System (Core)](#-phase-8--attendance-system-core)
 
 
 ---
@@ -198,6 +199,35 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 8 – Attendance System (Core)
+
+### Core Requirements & Features
+- **Attendance Verification Methods**:
+  - **Manual Marking**: Faculty instructors manually toggle Present, Absent, or Late with session notes.
+  - **QR Code Attendance**:
+    - Faculty clicks **"Start Attendance"** on active class.
+    - Server generates a dynamic **30-second expiring QR session token**.
+    - Teacher UI displays live QR code with **30-second animated countdown timer** and auto-refreshes token every 30 seconds.
+    - Students scan QR token via built-in web scanner / camera.
+    - Server validates JWT signature and non-expired timestamp window (<= 30 seconds).
+  - **GPS Location Verification**:
+    - Browser captures current student GPS position (`latitude`, `longitude`).
+    - Backend calculates distance between student position and campus coordinates using Haversine formula.
+    - Server automatically rejects attendance if distance exceeds allowed radius (e.g. 500 meters).
+  - **Device Fingerprint Verification**:
+    - Captures persistent Browser ID, User-Agent, screen resolution, and client device fingerprint.
+    - Stores Browser ID, Device Fingerprint, and Last Login timestamps.
+    - Prevents proxy attendance by rejecting duplicate scans from the same physical device for multiple students in the same session.
+
+### File Mapping
+- Frontend QR Modals & Fingerprint: `client/src/components/teacher/QRAttendanceModal.jsx`, `client/src/components/student/StudentQRScannerModal.jsx`, `client/src/services/deviceFingerprint.js`
+- Page Integration: `client/src/pages/teacher/TakeAttendance.jsx`, `client/src/pages/student/StudentDashboard.jsx`
+- Geolocation Utility: `server/src/utils/geoUtils.js`
+- Backend API Controllers: `server/src/controllers/classController.js`, `server/src/controllers/attendanceController.js`
+- Models: `server/src/models/Attendance.js`, `server/src/models/Class.js`, `server/src/models/User.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -226,8 +256,13 @@ This document provides a single, unified reference for all project implementatio
 | **Create Class Sessions (Faculty)** | ❌ | ✅ | ✅ | Phase 7 |
 | **Interactive Attendance Screen & Remarks** | ❌ | ✅ | ✅ | Phase 7 |
 | **Edit Attendance Status & Remarks** | ❌ | ✅ | ✅ | Phase 7 |
+| **Generate & Display 30s Dynamic QR** | ❌ | ✅ | ✅ | Phase 8 |
+| **Scan QR Attendance & Auto-Mark** | ✅ | ❌ | ❌ | Phase 8 |
+| **GPS Campus Radius Verification** | ✅ | ✅ | ✅ | Phase 8 |
+| **Device Fingerprint & Anti-Proxy Guard** | ✅ | ✅ | ✅ | Phase 8 |
 
 ---
 *Last Updated: August 2026*
+
 
 

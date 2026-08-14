@@ -20,6 +20,9 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 👩‍🏫 **Faculty Attendance Suite**: Quick active class scheduling, interactive roster marking (Present / Absent / Late), session notes/remarks, history log editor, and CSV report export.
 - 🎓 **Student Portal**: Real-time attendance percentage tracking, >75% exam eligibility status badges, interactive monthly attendance calendar, upcoming class timetable, visual analytics graphs, medical leave application system, and transcript PDF/CSV download.
 - 📂 **File Uploads & Documents**: Integrated Multer storage for student leave supporting documents and avatar uploads.
+- 📱 **Dynamic 30s QR Attendance**: Teacher generates rotating 30-second expiring QR code with live countdown timer.
+- 📍 **GPS Geolocation Verification**: Real-time student coordinate verification against campus radius using Haversine distance calculations.
+- 🛡️ **Device Anti-Proxy Verification**: Persistent browser ID and device fingerprinting to prevent proxy attendance submissions from shared devices.
 
 ---
 
@@ -37,6 +40,10 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Mark & Edit Attendance with Remarks** | ❌ | ✅ | ✅ |
 | **Export Class Attendance CSV** | ❌ | ✅ | ✅ |
 | **Student Roster & Low Attendance Alerts** | ❌ | ✅ | ✅ |
+| **Generate & Display 30s Dynamic QR Code** | ❌ | ✅ | ✅ |
+| **Scan QR Code & Auto-Record Attendance** | ✅ | ❌ | ❌ |
+| **GPS Campus Geolocation Radius Verification** | ✅ | ✅ | ✅ |
+| **Device Fingerprint Anti-Proxy Protection** | ✅ | ✅ | ✅ |
 | **Student Attendance Dashboard & Graph** | ✅ | ❌ | ❌ |
 | **Interactive Monthly Attendance Calendar** | ✅ | ❌ | ❌ |
 | **Today's & Upcoming Class Timetable** | ✅ | ✅ | ❌ |
