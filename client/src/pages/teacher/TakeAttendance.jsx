@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
 import { FiCheckCircle, FiXCircle, FiClock, FiSave, FiCheckSquare, FiMessageSquare } from 'react-icons/fi';
+import { QrCode } from 'lucide-react';
 import { mockStudentsList } from '../../data/mockData';
 import { markBulkAttendanceApi } from '../../services/api';
+import QRAttendanceModal from '../../components/teacher/QRAttendanceModal';
 
 export default function TakeAttendance() {
   const [selectedSubject, setSelectedSubject] = useState('CS401');
   const [selectedSection, setSelectedSection] = useState('Section A');
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [students, setStudents] = useState(
     mockStudentsList.map(s => ({
       ...s,
@@ -17,6 +20,14 @@ export default function TakeAttendance() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+
+  const activeClassMock = {
+    _id: 'class-cs401-secA',
+    subject: 'Database Systems',
+    subjectCode: selectedSubject,
+    room: '302-B',
+    section: selectedSection
+  };
 
   const toggleStatus = (id, newStatus) => {
     setStudents(students.map(s => s.id === id ? { ...s, attendance: newStatus } : s));
@@ -82,7 +93,7 @@ export default function TakeAttendance() {
             <p className="text-xs text-slate-400 mt-0.5">Select class details and record individual student attendance with remarks</p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div>
               <label className="block text-[10px] text-slate-400 uppercase font-semibold mb-1">Subject</label>
               <select 
@@ -108,6 +119,17 @@ export default function TakeAttendance() {
                 <option value="Section B">Section B</option>
                 <option value="Lab Batch 1">Lab Batch 1</option>
               </select>
+            </div>
+
+            <div className="pt-4 sm:pt-0">
+              <button
+                type="button"
+                onClick={() => setIsQrModalOpen(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-blue-500/20 transition-all border border-blue-400/30"
+              >
+                <QrCode className="w-4 h-4" />
+                <span>Start QR Attendance</span>
+              </button>
             </div>
           </div>
         </div>
