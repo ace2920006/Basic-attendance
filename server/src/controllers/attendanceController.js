@@ -247,6 +247,138 @@ const deleteAttendance = asyncHandler(async (req, res) => {
   });
 });
 
+const jwt = require('jsonwebtoken');
+const Class = require('../models/Class');
+const { getDistanceInMeters } = require('../utils/geoUtils');
+
+// @desc    Scan QR Code & mark attendance with GPS + Device verification
+// @route   POST /api/attendance/scan-qr
+// @access  Private (Student)
+const scanQRAttendance = asyncHandler(async (req, res) => {
+  const { qrToken, latitude, longitude, browserId, deviceFingerprint } = req.body;
+
+  if (!qrToken) {
+    res.status(400);
+    throw new Error('QR code token is required');
+  }
+
+  // 1. Verify 30-second expiring QR token signature
+  let decoded;
+  try {
+    decoded = jwt.verify(qrToken, process.env.JWT_SECRET || 'fallback_secret');
+  } catch (err) {
+    res.status(400);
+    throw new Error('Expired or invalid QR code (30s timeout). Please ask instructor for fresh QR.');
+  }
+
+  // 2. Fetch class session
+  const classItem = await Class.findById(decoded.classId);
+  if (!classItem) {
+    res.status(404);
+    throw new Error('Class session not found');
+  }
+
+  if (!classItem.qrActive) {
+    res.status(400);
+    throw new Error('QR Attendance is not active for this class session');
+  }
+
+  // 3. Prevent duplicate attendance for same student today
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const existingRecord = await Attendance.findOne({
+    student: req.user._id,
+    subjectCode: decoded.subjectCode,
+    date: { $gte: startOfDay, $lte: endOfDay }
+  });
+
+  if (existingRecord) {
+    res.status(400);
+    throw new Error('You have already submitted attendance for this class today');
+  }
+
+  // 4. GPS Geolocation Campus Radius Verification
+  const campus = classItem.campusLocation || { latitude: 28.6139, longitude: 77.2090, maxRadiusMeters: 500 };
+  let distanceMeters = null;
+  let isWithinBounds = true;
+
+  if (latitude !== undefined && longitude !== undefined) {
+    distanceMeters = Math.round(getDistanceInMeters(latitude, longitude, campus.latitude, campus.longitude));
+    if (distanceMeters > campus.maxRadiusMeters) {
+      isWithinBounds = false;
+      res.status(400);
+      throw new Error(`GPS Verification Failed: You are ${distanceMeters}m away from campus bounds (max allowed: ${campus.maxRadiusMeters}m).`);
+    }
+  }
+
+  // 5. Device Fingerprint Anti-Proxy Protection
+  if (deviceFingerprint || browserId) {
+    const proxyCheckFilter = {
+      date: { $gte: startOfDay, $lte: endOfDay },
+      subjectCode: decoded.subjectCode,
+      student: { $ne: req.user._id },
+      $or: []
+    };
+
+    if (deviceFingerprint) proxyCheckFilter.$or.push({ 'deviceInfo.deviceFingerprint': deviceFingerprint });
+    if (browserId) proxyCheckFilter.$or.push({ 'deviceInfo.browserId': browserId });
+
+    if (proxyCheckFilter.$or.length > 0) {
+      const proxyMatch = await Attendance.findOne(proxyCheckFilter);
+      if (proxyMatch) {
+        res.status(400);
+        throw new Error('Proxy Attendance Detected: This physical device has already submitted attendance for another student in this session today.');
+      }
+    }
+  }
+
+  // 6. Record attendance
+  const record = await Attendance.create({
+    student: req.user._id,
+    subject: decoded.subject || classItem.subject,
+    subjectCode: decoded.subjectCode || classItem.subjectCode,
+    status: 'Present',
+    date: new Date(),
+    arrivalTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    verificationMethod: 'QR',
+    classId: classItem._id,
+    location: {
+      latitude: latitude || null,
+      longitude: longitude || null,
+      distanceMeters,
+      isWithinBounds
+    },
+    deviceInfo: {
+      browserId: browserId || '',
+      deviceFingerprint: deviceFingerprint || '',
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || '',
+      userAgent: req.headers['user-agent'] || ''
+    },
+    markedBy: classItem.instructorId || req.user._id
+  });
+
+  // Update class session counts
+  classItem.present = (classItem.present || 0) + 1;
+  classItem.marked = true;
+  await classItem.save();
+
+  // Update student device profile
+  await User.findByIdAndUpdate(req.user._id, {
+    lastDeviceFingerprint: deviceFingerprint || '',
+    lastBrowserId: browserId || '',
+    lastLoginAt: new Date()
+  });
+
+  res.status(201).json({
+    success: true,
+    message: 'Attendance recorded successfully via QR code',
+    data: record
+  });
+});
+
 module.exports = {
   markAttendance,
   markBulkAttendance,
@@ -254,6 +386,7 @@ module.exports = {
   getStudentStats,
   getDashboardAnalytics,
   updateAttendance,
-  deleteAttendance
+  deleteAttendance,
+  scanQRAttendance
 };
 

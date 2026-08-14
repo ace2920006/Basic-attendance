@@ -7,7 +7,8 @@ const {
   getStudentStats,
   getDashboardAnalytics,
   updateAttendance,
-  deleteAttendance
+  deleteAttendance,
+  scanQRAttendance
 } = require('../controllers/attendanceController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -19,6 +20,7 @@ router
   .get(getAttendanceRecords);
 
 router.post('/bulk', authorize('teacher', 'admin'), markBulkAttendance);
+router.post('/scan-qr', authorize('student'), scanQRAttendance);
 router.get('/stats/:studentId', getStudentStats);
 router.get('/analytics', authorize('admin', 'teacher'), getDashboardAnalytics);
 

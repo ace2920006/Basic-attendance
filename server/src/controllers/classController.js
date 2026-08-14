@@ -91,8 +91,120 @@ const deleteClass = asyncHandler(async (req, res) => {
   });
 });
 
+const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+
+// @desc    Start QR Attendance session (generates dynamic 30-sec token)
+// @route   POST /api/classes/:id/start-qr
+// @access  Private (Teacher/Admin)
+const startQRAttendance = asyncHandler(async (req, res) => {
+  const classItem = await Class.findById(req.params.id);
+  if (!classItem) {
+    res.status(404);
+    throw new Error('Class session not found');
+  }
+
+  const { latitude, longitude, maxRadiusMeters } = req.body;
+  if (latitude !== undefined && longitude !== undefined) {
+    classItem.campusLocation = {
+      latitude: Number(latitude),
+      longitude: Number(longitude),
+      maxRadiusMeters: Number(maxRadiusMeters) || 500
+    };
+  }
+
+  const nonce = crypto.randomBytes(8).toString('hex');
+  const token = jwt.sign(
+    {
+      classId: classItem._id,
+      subjectCode: classItem.subjectCode,
+      subject: classItem.subject,
+      nonce
+    },
+    process.env.JWT_SECRET || 'fallback_secret',
+    { expiresIn: '30s' }
+  );
+
+  classItem.qrActive = true;
+  classItem.qrSecretToken = token;
+  classItem.qrExpiresAt = new Date(Date.now() + 30000);
+  await classItem.save();
+
+  res.json({
+    success: true,
+    message: 'QR Attendance session started',
+    token,
+    expiresAt: classItem.qrExpiresAt,
+    campusLocation: classItem.campusLocation
+  });
+});
+
+// @desc    Get or auto-rotate active 30s QR session token
+// @route   GET /api/classes/:id/qr-token
+// @access  Private (Teacher/Admin/Student)
+const getQRSessionToken = asyncHandler(async (req, res) => {
+  const classItem = await Class.findById(req.params.id);
+  if (!classItem) {
+    res.status(404);
+    throw new Error('Class session not found');
+  }
+
+  if (!classItem.qrActive) {
+    res.status(400);
+    throw new Error('QR Attendance is not active for this class');
+  }
+
+  // Generate a fresh 30-second token if current is expired or missing
+  const now = new Date();
+  if (!classItem.qrExpiresAt || classItem.qrExpiresAt <= now || !classItem.qrSecretToken) {
+    const nonce = crypto.randomBytes(8).toString('hex');
+    classItem.qrSecretToken = jwt.sign(
+      {
+        classId: classItem._id,
+        subjectCode: classItem.subjectCode,
+        subject: classItem.subject,
+        nonce
+      },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '30s' }
+    );
+    classItem.qrExpiresAt = new Date(Date.now() + 30000);
+    await classItem.save();
+  }
+
+  res.json({
+    success: true,
+    token: classItem.qrSecretToken,
+    expiresAt: classItem.qrExpiresAt,
+    campusLocation: classItem.campusLocation
+  });
+});
+
+// @desc    Stop QR Attendance session
+// @route   POST /api/classes/:id/stop-qr
+// @access  Private (Teacher/Admin)
+const stopQRAttendance = asyncHandler(async (req, res) => {
+  const classItem = await Class.findById(req.params.id);
+  if (!classItem) {
+    res.status(404);
+    throw new Error('Class session not found');
+  }
+
+  classItem.qrActive = false;
+  classItem.qrSecretToken = '';
+  await classItem.save();
+
+  res.json({
+    success: true,
+    message: 'QR Attendance session stopped'
+  });
+});
+
 module.exports = {
   getClasses,
   createClass,
-  deleteClass
+  deleteClass,
+  startQRAttendance,
+  getQRSessionToken,
+  stopQRAttendance
 };
