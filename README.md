@@ -23,6 +23,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 📱 **Dynamic 30s QR Attendance**: Teacher generates rotating 30-second expiring QR code with live countdown timer.
 - 📍 **GPS Geolocation Verification**: Real-time student coordinate verification against campus radius using Haversine distance calculations.
 - 🛡️ **Device Anti-Proxy Verification**: Persistent browser ID and device fingerprinting to prevent proxy attendance submissions from shared devices.
+- 🗓️ **Timetable Management**: Faculty schedules, edits, and manages weekly class slots; Students view Today's Classes, Tomorrow's Schedule, and complete Weekly Timetable matrix.
 
 ---
 
@@ -47,6 +48,9 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Student Attendance Dashboard & Graph** | ✅ | ❌ | ❌ |
 | **Interactive Monthly Attendance Calendar** | ✅ | ❌ | ❌ |
 | **Today's & Upcoming Class Timetable** | ✅ | ✅ | ❌ |
+| **Create & Manage Weekly Timetable Slots** | ❌ | ✅ | ✅ |
+| **View Tomorrow's Classes Schedule** | ✅ | ✅ | ❌ |
+| **View Full Weekly Timetable Matrix** | ✅ | ✅ | ❌ |
 | **Apply for Medical / Absence Leave** | ✅ | ❌ | ❌ |
 | **Download Official Attendance Transcript** | ✅ | ✅ | ✅ |
 
@@ -61,16 +65,16 @@ Basic-attendance/
 │   │   ├── components/          # Reusable UI Components & Role Modals
 │   │   │   ├── layout/          # Navbar, Sidebar, Header layout wrappers
 │   │   │   ├── student/         # Student-specific components & widgets
-│   │   │   ├── teacher/         # Teacher class creator modal & components
+│   │   │   ├── teacher/         # Teacher class creator modal & CreateTimetableModal
 │   │   │   └── ui/              # Buttons, Cards, Inputs, Badges, Modals
 │   │   ├── context/             # React AuthContext for state & token management
 │   │   ├── pages/
 │   │   │   ├── admin/           # Admin Dashboard, Departments, Courses, Subjects, Users
 │   │   │   ├── auth/            # Login, Register, Forgot Password, Reset Password
 │   │   │   ├── landing/         # Public Landing Page
-│   │   │   ├── student/         # Student Dashboard, Calendar, History, Leave, Profile
-│   │   │   └── teacher/         # Teacher Dashboard, Take Attendance, History, Reports
-│   │   ├── services/            # Axios API client modules
+│   │   │   ├── student/         # Student Dashboard, Calendar, History, Leave, Profile, StudentTimetable
+│   │   │   └── teacher/         # Teacher Dashboard, Take Attendance, History, Reports, TeacherTimetable
+│   │   ├── services/            # Axios API client modules (api.js)
 │   │   ├── App.jsx              # React Router route configurations
 │   │   ├── index.css            # Global CSS & Tailwind imports
 │   │   └── main.jsx             # React DOM entry point
@@ -82,10 +86,10 @@ Basic-attendance/
 │   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
 │   ├── src/
 │   │   ├── config/              # MongoDB Mongoose database connection
-│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, etc.)
+│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, etc.)
 │   │   ├── middleware/          # JWT auth middleware, RBAC guards, Error handlers
-│   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Notification)
-│   │   ├── routes/              # Express API Route definitions
+│   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification)
+│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable)
 │   │   ├── utils/               # JWT generator, Async handler wrappers
 │   │   ├── app.js               # Express application initialization & middleware setup
 │   │   └── server.js            # Node HTTP server launcher
@@ -200,6 +204,15 @@ cd Basic-attendance
 - `POST /api/leaves` — Submit new leave application (Medical, Emergency, Event) with file attachment
 - `GET /api/leaves/student` — View personal leave application history and approval status
 - `PUT /api/leaves/:id/status` — Approve or reject leave application (Teacher / Admin)
+
+### 🗓️ Timetable Management (`/api/timetable`)
+- `GET /api/timetable` — Fetch timetable entries with optional day, section, or search filters
+- `GET /api/timetable/today` — Fetch today's scheduled classes based on current day
+- `GET /api/timetable/tomorrow` — Fetch tomorrow's scheduled classes
+- `GET /api/timetable/weekly` — Fetch weekly timetable organized by day (Monday to Sunday)
+- `POST /api/timetable` — Create a new timetable class slot (Teacher / Admin)
+- `PUT /api/timetable/:id` — Update existing timetable class slot (Teacher / Admin)
+- `DELETE /api/timetable/:id` — Remove a timetable class slot (Teacher / Admin)
 
 ### 🏥 System Health (`/api/health`)
 - `GET /api/health` — Check backend status, connected database, and API uptime

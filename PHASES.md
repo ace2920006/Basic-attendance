@@ -13,6 +13,7 @@ This document provides a single, unified reference for all project implementatio
 6. [Phase 6 – Student Module](#-phase-6--student-module)
 7. [Phase 7 – Teacher Module](#-phase-7--teacher-module)
 8. [Phase 8 – Attendance System (Core)](#-phase-8--attendance-system-core)
+9. [Phase 9 – Timetable](#-phase-9--timetable)
 
 
 ---
@@ -228,6 +229,33 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 9 – Timetable
+
+### Core Requirements & Features
+- **Teacher Creates & Manages Timetable**:
+  - Faculty/Admin can schedule, edit, and delete weekly timetable class slots.
+  - Slot attributes: Day of week (`Monday` to `Sunday`), Start & End Time, Time Slot string, Subject Name, Subject Code, Room/Venue, Section, Department, Instructor Name, and theme color badge.
+  - Weekly master schedule view with day filters, search filter, and inline modal editor (`CreateTimetableModal.jsx`).
+- **Student Timetable Portal**:
+  - **Today's Classes**: View today's scheduled lectures dynamically computed from current day of week with real-time status badges (`Completed`, `Ongoing`, `Upcoming`).
+  - **Tomorrow**: View tomorrow's scheduled lectures to prepare notes and materials in advance.
+  - **Weekly Timetable**: Complete interactive weekly schedule grid (Monday to Sunday) with day selector, room locations, teacher details, and full weekly matrix.
+
+### File Mapping
+- Backend Infrastructure:
+  - Model: `server/src/models/Timetable.js`
+  - Controller: `server/src/controllers/timetableController.js`
+  - Routes: `server/src/routes/timetableRoutes.js`
+  - App Integration: `server/src/app.js`
+- Frontend Infrastructure:
+  - API Client: `client/src/services/api.js`
+  - Teacher Timetable Creator Modal: `client/src/components/teacher/CreateTimetableModal.jsx`
+  - Teacher Timetable Manager: `client/src/pages/teacher/TeacherTimetable.jsx`
+  - Student Timetable View: `client/src/pages/student/StudentTimetable.jsx`
+  - Routing & Navigation: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`, `client/src/pages/teacher/TeacherDashboard.jsx`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -236,7 +264,7 @@ This document provides a single, unified reference for all project implementatio
 | **User Role Access Control (RBAC)** | ✅ | ✅ | ✅ | Phase 1 |
 | **Database Schemas & Models** | — | — | — | Phase 2 |
 | **View Personal Dashboard & Graph** | ✅ | ❌ | ❌ | Phase 3 & 6 |
-| **View Today's Classes Schedule** | ✅ | ✅ | ❌ | Phase 3 & 4 |
+| **View Today's Classes Schedule** | ✅ | ✅ | ❌ | Phase 3, 4 & 9 |
 | **Receive Low Attendance Alerts** | ✅ | ❌ | ❌ | Phase 3 |
 | **Take Class Attendance & Notes** | ❌ | ✅ | ✅ | Phase 4 & 7 |
 | **View & Edit Attendance History** | ❌ | ✅ | ✅ | Phase 4 & 7 |
@@ -260,6 +288,9 @@ This document provides a single, unified reference for all project implementatio
 | **Scan QR Attendance & Auto-Mark** | ✅ | ❌ | ❌ | Phase 8 |
 | **GPS Campus Radius Verification** | ✅ | ✅ | ✅ | Phase 8 |
 | **Device Fingerprint & Anti-Proxy Guard** | ✅ | ✅ | ✅ | Phase 8 |
+| **Create & Manage Weekly Timetable Slots** | ❌ | ✅ | ✅ | Phase 9 |
+| **View Tomorrow's Classes Schedule** | ✅ | ✅ | ❌ | Phase 9 |
+| **View Full Weekly Timetable Matrix** | ✅ | ✅ | ❌ | Phase 9 |
 
 ---
 *Last Updated: August 2026*
