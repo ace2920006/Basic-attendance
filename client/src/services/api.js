@@ -326,5 +326,50 @@ export const deleteAttendanceApi = async (id) => {
   return apiRequest(`/attendance/${id}`, { method: 'DELETE' });
 };
 
+// --- Timetable Management API ---
+export const getTimetablesApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.day) queryParams.append('day', params.day);
+  if (params.department) queryParams.append('department', params.department);
+  if (params.section) queryParams.append('section', params.section);
+  if (params.instructorId) queryParams.append('instructorId', params.instructorId);
+  if (params.search) queryParams.append('search', params.search);
+
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/timetable${queryStr}`, { method: 'GET' });
+};
+
+export const getTodayTimetableApi = async (day) => {
+  const query = day ? `?day=${encodeURIComponent(day)}` : '';
+  return apiRequest(`/timetable/today${query}`, { method: 'GET' });
+};
+
+export const getTomorrowTimetableApi = async () => {
+  return apiRequest('/timetable/tomorrow', { method: 'GET' });
+};
+
+export const getWeeklyTimetableApi = async () => {
+  return apiRequest('/timetable/weekly', { method: 'GET' });
+};
+
+export const createTimetableApi = async (timetableData) => {
+  return apiRequest('/timetable', {
+    method: 'POST',
+    body: JSON.stringify(timetableData)
+  });
+};
+
+export const updateTimetableApi = async (id, timetableData) => {
+  return apiRequest(`/timetable/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(timetableData)
+  });
+};
+
+export const deleteTimetableApi = async (id) => {
+  return apiRequest(`/timetable/${id}`, { method: 'DELETE' });
+};
+
+
 
 
