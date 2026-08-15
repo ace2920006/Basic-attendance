@@ -156,6 +156,10 @@ export default function TeacherDashboard() {
               <FiPlusCircle className="w-4 h-4 text-indigo-400" />
               <span>Create New Class Session</span>
             </button>
+            <Link to="/teacher/timetable" className="btn btn-secondary w-full justify-start text-xs py-2.5">
+              <FiBookOpen className="w-4 h-4 text-indigo-400" />
+              <span>Manage Timetable Schedule</span>
+            </Link>
             <Link to="/teacher/take-attendance" className="btn btn-secondary w-full justify-start text-xs py-2.5">
               <FiCheckSquare className="w-4 h-4 text-emerald-400" />
               <span>Take Attendance Roster</span>
