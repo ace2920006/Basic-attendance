@@ -15,6 +15,7 @@ import ResetPassword from './pages/auth/ResetPassword';
 import StudentLayout from './pages/student/StudentLayout';
 import StudentDashboard from './pages/student/StudentDashboard';
 import TodaysClasses from './pages/student/TodaysClasses';
+import StudentTimetable from './pages/student/StudentTimetable';
 import AttendanceGraph from './pages/student/AttendanceGraph';
 import NotificationsList from './pages/student/NotificationsList';
 import StudentCalendar from './pages/student/StudentCalendar';
@@ -26,6 +27,7 @@ import StudentProfile from './pages/student/StudentProfile';
 // Teacher Portal
 import TeacherLayout from './pages/teacher/TeacherLayout';
 import TeacherDashboard from './pages/teacher/TeacherDashboard';
+import TeacherTimetable from './pages/teacher/TeacherTimetable';
 import TakeAttendance from './pages/teacher/TakeAttendance';
 import AttendanceHistory from './pages/teacher/AttendanceHistory';
 import StudentsList from './pages/teacher/StudentsList';
@@ -63,7 +65,8 @@ export default function App() {
             }
           >
             <Route index element={<StudentDashboard />} />
-            <Route path="classes" element={<TodaysClasses />} />
+            <Route path="classes" element={<StudentTimetable />} />
+            <Route path="timetable" element={<StudentTimetable />} />
             <Route path="calendar" element={<StudentCalendar />} />
             <Route path="history" element={<StudentHistory />} />
             <Route path="graph" element={<AttendanceGraph />} />
@@ -84,6 +87,7 @@ export default function App() {
           >
             <Route index element={<TeacherDashboard />} />
             <Route path="classes" element={<TeacherDashboard />} />
+            <Route path="timetable" element={<TeacherTimetable />} />
             <Route path="take-attendance" element={<TakeAttendance />} />
             <Route path="history" element={<AttendanceHistory />} />
             <Route path="students" element={<StudentsList />} />

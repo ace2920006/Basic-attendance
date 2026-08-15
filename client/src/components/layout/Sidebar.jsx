@@ -38,7 +38,7 @@ export default function Sidebar({ role, user: userProp }) {
       case 'student':
         return [
           { to: '/student', label: 'Dashboard Overview', icon: FiHome, end: true },
-          { to: '/student/classes', label: "Today's Classes", icon: FiCalendar },
+          { to: '/student/classes', label: "Today's & Timetable", icon: FiCalendar },
           { to: '/student/calendar', label: 'Attendance Calendar', icon: FiGrid },
           { to: '/student/history', label: 'Attendance History', icon: FiClock },
           { to: '/student/graph', label: 'Attendance Graph', icon: FiBarChart2 },
@@ -51,6 +51,7 @@ export default function Sidebar({ role, user: userProp }) {
         return [
           { to: '/teacher', label: 'Dashboard', icon: FiHome, end: true },
           { to: '/teacher/classes', label: "Today's Classes", icon: FiCalendar },
+          { to: '/teacher/timetable', label: 'Timetable Manager', icon: FiGrid },
           { to: '/teacher/take-attendance', label: 'Take Attendance', icon: FiCheckSquare },
           { to: '/teacher/history', label: 'Attendance History', icon: FiClock },
           { to: '/teacher/students', label: 'Students List', icon: FiUsers },
