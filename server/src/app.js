@@ -15,6 +15,7 @@ const subjectRoutes = require('./routes/subjectRoutes');
 const leaveRoutes = require('./routes/leaveRoutes');
 const classRoutes = require('./routes/classRoutes');
 const timetableRoutes = require('./routes/timetableRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/api/subjects', subjectRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/timetable', timetableRoutes);
+app.use('/api/reports', reportRoutes);
 
 
 // Error Handling Middlewares

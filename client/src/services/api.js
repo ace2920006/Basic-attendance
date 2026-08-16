@@ -370,6 +370,42 @@ export const deleteTimetableApi = async (id) => {
   return apiRequest(`/timetable/${id}`, { method: 'DELETE' });
 };
 
+// --- Report Management API ---
+export const generateReportApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.type) queryParams.append('type', params.type);
+  if (params.date) queryParams.append('date', params.date);
+  if (params.startDate) queryParams.append('startDate', params.startDate);
+  if (params.endDate) queryParams.append('endDate', params.endDate);
+  if (params.month !== undefined) queryParams.append('month', params.month);
+  if (params.year) queryParams.append('year', params.year);
+  if (params.semester) queryParams.append('semester', params.semester);
+  if (params.department) queryParams.append('department', params.department);
+  if (params.course) queryParams.append('course', params.course);
+  if (params.subject) queryParams.append('subject', params.subject);
+  if (params.studentId) queryParams.append('studentId', params.studentId);
+
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/reports/generate${queryStr}`, { method: 'GET' });
+};
+
+export const exportReportApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.format) queryParams.append('format', params.format);
+  if (params.type) queryParams.append('type', params.type);
+  if (params.date) queryParams.append('date', params.date);
+  if (params.startDate) queryParams.append('startDate', params.startDate);
+  if (params.endDate) queryParams.append('endDate', params.endDate);
+  if (params.semester) queryParams.append('semester', params.semester);
+
+  const token = getStoredToken();
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  const url = `${API_BASE_URL}/reports/export${queryStr}`;
+  
+  window.open(url, '_blank');
+};
+
+
 
 
 
