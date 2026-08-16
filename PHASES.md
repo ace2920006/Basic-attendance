@@ -14,6 +14,7 @@ This document provides a single, unified reference for all project implementatio
 7. [Phase 7 – Teacher Module](#-phase-7--teacher-module)
 8. [Phase 8 – Attendance System (Core)](#-phase-8--attendance-system-core)
 9. [Phase 9 – Timetable](#-phase-9--timetable)
+10. [Phase 10 – Reports](#-phase-10--reports)
 
 
 ---
@@ -256,6 +257,38 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 10 – Reports
+
+### Core Requirements & Features
+- **Multi-Timeframe Attendance Report Generator**:
+  - **Daily Report**: Computes present, absent, late counts and rates for a specified calendar date.
+  - **Weekly Report**: Computes weekly attendance statistics and trends across selected 7-day windows.
+  - **Monthly Report**: Monthly aggregate metrics for selected month & year (e.g. August 2026).
+  - **Semester Report**: Semester-wide comprehensive transcript calculating cumulative attendance rates, total sessions, and exam eligibility status (>75% = Eligible, <75% = Shortage Warning).
+- **Export Engine**:
+  - **PDF Export**: Formats official printable university transcript with academic headers, metadata summary, tabular audit, exam eligibility badges, and registrar signature block.
+  - **Excel Export**: Generates `.xls` Microsoft Excel compatible spreadsheet file with custom styling and formatting.
+  - **CSV Export**: Standard `.csv` download stream for raw data analysis.
+- **Multi-Role Reports Hub**:
+  - **Admin Reports Console** (`AdminReports.jsx`): Executive reporting suite filtering by Department, Course, Subject, and Semester with at-risk warning alerts.
+  - **Teacher Reports Hub** (`TeacherReports.jsx`): Subject class attendance generator with CSV, Excel, and PDF exports.
+  - **Student Report Portal** (`StudentReport.jsx`): Official student attendance transcript generator with Daily/Weekly/Monthly/Semester views.
+
+### File Mapping
+- Backend Infrastructure:
+  - Controller: `server/src/controllers/reportController.js`
+  - Routes: `server/src/routes/reportRoutes.js`
+  - App Integration: `server/src/app.js`
+- Frontend Infrastructure:
+  - Export Utility: `client/src/utils/reportExporter.js`
+  - API Client: `client/src/services/api.js`
+  - Admin Reports Hub: `client/src/pages/admin/AdminReports.jsx`
+  - Teacher Reports Hub: `client/src/pages/teacher/TeacherReports.jsx`
+  - Student Report View: `client/src/pages/student/StudentReport.jsx`
+  - Navigation & Routing: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -278,7 +311,7 @@ This document provides a single, unified reference for all project implementatio
 | **Assign Subjects to Students/Teachers** | ❌ | ❌ | ✅ | Phase 5 |
 | **View Executive Dashboard Stats** | ❌ | ❌ | ✅ | Phase 5 |
 | **View Attendance Calendar** | ✅ | ❌ | ❌ | Phase 6 |
-| **Download Official Report & Transcript** | ✅ | ✅ | ✅ | Phase 6 |
+| **Download Official Report & Transcript** | ✅ | ✅ | ✅ | Phase 6 & 10 |
 | **Apply for Absence / Medical Leave** | ✅ | ❌ | ❌ | Phase 6 |
 | **Manage Profile & Security Settings** | ✅ | ✅ | ✅ | Phase 6 |
 | **Create Class Sessions (Faculty)** | ❌ | ✅ | ✅ | Phase 7 |
@@ -291,9 +324,12 @@ This document provides a single, unified reference for all project implementatio
 | **Create & Manage Weekly Timetable Slots** | ❌ | ✅ | ✅ | Phase 9 |
 | **View Tomorrow's Classes Schedule** | ✅ | ✅ | ❌ | Phase 9 |
 | **View Full Weekly Timetable Matrix** | ✅ | ✅ | ❌ | Phase 9 |
+| **Generate Daily, Weekly, Monthly, Semester Reports** | ✅ | ✅ | ✅ | Phase 10 |
+| **Export Reports to PDF, Excel, and CSV** | ✅ | ✅ | ✅ | Phase 10 |
 
 ---
 *Last Updated: August 2026*
+
 
 
 
