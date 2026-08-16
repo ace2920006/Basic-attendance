@@ -41,6 +41,7 @@ import AdminCourses from './pages/admin/AdminCourses';
 import AdminSubjects from './pages/admin/AdminSubjects';
 import AdminTeachers from './pages/admin/AdminTeachers';
 import AdminStudents from './pages/admin/AdminStudents';
+import AdminReports from './pages/admin/AdminReports';
 import AdminSettings from './pages/admin/AdminSettings';
 
 export default function App() {
@@ -109,6 +110,7 @@ export default function App() {
             <Route path="subjects" element={<AdminSubjects />} />
             <Route path="teachers" element={<AdminTeachers />} />
             <Route path="students" element={<AdminStudents />} />
+            <Route path="reports" element={<AdminReports />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 

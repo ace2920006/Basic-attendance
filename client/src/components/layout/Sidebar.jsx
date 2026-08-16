@@ -65,6 +65,7 @@ export default function Sidebar({ role, user: userProp }) {
           { to: '/admin/subjects', label: 'Subjects & Assignments', icon: FiBook },
           { to: '/admin/teachers', label: 'Teachers Management', icon: FiUserCheck },
           { to: '/admin/students', label: 'Students Directory', icon: FiUsers },
+          { to: '/admin/reports', label: 'Reports & Export', icon: FiFileText },
           { to: '/admin/settings', label: 'System Settings', icon: FiSettings },
         ];
       default:
