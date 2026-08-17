@@ -24,6 +24,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 📍 **GPS Geolocation Verification**: Real-time student coordinate verification against campus radius using Haversine distance calculations.
 - 🛡️ **Device Anti-Proxy Verification**: Persistent browser ID and device fingerprinting to prevent proxy attendance submissions from shared devices.
 - 🗓️ **Timetable Management**: Faculty schedules, edits, and manages weekly class slots; Students view Today's Classes, Tomorrow's Schedule, and complete Weekly Timetable matrix.
+- 📊 **Visual Charts & Analytics (Phase 11)**: Interactive graphical dashboards comparing Attendance %, Department averages, Monthly Trends with 75% benchmark threshold line, Subject-wise ratios, and Student Rankings powered by dual **Recharts** and **Chart.js** engines with an on-the-fly engine switcher.
 
 ---
 
@@ -53,6 +54,12 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **View Full Weekly Timetable Matrix** | ✅ | ✅ | ❌ |
 | **Apply for Medical / Absence Leave** | ✅ | ❌ | ❌ |
 | **Download Official Attendance Transcript** | ✅ | ✅ | ✅ |
+| **View Attendance % Ratio Chart (Doughnut/Pie)** | ✅ | ✅ | ✅ |
+| **View Department Comparison Chart** | ❌ | ✅ | ✅ |
+| **View Monthly Trend & 75% Benchmark Line Chart** | ✅ | ✅ | ✅ |
+| **View Subject-Wise Attendance Chart** | ✅ | ✅ | ✅ |
+| **View Student Ranking & Leaderboard Chart** | ❌ | ✅ | ✅ |
+| **Switch Chart Library Engine (Recharts / Chart.js)** | ✅ | ✅ | ✅ |
 
 ---
 
@@ -63,6 +70,7 @@ Basic-attendance/
 ├── client/                      # Frontend Application (React + Vite + Tailwind CSS)
 │   ├── src/
 │   │   ├── components/          # Reusable UI Components & Role Modals
+│   │   │   ├── charts/          # Modular Recharts & Chart.js components (Pie, Dept, Monthly, Subject, Ranking)
 │   │   │   ├── layout/          # Navbar, Sidebar, Header layout wrappers
 │   │   │   ├── student/         # Student-specific components & widgets
 │   │   │   ├── teacher/         # Teacher class creator modal & CreateTimetableModal
@@ -70,6 +78,7 @@ Basic-attendance/
 │   │   ├── context/             # React AuthContext for state & token management
 │   │   ├── pages/
 │   │   │   ├── admin/           # Admin Dashboard, Departments, Courses, Subjects, Users
+│   │   │   ├── analytics/       # Phase 11 Visual Analytics Hub (ChartsPage.jsx)
 │   │   │   ├── auth/            # Login, Register, Forgot Password, Reset Password
 │   │   │   ├── landing/         # Public Landing Page
 │   │   │   ├── student/         # Student Dashboard, Calendar, History, Leave, Profile, StudentTimetable
@@ -86,10 +95,10 @@ Basic-attendance/
 │   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
 │   ├── src/
 │   │   ├── config/              # MongoDB Mongoose database connection
-│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, etc.)
+│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, etc.)
 │   │   ├── middleware/          # JWT auth middleware, RBAC guards, Error handlers
 │   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification)
-│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable)
+│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart)
 │   │   ├── utils/               # JWT generator, Async handler wrappers
 │   │   ├── app.js               # Express application initialization & middleware setup
 │   │   └── server.js            # Node HTTP server launcher
@@ -214,6 +223,9 @@ cd Basic-attendance
 - `PUT /api/timetable/:id` — Update existing timetable class slot (Teacher / Admin)
 - `DELETE /api/timetable/:id` — Remove a timetable class slot (Teacher / Admin)
 
+### 📊 Visual Charts & Analytics (`/api/charts`)
+- `GET /api/charts/analytics` — Fetch aggregated analytics data for Attendance %, Department comparison, Monthly trend, Subject breakdown, and Student rankings
+
 ### 🏥 System Health (`/api/health`)
 - `GET /api/health` — Check backend status, connected database, and API uptime
 
@@ -222,6 +234,7 @@ cd Basic-attendance
 ## 🧪 Technology Stack Breakdown
 
 - **Frontend Core**: React 18, React Router DOM v7, Vite
+- **Data Visualization**: Recharts, Chart.js, react-chartjs-2
 - **Styling**: Tailwind CSS v4, Lucide React Icons, Custom Glassmorphism UI
 - **Backend Framework**: Node.js, Express.js
 - **Database Layer**: MongoDB, Mongoose ODM

@@ -10,6 +10,13 @@ This document provides a single, unified reference for all project implementatio
 3. [Phase 3 – Student Module](#-phase-3--student-module)
 4. [Phase 4 – Teacher Module](#-phase-4--teacher-module)
 5. [Phase 5 – Admin Module](#-phase-5--admin-module)
+6. [Phase 6 – Student Module](#-phase-6--student-module)
+7. [Phase 7 – Teacher Module](#-phase-7--teacher-module)
+8. [Phase 8 – Attendance System (Core)](#-phase-8--attendance-system-core)
+9. [Phase 9 – Timetable](#-phase-9--timetable)
+10. [Phase 10 – Reports](#-phase-10--reports)
+11. [Phase 11 – Charts](#-phase-11--charts)
+
 
 ---
 
@@ -135,6 +142,190 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 6 – Student Module
+
+### Core Requirements & Features
+- **Student Dashboard Overview**:
+  - **Attendance %**: Real-time overall percentage score, total sessions, present, absent count, and exam eligibility badge (>75%).
+  - **Today's Lecture**: Full daily timetable with timings, room numbers, instructors, and status badges.
+  - **Upcoming Lecture**: Dedicated next-lecture highlight banner showing live countdown, topic, room, and instructor.
+  - **Notifications**: Feed showing system alerts, low attendance warnings, and timetable changes.
+  - **Leave Status**: Quick leave status card showcasing active/past applications.
+- **Attendance Calendar**: Monthly interactive grid view with color-coded day markers (`Present`, `Absent`, `Late`, `Leave`, `Holiday`) and day inspector panel.
+- **Attendance History**: Searchable and filterable table log of past lecture attendance sessions with date range and status filters.
+- **Attendance Graph**: Monthly attendance trend charts with 75% benchmark threshold line, subject-wise comparisons, and weekday pattern analytics.
+- **Download Report**: Printable official attendance transcript and downloadable CSV report generator.
+- **Apply Leave**: Leave application form (Medical, Emergency, Event, Duty Leave), supporting document upload simulation, and tracking log (`Pending`, `Approved`, `Rejected`).
+- **Profile**: Student personal details, contact info editor, enrolled subjects grid, and account security password change.
+
+### File Mapping
+- Student Portal Layout: `client/src/pages/student/StudentLayout.jsx`
+- Student Dashboard: `client/src/pages/student/StudentDashboard.jsx`
+- Attendance Calendar: `client/src/pages/student/StudentCalendar.jsx`
+- Attendance History: `client/src/pages/student/StudentHistory.jsx`
+- Attendance Graph: `client/src/pages/student/AttendanceGraph.jsx`
+- Download Report: `client/src/pages/student/StudentReport.jsx`
+- Apply Leave: `client/src/pages/student/StudentLeave.jsx`
+- Profile: `client/src/pages/student/StudentProfile.jsx`
+- Notifications: `client/src/pages/student/NotificationsList.jsx`
+- Leave Backend: `server/src/models/Leave.js`, `server/src/controllers/leaveController.js`, `server/src/routes/leaveRoutes.js`
+
+---
+
+## 📌 Phase 7 – Teacher Module
+
+### Core Requirements & Features
+- **Teacher Dashboard**:
+  - **Create Class**: Modal dialog interface (`CreateClassModal.jsx`) allowing faculty to schedule and create active class sessions with subject name, subject code, room venue, time slot, section, and enrolled capacity.
+  - **View Students**: Enrolled course student directory showing student roll numbers, attendance rates, status badges (>75% active, <75% warning), and advisory notification tools.
+  - **Take Attendance**: Direct launcher to active class attendance roster sheet.
+  - **Edit Attendance**: Access to past session logs with inline modal editor to modify student status and remarks.
+  - **Generate Reports**: Class attendance reports analytics and downloadable CSV export generator.
+- **Attendance Screen**:
+  - **Student List**: Full interactive student roster table with roll numbers, names, and current attendance averages.
+  - **Present Button**: Green toggle action button per student for marking Present.
+  - **Absent Button**: Red toggle action button per student for marking Absent.
+  - **Late Button**: Amber toggle action button per student for marking Late.
+  - **Remarks**: Text input per student to attach custom session notes (e.g. "Medical note", "15 mins late", "Permission granted").
+  - **Batch Actions & Real-Time Counters**: One-click "Mark All Present" & "Mark All Absent" with real-time Present/Absent/Late counter badges.
+
+### File Mapping
+- Dashboard & Class Creator: `client/src/pages/teacher/TeacherDashboard.jsx`, `client/src/components/teacher/CreateClassModal.jsx`
+- Attendance Screen: `client/src/pages/teacher/TakeAttendance.jsx`
+- History & Edit Attendance: `client/src/pages/teacher/AttendanceHistory.jsx`
+- Enrolled Students Roster: `client/src/pages/teacher/StudentsList.jsx`
+- Class Reports & CSV Export: `client/src/pages/teacher/TeacherReports.jsx`
+- Backend Infrastructure:
+  - Model: `server/src/models/Class.js`
+  - Controller: `server/src/controllers/classController.js`, `server/src/controllers/attendanceController.js`
+  - Routes: `server/src/routes/classRoutes.js`, `server/src/routes/attendanceRoutes.js`
+
+---
+
+## 📌 Phase 8 – Attendance System (Core)
+
+### Core Requirements & Features
+- **Attendance Verification Methods**:
+  - **Manual Marking**: Faculty instructors manually toggle Present, Absent, or Late with session notes.
+  - **QR Code Attendance**:
+    - Faculty clicks **"Start Attendance"** on active class.
+    - Server generates a dynamic **30-second expiring QR session token**.
+    - Teacher UI displays live QR code with **30-second animated countdown timer** and auto-refreshes token every 30 seconds.
+    - Students scan QR token via built-in web scanner / camera.
+    - Server validates JWT signature and non-expired timestamp window (<= 30 seconds).
+  - **GPS Location Verification**:
+    - Browser captures current student GPS position (`latitude`, `longitude`).
+    - Backend calculates distance between student position and campus coordinates using Haversine formula.
+    - Server automatically rejects attendance if distance exceeds allowed radius (e.g. 500 meters).
+  - **Device Fingerprint Verification**:
+    - Captures persistent Browser ID, User-Agent, screen resolution, and client device fingerprint.
+    - Stores Browser ID, Device Fingerprint, and Last Login timestamps.
+    - Prevents proxy attendance by rejecting duplicate scans from the same physical device for multiple students in the same session.
+
+### File Mapping
+- Frontend QR Modals & Fingerprint: `client/src/components/teacher/QRAttendanceModal.jsx`, `client/src/components/student/StudentQRScannerModal.jsx`, `client/src/services/deviceFingerprint.js`
+- Page Integration: `client/src/pages/teacher/TakeAttendance.jsx`, `client/src/pages/student/StudentDashboard.jsx`
+- Geolocation Utility: `server/src/utils/geoUtils.js`
+- Backend API Controllers: `server/src/controllers/classController.js`, `server/src/controllers/attendanceController.js`
+- Models: `server/src/models/Attendance.js`, `server/src/models/Class.js`, `server/src/models/User.js`
+
+---
+
+## 📌 Phase 9 – Timetable
+
+### Core Requirements & Features
+- **Teacher Creates & Manages Timetable**:
+  - Faculty/Admin can schedule, edit, and delete weekly timetable class slots.
+  - Slot attributes: Day of week (`Monday` to `Sunday`), Start & End Time, Time Slot string, Subject Name, Subject Code, Room/Venue, Section, Department, Instructor Name, and theme color badge.
+  - Weekly master schedule view with day filters, search filter, and inline modal editor (`CreateTimetableModal.jsx`).
+- **Student Timetable Portal**:
+  - **Today's Classes**: View today's scheduled lectures dynamically computed from current day of week with real-time status badges (`Completed`, `Ongoing`, `Upcoming`).
+  - **Tomorrow**: View tomorrow's scheduled lectures to prepare notes and materials in advance.
+  - **Weekly Timetable**: Complete interactive weekly schedule grid (Monday to Sunday) with day selector, room locations, teacher details, and full weekly matrix.
+
+### File Mapping
+- Backend Infrastructure:
+  - Model: `server/src/models/Timetable.js`
+  - Controller: `server/src/controllers/timetableController.js`
+  - Routes: `server/src/routes/timetableRoutes.js`
+  - App Integration: `server/src/app.js`
+- Frontend Infrastructure:
+  - API Client: `client/src/services/api.js`
+  - Teacher Timetable Creator Modal: `client/src/components/teacher/CreateTimetableModal.jsx`
+  - Teacher Timetable Manager: `client/src/pages/teacher/TeacherTimetable.jsx`
+  - Student Timetable View: `client/src/pages/student/StudentTimetable.jsx`
+  - Routing & Navigation: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`, `client/src/pages/teacher/TeacherDashboard.jsx`
+
+---
+
+## 📌 Phase 10 – Reports
+
+### Core Requirements & Features
+- **Multi-Timeframe Attendance Report Generator**:
+  - **Daily Report**: Computes present, absent, late counts and rates for a specified calendar date.
+  - **Weekly Report**: Computes weekly attendance statistics and trends across selected 7-day windows.
+  - **Monthly Report**: Monthly aggregate metrics for selected month & year (e.g. August 2026).
+  - **Semester Report**: Semester-wide comprehensive transcript calculating cumulative attendance rates, total sessions, and exam eligibility status (>75% = Eligible, <75% = Shortage Warning).
+- **Export Engine**:
+  - **PDF Export**: Formats official printable university transcript with academic headers, metadata summary, tabular audit, exam eligibility badges, and registrar signature block.
+  - **Excel Export**: Generates `.xls` Microsoft Excel compatible spreadsheet file with custom styling and formatting.
+  - **CSV Export**: Standard `.csv` download stream for raw data analysis.
+- **Multi-Role Reports Hub**:
+  - **Admin Reports Console** (`AdminReports.jsx`): Executive reporting suite filtering by Department, Course, Subject, and Semester with at-risk warning alerts.
+  - **Teacher Reports Hub** (`TeacherReports.jsx`): Subject class attendance generator with CSV, Excel, and PDF exports.
+  - **Student Report Portal** (`StudentReport.jsx`): Official student attendance transcript generator with Daily/Weekly/Monthly/Semester views.
+
+### File Mapping
+- Backend Infrastructure:
+  - Controller: `server/src/controllers/reportController.js`
+  - Routes: `server/src/routes/reportRoutes.js`
+  - App Integration: `server/src/app.js`
+- Frontend Infrastructure:
+  - Export Utility: `client/src/utils/reportExporter.js`
+  - API Client: `client/src/services/api.js`
+  - Admin Reports Hub: `client/src/pages/admin/AdminReports.jsx`
+  - Teacher Reports Hub: `client/src/pages/teacher/TeacherReports.jsx`
+  - Student Report View: `client/src/pages/student/StudentReport.jsx`
+  - Navigation & Routing: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`
+
+---
+
+## 📌 Phase 11 – Charts
+
+### Core Requirements & Features
+- **Visual Analytics Engine**:
+  - **Attendance % Ratio**: Interactive Doughnut & Pie chart displaying distribution of Present, Absent, and Late attendance records with overall percentage center badge.
+  - **Department Comparison**: Multi-department Bar chart comparing average attendance rates across academic departments (CSE, ECE, ME, CE, IT) against the campus benchmark.
+  - **Monthly Trend**: 6 to 12 month Area & Line chart tracking monthly attendance trends with a prominent **75% minimum exam requirement line**.
+  - **Subject Wise Breakdown**: Course subject attendance percentages, total sessions, present count, absent count, and subject color badges.
+  - **Student Ranking & Leaderboard**: Horizontal Leaderboard Bar chart featuring rank badges (Gold, Silver, Bronze) for top performers and shortage warning alerts for at-risk students (<75%).
+- **Dual-Engine Rendering**:
+  - Full support for both **Recharts** and **Chart.js / react-chartjs-2**.
+  - Interactive **Library Engine Switcher** toggle bar allowing users to switch rendering engines dynamically on the fly.
+- **Role-Based Analytics Filtering**:
+  - Admin sees system-wide campus analytics and department rankings.
+  - Teacher sees department averages and student shortage warnings.
+  - Student sees personal attendance ratio, monthly trend, and relative class standing.
+
+### File Mapping
+- Backend Infrastructure:
+  - Controller: `server/src/controllers/chartController.js`
+  - Routes: `server/src/routes/chartRoutes.js`
+  - Express App Mount: `server/src/app.js` (`/api/charts/analytics`)
+- Frontend Infrastructure:
+  - API Client Helper: `client/src/services/api.js` (`getChartAnalyticsApi`)
+  - Modular Chart Components:
+    - `client/src/components/charts/AttendancePieChart.jsx`
+    - `client/src/components/charts/DeptComparisonChart.jsx`
+    - `client/src/components/charts/MonthlyTrendChart.jsx`
+    - `client/src/components/charts/SubjectWiseChart.jsx`
+    - `client/src/components/charts/StudentRankingChart.jsx`
+  - Main Analytics Page: `client/src/pages/analytics/ChartsPage.jsx`
+  - Student Analytics Page: `client/src/pages/student/AttendanceGraph.jsx`
+  - Routing & Sidebar: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -142,12 +333,12 @@ This document provides a single, unified reference for all project implementatio
 | **Authentication & Profile Reset** | ✅ | ✅ | ✅ | Phase 1 |
 | **User Role Access Control (RBAC)** | ✅ | ✅ | ✅ | Phase 1 |
 | **Database Schemas & Models** | — | — | — | Phase 2 |
-| **View Personal Dashboard & Graph** | ✅ | ❌ | ❌ | Phase 3 |
-| **View Today's Classes Schedule** | ✅ | ✅ | ❌ | Phase 3 & 4 |
+| **View Personal Dashboard & Graph** | ✅ | ❌ | ❌ | Phase 3 & 6 |
+| **View Today's Classes Schedule** | ✅ | ✅ | ❌ | Phase 3, 4 & 9 |
 | **Receive Low Attendance Alerts** | ✅ | ❌ | ❌ | Phase 3 |
-| **Take Class Attendance & Notes** | ❌ | ✅ | ✅ | Phase 4 |
-| **View & Edit Attendance History** | ❌ | ✅ | ✅ | Phase 4 |
-| **Export Class Attendance CSV** | ❌ | ✅ | ✅ | Phase 4 |
+| **Take Class Attendance & Notes** | ❌ | ✅ | ✅ | Phase 4 & 7 |
+| **View & Edit Attendance History** | ❌ | ✅ | ✅ | Phase 4 & 7 |
+| **Export Class Attendance CSV** | ❌ | ✅ | ✅ | Phase 4 & 7 |
 | **Create Academic Departments** | ❌ | ❌ | ✅ | Phase 5 |
 | **Create Degree Courses** | ❌ | ❌ | ✅ | Phase 5 |
 | **Add Academic Subjects** | ❌ | ❌ | ✅ | Phase 5 |
@@ -155,7 +346,29 @@ This document provides a single, unified reference for all project implementatio
 | **Add & Manage Students** | ❌ | ❌ | ✅ | Phase 5 |
 | **Assign Teachers to Subjects** | ❌ | ❌ | ✅ | Phase 5 |
 | **Assign Subjects to Students/Teachers** | ❌ | ❌ | ✅ | Phase 5 |
-| **View Executive Dashboard Stats (Students, Teachers, Today & Monthly Attendance)** | ❌ | ❌ | ✅ | Phase 5 |
+| **View Executive Dashboard Stats** | ❌ | ❌ | ✅ | Phase 5 |
+| **View Attendance Calendar** | ✅ | ❌ | ❌ | Phase 6 |
+| **Download Official Report & Transcript** | ✅ | ✅ | ✅ | Phase 6 & 10 |
+| **Apply for Absence / Medical Leave** | ✅ | ❌ | ❌ | Phase 6 |
+| **Manage Profile & Security Settings** | ✅ | ✅ | ✅ | Phase 6 |
+| **Create Class Sessions (Faculty)** | ❌ | ✅ | ✅ | Phase 7 |
+| **Interactive Attendance Screen & Remarks** | ❌ | ✅ | ✅ | Phase 7 |
+| **Edit Attendance Status & Remarks** | ❌ | ✅ | ✅ | Phase 7 |
+| **Generate & Display 30s Dynamic QR** | ❌ | ✅ | ✅ | Phase 8 |
+| **Scan QR Attendance & Auto-Mark** | ✅ | ❌ | ❌ | Phase 8 |
+| **GPS Campus Radius Verification** | ✅ | ✅ | ✅ | Phase 8 |
+| **Device Fingerprint & Anti-Proxy Guard** | ✅ | ✅ | ✅ | Phase 8 |
+| **Create & Manage Weekly Timetable Slots** | ❌ | ✅ | ✅ | Phase 9 |
+| **View Tomorrow's Classes Schedule** | ✅ | ✅ | ❌ | Phase 9 |
+| **View Full Weekly Timetable Matrix** | ✅ | ✅ | ❌ | Phase 9 |
+| **Generate Daily, Weekly, Monthly, Semester Reports** | ✅ | ✅ | ✅ | Phase 10 |
+| **Export Reports to PDF, Excel, and CSV** | ✅ | ✅ | ✅ | Phase 10 |
+| **View Attendance % Ratio Chart (Doughnut/Pie)** | ✅ | ✅ | ✅ | Phase 11 |
+| **View Department Comparison Chart** | ❌ | ✅ | ✅ | Phase 11 |
+| **View Monthly Trend & 75% Benchmark Line Chart** | ✅ | ✅ | ✅ | Phase 11 |
+| **View Subject-Wise Attendance Chart** | ✅ | ✅ | ✅ | Phase 11 |
+| **View Student Ranking & Leaderboard Chart** | ❌ | ✅ | ✅ | Phase 11 |
+| **Switch Chart Library Engine (Recharts / Chart.js)** | ✅ | ✅ | ✅ | Phase 11 |
 
 ---
 *Last Updated: August 2026*
