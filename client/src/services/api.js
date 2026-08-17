@@ -405,6 +405,18 @@ export const exportReportApi = async (params = {}) => {
   window.open(url, '_blank');
 };
 
+export const getChartAnalyticsApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.department) queryParams.append('department', params.department);
+  if (params.course) queryParams.append('course', params.course);
+  if (params.subject) queryParams.append('subject', params.subject);
+  if (params.studentId) queryParams.append('studentId', params.studentId);
+  if (params.timeframe) queryParams.append('timeframe', params.timeframe);
+
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/charts/analytics${queryStr}`, { method: 'GET' });
+};
+
 
 
 
