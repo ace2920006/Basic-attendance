@@ -44,6 +44,9 @@ import AdminStudents from './pages/admin/AdminStudents';
 import AdminReports from './pages/admin/AdminReports';
 import AdminSettings from './pages/admin/AdminSettings';
 
+// Phase 11 Charts
+import ChartsPage from './pages/analytics/ChartsPage';
+
 export default function App() {
   return (
     <AuthProvider>
@@ -71,6 +74,7 @@ export default function App() {
             <Route path="calendar" element={<StudentCalendar />} />
             <Route path="history" element={<StudentHistory />} />
             <Route path="graph" element={<AttendanceGraph />} />
+            <Route path="charts" element={<ChartsPage />} />
             <Route path="report" element={<StudentReport />} />
             <Route path="leave" element={<StudentLeave />} />
             <Route path="notifications" element={<NotificationsList />} />
@@ -93,6 +97,7 @@ export default function App() {
             <Route path="history" element={<AttendanceHistory />} />
             <Route path="students" element={<StudentsList />} />
             <Route path="reports" element={<TeacherReports />} />
+            <Route path="charts" element={<ChartsPage />} />
           </Route>
 
           {/* Admin Portal Routes */}
@@ -111,6 +116,7 @@ export default function App() {
             <Route path="teachers" element={<AdminTeachers />} />
             <Route path="students" element={<AdminStudents />} />
             <Route path="reports" element={<AdminReports />} />
+            <Route path="charts" element={<ChartsPage />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 
