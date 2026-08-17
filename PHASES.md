@@ -15,6 +15,7 @@ This document provides a single, unified reference for all project implementatio
 8. [Phase 8 – Attendance System (Core)](#-phase-8--attendance-system-core)
 9. [Phase 9 – Timetable](#-phase-9--timetable)
 10. [Phase 10 – Reports](#-phase-10--reports)
+11. [Phase 11 – Charts](#-phase-11--charts)
 
 
 ---
@@ -289,6 +290,42 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 11 – Charts
+
+### Core Requirements & Features
+- **Visual Analytics Engine**:
+  - **Attendance % Ratio**: Interactive Doughnut & Pie chart displaying distribution of Present, Absent, and Late attendance records with overall percentage center badge.
+  - **Department Comparison**: Multi-department Bar chart comparing average attendance rates across academic departments (CSE, ECE, ME, CE, IT) against the campus benchmark.
+  - **Monthly Trend**: 6 to 12 month Area & Line chart tracking monthly attendance trends with a prominent **75% minimum exam requirement line**.
+  - **Subject Wise Breakdown**: Course subject attendance percentages, total sessions, present count, absent count, and subject color badges.
+  - **Student Ranking & Leaderboard**: Horizontal Leaderboard Bar chart featuring rank badges (Gold, Silver, Bronze) for top performers and shortage warning alerts for at-risk students (<75%).
+- **Dual-Engine Rendering**:
+  - Full support for both **Recharts** and **Chart.js / react-chartjs-2**.
+  - Interactive **Library Engine Switcher** toggle bar allowing users to switch rendering engines dynamically on the fly.
+- **Role-Based Analytics Filtering**:
+  - Admin sees system-wide campus analytics and department rankings.
+  - Teacher sees department averages and student shortage warnings.
+  - Student sees personal attendance ratio, monthly trend, and relative class standing.
+
+### File Mapping
+- Backend Infrastructure:
+  - Controller: `server/src/controllers/chartController.js`
+  - Routes: `server/src/routes/chartRoutes.js`
+  - Express App Mount: `server/src/app.js` (`/api/charts/analytics`)
+- Frontend Infrastructure:
+  - API Client Helper: `client/src/services/api.js` (`getChartAnalyticsApi`)
+  - Modular Chart Components:
+    - `client/src/components/charts/AttendancePieChart.jsx`
+    - `client/src/components/charts/DeptComparisonChart.jsx`
+    - `client/src/components/charts/MonthlyTrendChart.jsx`
+    - `client/src/components/charts/SubjectWiseChart.jsx`
+    - `client/src/components/charts/StudentRankingChart.jsx`
+  - Main Analytics Page: `client/src/pages/analytics/ChartsPage.jsx`
+  - Student Analytics Page: `client/src/pages/student/AttendanceGraph.jsx`
+  - Routing & Sidebar: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -326,6 +363,12 @@ This document provides a single, unified reference for all project implementatio
 | **View Full Weekly Timetable Matrix** | ✅ | ✅ | ❌ | Phase 9 |
 | **Generate Daily, Weekly, Monthly, Semester Reports** | ✅ | ✅ | ✅ | Phase 10 |
 | **Export Reports to PDF, Excel, and CSV** | ✅ | ✅ | ✅ | Phase 10 |
+| **View Attendance % Ratio Chart (Doughnut/Pie)** | ✅ | ✅ | ✅ | Phase 11 |
+| **View Department Comparison Chart** | ❌ | ✅ | ✅ | Phase 11 |
+| **View Monthly Trend & 75% Benchmark Line Chart** | ✅ | ✅ | ✅ | Phase 11 |
+| **View Subject-Wise Attendance Chart** | ✅ | ✅ | ✅ | Phase 11 |
+| **View Student Ranking & Leaderboard Chart** | ❌ | ✅ | ✅ | Phase 11 |
+| **Switch Chart Library Engine (Recharts / Chart.js)** | ✅ | ✅ | ✅ | Phase 11 |
 
 ---
 *Last Updated: August 2026*
