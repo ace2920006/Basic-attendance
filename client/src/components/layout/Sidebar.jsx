@@ -4,6 +4,7 @@ import {
   FiHome, 
   FiCalendar, 
   FiBarChart2, 
+  FiPieChart,
   FiBell, 
   FiCheckSquare, 
   FiClock, 
@@ -41,6 +42,7 @@ export default function Sidebar({ role, user: userProp }) {
           { to: '/student/classes', label: "Today's & Timetable", icon: FiCalendar },
           { to: '/student/calendar', label: 'Attendance Calendar', icon: FiGrid },
           { to: '/student/history', label: 'Attendance History', icon: FiClock },
+          { to: '/student/charts', label: 'Visual Charts', icon: FiPieChart },
           { to: '/student/graph', label: 'Attendance Graph', icon: FiBarChart2 },
           { to: '/student/report', label: 'Download Report', icon: FiFileText },
           { to: '/student/leave', label: 'Apply Leave', icon: FiCheckSquare },
@@ -55,11 +57,13 @@ export default function Sidebar({ role, user: userProp }) {
           { to: '/teacher/take-attendance', label: 'Take Attendance', icon: FiCheckSquare },
           { to: '/teacher/history', label: 'Attendance History', icon: FiClock },
           { to: '/teacher/students', label: 'Students List', icon: FiUsers },
+          { to: '/teacher/charts', label: 'Visual Charts', icon: FiPieChart },
           { to: '/teacher/reports', label: 'Reports & Export', icon: FiFileText },
         ];
       case 'admin':
         return [
           { to: '/admin', label: 'Analytics Console', icon: FiBarChart2, end: true },
+          { to: '/admin/charts', label: 'Visual Charts Hub', icon: FiPieChart },
           { to: '/admin/departments', label: 'Departments', icon: FiGrid },
           { to: '/admin/courses', label: 'Courses Management', icon: FiBookOpen },
           { to: '/admin/subjects', label: 'Subjects & Assignments', icon: FiBook },
