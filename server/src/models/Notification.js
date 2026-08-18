@@ -20,6 +20,24 @@ const notificationSchema = new mongoose.Schema(
       enum: ['info', 'warning', 'success', 'error'],
       default: 'info'
     },
+    eventType: {
+      type: String,
+      enum: ['ATTENDANCE_MARKED', 'CLASS_CANCELLED', 'LOW_ATTENDANCE', 'LEAVE_STATUS', 'ANNOUNCEMENT', 'GENERAL'],
+      default: 'GENERAL'
+    },
+    data: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+    targetRole: {
+      type: String,
+      enum: ['student', 'teacher', 'admin', 'all', ''],
+      default: ''
+    },
+    department: {
+      type: String,
+      default: ''
+    },
     unread: {
       type: Boolean,
       default: true
@@ -31,3 +49,4 @@ const notificationSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('Notification', notificationSchema);
+

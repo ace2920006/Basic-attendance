@@ -80,6 +80,11 @@ const userSchema = new mongoose.Schema(
     lastLoginAt: {
       type: Date
     },
+    fcmTokens: [
+      {
+        type: String
+      }
+    ],
     resetPasswordToken: String,
     resetPasswordExpire: Date
   },
