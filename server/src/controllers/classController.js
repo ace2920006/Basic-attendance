@@ -72,6 +72,8 @@ const createClass = asyncHandler(async (req, res) => {
   });
 });
 
+const { sendNotification } = require('../config/socket');
+
 // @desc    Delete a class session
 // @route   DELETE /api/classes/:id
 // @access  Private (Teacher/Admin)
@@ -83,11 +85,27 @@ const deleteClass = asyncHandler(async (req, res) => {
     throw new Error('Class session not found');
   }
 
+  // Trigger Class Cancelled real-time notification to students
+  sendNotification({
+    department: classItem.department,
+    role: 'student',
+    title: 'Class Cancelled',
+    message: `Notice: ${classItem.subject} (${classItem.subjectCode}) scheduled for ${classItem.timeSlot || 'today'} in Room ${classItem.room} has been cancelled.`,
+    type: 'warning',
+    eventType: 'CLASS_CANCELLED',
+    data: {
+      subject: classItem.subject,
+      subjectCode: classItem.subjectCode,
+      room: classItem.room,
+      timeSlot: classItem.timeSlot
+    }
+  });
+
   await classItem.deleteOne();
 
   res.json({
     success: true,
-    message: 'Class session removed successfully'
+    message: 'Class session removed successfully and cancellation alert sent'
   });
 });
 

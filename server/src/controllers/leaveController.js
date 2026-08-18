@@ -65,6 +65,8 @@ const getAllLeaves = asyncHandler(async (req, res) => {
   });
 });
 
+const { sendNotification } = require('../config/socket');
+
 // @desc    Approve or reject leave request
 // @route   PUT /api/leaves/:id
 // @access  Private (Teacher/Admin)
@@ -92,6 +94,23 @@ const updateLeaveStatus = asyncHandler(async (req, res) => {
   const updated = await Leave.findById(leave._id)
     .populate('student', 'name email rollNo department')
     .populate('reviewedBy', 'name email designation');
+
+  // Trigger real-time notification to the student applicant
+  if (updated && updated.student) {
+    sendNotification({
+      recipientId: updated.student._id,
+      title: `Leave Application ${status}`,
+      message: `Your ${updated.leaveType || 'absence'} leave application has been ${status.toLowerCase()}.${remarks ? ' Note: ' + remarks : ''}`,
+      type: status === 'Approved' ? 'success' : status === 'Rejected' ? 'error' : 'info',
+      eventType: 'LEAVE_STATUS',
+      data: {
+        leaveId: updated._id,
+        leaveType: updated.leaveType,
+        status,
+        remarks: remarks || ''
+      }
+    });
+  }
 
   res.json({
     success: true,

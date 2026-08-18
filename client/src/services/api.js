@@ -417,6 +417,42 @@ export const getChartAnalyticsApi = async (params = {}) => {
   return apiRequest(`/charts/analytics${queryStr}`, { method: 'GET' });
 };
 
+// Notification APIs
+export const getNotificationsApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.unreadOnly) queryParams.append('unreadOnly', params.unreadOnly);
+  if (params.limit) queryParams.append('limit', params.limit);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/notifications${queryStr}`, { method: 'GET' });
+};
+
+export const markNotificationReadApi = async (id) => {
+  return apiRequest(`/notifications/${id}/read`, { method: 'PUT' });
+};
+
+export const markAllNotificationsReadApi = async () => {
+  return apiRequest('/notifications/read-all', { method: 'PUT' });
+};
+
+export const deleteNotificationApi = async (id) => {
+  return apiRequest(`/notifications/${id}`, { method: 'DELETE' });
+};
+
+export const sendAnnouncementApi = async (announcementData) => {
+  return apiRequest('/notifications/announcement', {
+    method: 'POST',
+    body: JSON.stringify(announcementData)
+  });
+};
+
+export const registerFCMTokenApi = async (token) => {
+  return apiRequest('/notifications/fcm-token', {
+    method: 'POST',
+    body: JSON.stringify({ token })
+  });
+};
+
+
 
 
 

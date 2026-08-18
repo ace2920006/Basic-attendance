@@ -1,6 +1,42 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
+const { sendNotification } = require('../config/socket');
+
+// Helper to send real-time notification for Attendance Marked & Low Attendance Warning
+async function checkAndSendAttendanceAlerts(studentId, subject, status) {
+  try {
+    // 1. Send Attendance Marked notification
+    await sendNotification({
+      recipientId: studentId,
+      title: 'Attendance Marked',
+      message: `You were marked ${status} for ${subject}.`,
+      type: status === 'Present' ? 'success' : status === 'Late' ? 'warning' : 'error',
+      eventType: 'ATTENDANCE_MARKED',
+      data: { subject, status }
+    });
+
+    // 2. Check cumulative attendance percentage for Low Attendance Warning
+    const allRecords = await Attendance.find({ student: studentId, subject });
+    const total = allRecords.length;
+    if (total >= 2) {
+      const presentCount = allRecords.filter(r => r.status === 'Present').length;
+      const percentage = Number(((presentCount / total) * 100).toFixed(1));
+      if (percentage < 75) {
+        await sendNotification({
+          recipientId: studentId,
+          title: 'Low Attendance Warning',
+          message: `Warning: Your attendance in ${subject} is ${percentage}%, which is below the 75% requirement.`,
+          type: 'warning',
+          eventType: 'LOW_ATTENDANCE',
+          data: { subject, percentage }
+        });
+      }
+    }
+  } catch (err) {
+    console.error('Failed to send attendance notification alert:', err.message);
+  }
+}
 
 // @desc    Mark individual student attendance
 // @route   POST /api/attendance
@@ -27,6 +63,9 @@ const markAttendance = asyncHandler(async (req, res) => {
     notes: notes || '',
     markedBy: req.user._id
   });
+
+  // Trigger real-time notifications
+  checkAndSendAttendanceAlerts(studentId, subject, status);
 
   res.status(201).json({
     success: true,
@@ -58,6 +97,11 @@ const markBulkAttendance = asyncHandler(async (req, res) => {
   }));
 
   const createdRecords = await Attendance.insertMany(attendanceDocs);
+
+  // Trigger real-time notifications for each marked student
+  createdRecords.forEach((rec) => {
+    checkAndSendAttendanceAlerts(rec.student, rec.subject, rec.status);
+  });
 
   res.status(201).json({
     success: true,
@@ -371,6 +415,9 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
     lastBrowserId: browserId || '',
     lastLoginAt: new Date()
   });
+
+  // Trigger real-time notification alert
+  checkAndSendAttendanceAlerts(req.user._id, record.subject, 'Present');
 
   res.status(201).json({
     success: true,
