@@ -326,6 +326,50 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 12 – Notifications
+
+### Core Requirements & Features
+- **Real-Time WebSockets Engine**:
+  - Socket.io integration on HTTP server (`server/src/config/socket.js`) and React client (`client/src/services/socket.js`).
+  - Automatic authentication & connection lifecycle management joining user rooms (`user_${id}`), role rooms (`role_${role}`), and department rooms (`dept_${dept}`).
+  - Centralized `sendNotification` helper emitting WS events and persisting notifications in MongoDB.
+- **Firebase Cloud Messaging (FCM) / Web Push**:
+  - FCM push notification support via Firebase Admin SDK (`server/src/config/firebase.js`) with dev fallback mode.
+  - Browser Web Push Service Worker (`client/public/firebase-messaging-sw.js`).
+  - User device FCM token registration (`POST /api/notifications/fcm-token`).
+- **5 Mandatory Event Triggers**:
+  - **Attendance Marked**: Notifies student in real-time when marked Present, Absent, or Late via manual roster or QR scan.
+  - **Class Cancelled**: Notifies enrolled students in real-time when a class session or schedule is cancelled or removed.
+  - **Low Attendance Warning**: Automatically warns student when cumulative or subject attendance drops below the 75% threshold.
+  - **Leave Status Updated**: Notifies student applicant in real-time when leave application is Approved or Rejected.
+  - **Announcements**: Broadcast or target real-time announcements from Admin/Teacher to Students, Teachers, or Campus-wide.
+- **Notification Center UI & Toast Suite**:
+  - Interactive top header Bell icon (`Header.jsx`) with live unread badge count & pulse animation.
+  - Glassmorphism slide-out Notification Drawer with read/unread filters, Web Push toggle, and audio chime toggle.
+  - Floating top-right real-time Toast alerts (`ToastContainer.jsx`) with custom event icons and Web Audio API chime sound.
+  - Dedicated Notifications Hub Page (`NotificationsList.jsx`) with category filter tabs.
+  - Broadcast Announcement Modal (`CreateAnnouncementModal.jsx`) for Admins and Teachers.
+
+### File Mapping
+- Backend Infrastructure:
+  - Socket Config & Helper: `server/src/config/socket.js`
+  - Firebase FCM Helper: `server/src/config/firebase.js`
+  - Controller: `server/src/controllers/notificationController.js`
+  - Routes: `server/src/routes/notificationRoutes.js`
+  - Model Updates: `server/src/models/Notification.js`, `server/src/models/User.js`
+  - Server Entry: `server/src/server.js`, `server/src/app.js`
+- Frontend Infrastructure:
+  - Socket Manager: `client/src/services/socket.js`
+  - FCM Config: `client/src/config/firebase.js`, `client/public/firebase-messaging-sw.js`
+  - Global Context: `client/src/context/NotificationContext.jsx`
+  - Toast Container: `client/src/components/common/ToastContainer.jsx`
+  - Header Bell & Drawer: `client/src/components/layout/Header.jsx`
+  - Announcement Modal: `client/src/components/common/CreateAnnouncementModal.jsx`
+  - Notifications Page: `client/src/pages/student/NotificationsList.jsx`
+  - API Client: `client/src/services/api.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -335,7 +379,7 @@ This document provides a single, unified reference for all project implementatio
 | **Database Schemas & Models** | — | — | — | Phase 2 |
 | **View Personal Dashboard & Graph** | ✅ | ❌ | ❌ | Phase 3 & 6 |
 | **View Today's Classes Schedule** | ✅ | ✅ | ❌ | Phase 3, 4 & 9 |
-| **Receive Low Attendance Alerts** | ✅ | ❌ | ❌ | Phase 3 |
+| **Receive Low Attendance Alerts** | ✅ | ❌ | ❌ | Phase 3 & 12 |
 | **Take Class Attendance & Notes** | ❌ | ✅ | ✅ | Phase 4 & 7 |
 | **View & Edit Attendance History** | ❌ | ✅ | ✅ | Phase 4 & 7 |
 | **Export Class Attendance CSV** | ❌ | ✅ | ✅ | Phase 4 & 7 |
@@ -369,6 +413,13 @@ This document provides a single, unified reference for all project implementatio
 | **View Subject-Wise Attendance Chart** | ✅ | ✅ | ✅ | Phase 11 |
 | **View Student Ranking & Leaderboard Chart** | ❌ | ✅ | ✅ | Phase 11 |
 | **Switch Chart Library Engine (Recharts / Chart.js)** | ✅ | ✅ | ✅ | Phase 11 |
+| **Socket.io Real-Time Event Alerts & Audio Chime** | ✅ | ✅ | ✅ | Phase 12 |
+| **FCM Web Push Push Notifications Registration** | ✅ | ✅ | ✅ | Phase 12 |
+| **Receive Attendance Marked Real-Time Alert** | ✅ | ❌ | ❌ | Phase 12 |
+| **Receive Class Cancelled Real-Time Alert** | ✅ | ❌ | ❌ | Phase 12 |
+| **Receive Low Attendance Warning (<75%)** | ✅ | ❌ | ❌ | Phase 12 |
+| **Receive Leave Application Approved/Rejected Alert** | ✅ | ❌ | ❌ | Phase 12 |
+| **Broadcast & Receive Campus Announcements** | ✅ | ✅ | ✅ | Phase 12 |
 
 ---
 *Last Updated: August 2026*
