@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
+import ToastContainer from './components/common/ToastContainer';
 import ProtectedRoute from './components/common/ProtectedRoute';
 
 // Landing Page & Auth
@@ -50,80 +52,85 @@ import ChartsPage from './pages/analytics/ChartsPage';
 export default function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public & Authentication */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
+      <NotificationProvider>
+        <Router>
+          <ToastContainer />
+          <Routes>
+            {/* Public & Authentication */}
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-          {/* Student Portal Routes */}
-          <Route 
-            path="/student" 
-            element={
-              <ProtectedRoute allowedRoles={['student', 'admin']}>
-                <StudentLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<StudentDashboard />} />
-            <Route path="classes" element={<StudentTimetable />} />
-            <Route path="timetable" element={<StudentTimetable />} />
-            <Route path="calendar" element={<StudentCalendar />} />
-            <Route path="history" element={<StudentHistory />} />
-            <Route path="graph" element={<AttendanceGraph />} />
-            <Route path="charts" element={<ChartsPage />} />
-            <Route path="report" element={<StudentReport />} />
-            <Route path="leave" element={<StudentLeave />} />
-            <Route path="notifications" element={<NotificationsList />} />
-            <Route path="profile" element={<StudentProfile />} />
-          </Route>
+            {/* Student Portal Routes */}
+            <Route 
+              path="/student" 
+              element={
+                <ProtectedRoute allowedRoles={['student', 'admin']}>
+                  <StudentLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<StudentDashboard />} />
+              <Route path="classes" element={<StudentTimetable />} />
+              <Route path="timetable" element={<StudentTimetable />} />
+              <Route path="calendar" element={<StudentCalendar />} />
+              <Route path="history" element={<StudentHistory />} />
+              <Route path="graph" element={<AttendanceGraph />} />
+              <Route path="charts" element={<ChartsPage />} />
+              <Route path="report" element={<StudentReport />} />
+              <Route path="leave" element={<StudentLeave />} />
+              <Route path="notifications" element={<NotificationsList />} />
+              <Route path="profile" element={<StudentProfile />} />
+            </Route>
 
-          {/* Teacher Portal Routes */}
-          <Route 
-            path="/teacher" 
-            element={
-              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
-                <TeacherLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<TeacherDashboard />} />
-            <Route path="classes" element={<TeacherDashboard />} />
-            <Route path="timetable" element={<TeacherTimetable />} />
-            <Route path="take-attendance" element={<TakeAttendance />} />
-            <Route path="history" element={<AttendanceHistory />} />
-            <Route path="students" element={<StudentsList />} />
-            <Route path="reports" element={<TeacherReports />} />
-            <Route path="charts" element={<ChartsPage />} />
-          </Route>
+            {/* Teacher Portal Routes */}
+            <Route 
+              path="/teacher" 
+              element={
+                <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                  <TeacherLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<TeacherDashboard />} />
+              <Route path="classes" element={<TeacherDashboard />} />
+              <Route path="timetable" element={<TeacherTimetable />} />
+              <Route path="take-attendance" element={<TakeAttendance />} />
+              <Route path="history" element={<AttendanceHistory />} />
+              <Route path="students" element={<StudentsList />} />
+              <Route path="reports" element={<TeacherReports />} />
+              <Route path="charts" element={<ChartsPage />} />
+              <Route path="notifications" element={<NotificationsList />} />
+            </Route>
 
-          {/* Admin Portal Routes */}
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <AdminLayout />
-              </ProtectedRoute>
-            }
-          >
-            <Route index element={<AdminAnalytics />} />
-            <Route path="departments" element={<AdminDepartments />} />
-            <Route path="courses" element={<AdminCourses />} />
-            <Route path="subjects" element={<AdminSubjects />} />
-            <Route path="teachers" element={<AdminTeachers />} />
-            <Route path="students" element={<AdminStudents />} />
-            <Route path="reports" element={<AdminReports />} />
-            <Route path="charts" element={<ChartsPage />} />
-            <Route path="settings" element={<AdminSettings />} />
-          </Route>
+            {/* Admin Portal Routes */}
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminAnalytics />} />
+              <Route path="departments" element={<AdminDepartments />} />
+              <Route path="courses" element={<AdminCourses />} />
+              <Route path="subjects" element={<AdminSubjects />} />
+              <Route path="teachers" element={<AdminTeachers />} />
+              <Route path="students" element={<AdminStudents />} />
+              <Route path="reports" element={<AdminReports />} />
+              <Route path="charts" element={<ChartsPage />} />
+              <Route path="notifications" element={<NotificationsList />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
 
-          {/* Fallback to Home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </Router>
+            {/* Fallback to Home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Router>
+      </NotificationProvider>
     </AuthProvider>
   );
 }
