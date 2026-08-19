@@ -10,7 +10,7 @@ import {
   FiVolume2,
   FiVolumeX,
   FiSmartphone,
-  FiMegaphone,
+  FiRadio,
   FiX,
   FiArrowRight
 } from 'react-icons/fi';
@@ -171,7 +171,7 @@ export default function Header({ title, subtitle, user: userProp }) {
                     }}
                     className="w-full py-1.5 px-3 bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/40 text-indigo-200 rounded-xl font-semibold flex items-center justify-center gap-1.5 transition-colors"
                   >
-                    <FiMegaphone className="w-3.5 h-3.5 text-indigo-400" />
+                    <FiRadio className="w-3.5 h-3.5 text-indigo-400" />
                     <span>Broadcast Announcement</span>
                   </button>
                 ) : (

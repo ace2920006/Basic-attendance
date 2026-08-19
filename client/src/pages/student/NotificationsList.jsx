@@ -8,7 +8,7 @@ import {
   FiTrash2,
   FiFilter,
   FiCalendar,
-  FiMegaphone,
+  FiRadio,
   FiFileText
 } from 'react-icons/fi';
 import { useNotifications } from '../../context/NotificationContext';
@@ -69,7 +69,7 @@ export default function NotificationsList() {
   const getEventIcon = (notif) => {
     if (notif.eventType === 'CLASS_CANCELLED') return <FiCalendar className="w-5 h-5 text-amber-400" />;
     if (notif.eventType === 'LOW_ATTENDANCE') return <FiAlertTriangle className="w-5 h-5 text-rose-400 animate-pulse" />;
-    if (notif.eventType === 'ANNOUNCEMENT') return <FiMegaphone className="w-5 h-5 text-cyan-400" />;
+    if (notif.eventType === 'ANNOUNCEMENT') return <FiRadio className="w-5 h-5 text-cyan-400" />;
     if (notif.eventType === 'LEAVE_STATUS') return <FiFileText className="w-5 h-5 text-indigo-400" />;
 
     switch (notif.type) {

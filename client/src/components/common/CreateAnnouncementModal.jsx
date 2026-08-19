@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Modal from './Modal';
 import { useNotifications } from '../../context/NotificationContext';
-import { FiMegaphone, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiRadio, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 
 export default function CreateAnnouncementModal({ isOpen, onClose }) {
   const { sendAnnouncement } = useNotifications();
@@ -133,7 +133,7 @@ export default function CreateAnnouncementModal({ isOpen, onClose }) {
             disabled={submitting}
             className="btn btn-primary w-full py-2.5 text-xs font-semibold flex items-center justify-center gap-2"
           >
-            <FiMegaphone className="w-4 h-4" />
+            <FiRadio className="w-4 h-4 text-cyan-400" />
             <span>{submitting ? 'Broadcasting...' : 'Send Live Announcement'}</span>
           </button>
         </form>
