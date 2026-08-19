@@ -242,6 +242,30 @@ export const deleteUserApi = async (id) => {
   return apiRequest(`/users/${id}`, { method: 'DELETE' });
 };
 
+// --- File Upload API ---
+export const uploadFileApi = async (file) => {
+  const token = getStoredToken();
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/uploads`, {
+    method: 'POST',
+    headers,
+    body: formData
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'File upload failed');
+  }
+  return data;
+};
+
 // --- Leave Management API ---
 export const applyLeaveApi = async (leaveData) => {
   return apiRequest('/leaves', {

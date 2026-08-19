@@ -4,8 +4,14 @@ const Leave = require('../models/Leave');
 // @desc    Apply for student leave
 // @route   POST /api/leaves
 // @access  Private (Student)
+const Notification = require('../models/Notification');
+const { sendNotification } = require('../config/socket');
+
+// @desc    Apply for student leave
+// @route   POST /api/leaves
+// @access  Private (Student)
 const applyLeave = asyncHandler(async (req, res) => {
-  const { leaveType, startDate, endDate, reason } = req.body;
+  const { leaveType, startDate, endDate, reason, documentUrl, documentName } = req.body;
 
   if (!startDate || !endDate || !reason) {
     res.status(400);
@@ -18,6 +24,8 @@ const applyLeave = asyncHandler(async (req, res) => {
     startDate: new Date(startDate),
     endDate: new Date(endDate),
     reason,
+    documentUrl: documentUrl || '',
+    documentName: documentName || '',
     status: 'Pending',
     appliedOn: new Date()
   });
@@ -51,11 +59,11 @@ const getMyLeaves = asyncHandler(async (req, res) => {
 const getAllLeaves = asyncHandler(async (req, res) => {
   const { status } = req.query;
   const filter = {};
-  if (status) filter.status = status;
+  if (status && status !== 'All') filter.status = status;
 
   const leaves = await Leave.find(filter)
     .populate('student', 'name email rollNo department semester')
-    .populate('reviewedBy', 'name email')
+    .populate('reviewedBy', 'name email designation')
     .sort({ appliedOn: -1 });
 
   res.json({
@@ -64,8 +72,6 @@ const getAllLeaves = asyncHandler(async (req, res) => {
     data: leaves
   });
 });
-
-const { sendNotification } = require('../config/socket');
 
 // @desc    Approve or reject leave request
 // @route   PUT /api/leaves/:id
@@ -97,11 +103,34 @@ const updateLeaveStatus = asyncHandler(async (req, res) => {
 
   // Trigger real-time notification to the student applicant
   if (updated && updated.student) {
+    const notifTitle = `Leave Application ${status}`;
+    const notifMsg = `Your ${updated.leaveType || 'absence'} leave request has been ${status.toLowerCase()}.${remarks ? ' Note: ' + remarks : ''}`;
+    const notifType = status === 'Approved' ? 'success' : status === 'Rejected' ? 'error' : 'info';
+
+    // Save notification to DB for persistent list
+    try {
+      await Notification.create({
+        recipient: updated.student._id,
+        title: notifTitle,
+        message: notifMsg,
+        type: notifType,
+        eventType: 'LEAVE_STATUS',
+        data: {
+          leaveId: updated._id,
+          leaveType: updated.leaveType,
+          status,
+          remarks: remarks || ''
+        }
+      });
+    } catch (e) {
+      console.error('Failed to create leave status notification:', e.message);
+    }
+
     sendNotification({
       recipientId: updated.student._id,
-      title: `Leave Application ${status}`,
-      message: `Your ${updated.leaveType || 'absence'} leave application has been ${status.toLowerCase()}.${remarks ? ' Note: ' + remarks : ''}`,
-      type: status === 'Approved' ? 'success' : status === 'Rejected' ? 'error' : 'info',
+      title: notifTitle,
+      message: notifMsg,
+      type: notifType,
       eventType: 'LEAVE_STATUS',
       data: {
         leaveId: updated._id,
