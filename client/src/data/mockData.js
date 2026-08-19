@@ -82,6 +82,8 @@ export const studentLeaves = [
     startDate: '2026-08-01', 
     endDate: '2026-08-02', 
     reason: 'Severe viral fever and physician recommended bed rest.', 
+    documentName: 'medical_certificate_aug20.pdf',
+    documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     status: 'Approved', 
     appliedOn: '2026-07-31', 
     reviewedBy: 'Dr. Sarah Jenkins', 
@@ -93,6 +95,8 @@ export const studentLeaves = [
     startDate: '2026-08-15', 
     endDate: '2026-08-16', 
     reason: 'Representing university in Inter-College Hackathon Finals.', 
+    documentName: 'hackathon_permission_letter.pdf',
+    documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
     status: 'Pending', 
     appliedOn: '2026-08-10', 
     reviewedBy: 'Pending Review', 
@@ -104,6 +108,8 @@ export const studentLeaves = [
     startDate: '2026-07-12', 
     endDate: '2026-07-12', 
     reason: 'Family emergency, traveling out of state.', 
+    documentName: '',
+    documentUrl: '',
     status: 'Approved', 
     appliedOn: '2026-07-11', 
     reviewedBy: 'Marcus Vance', 
@@ -173,47 +179,7 @@ export const adminAnalyticsData = {
   ]
 };
 
-export const studentLeaves = [
-  {
-    id: 'LV-2026-001',
-    leaveType: 'Medical',
-    startDate: '2026-08-20',
-    endDate: '2026-08-22',
-    reason: 'High fever and viral infection. Doctor advised 3 days rest.',
-    documentName: 'medical_certificate_aug20.pdf',
-    documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    status: 'Pending',
-    appliedOn: '2026-08-19',
-    reviewedBy: 'Pending Review',
-    remarks: 'Awaiting faculty evaluation'
-  },
-  {
-    id: 'LV-2026-002',
-    leaveType: 'Official Event',
-    startDate: '2026-08-10',
-    endDate: '2026-08-11',
-    reason: 'Representing university at Inter-College Hackathon 2026.',
-    documentName: 'hackathon_permission_letter.pdf',
-    documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    status: 'Approved',
-    appliedOn: '2026-08-08',
-    reviewedBy: 'Dr. Sarah Jenkins',
-    remarks: 'Duty leave granted for hackathon competition.'
-  },
-  {
-    id: 'LV-2026-003',
-    leaveType: 'Personal Emergency',
-    startDate: '2026-08-01',
-    endDate: '2026-08-02',
-    reason: 'Family emergency requiring travel to hometown.',
-    documentName: '',
-    documentUrl: '',
-    status: 'Rejected',
-    appliedOn: '2026-07-31',
-    reviewedBy: 'Dr. John Smith',
-    remarks: 'Insufficient notice provided without supporting evidence.'
-  }
-];
+
 
 export const mockTeacherLeavesList = [
   {
