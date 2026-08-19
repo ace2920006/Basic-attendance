@@ -172,3 +172,111 @@ export const adminAnalyticsData = {
     { month: 'Jun', rate: 84.4 }
   ]
 };
+
+export const studentLeaves = [
+  {
+    id: 'LV-2026-001',
+    leaveType: 'Medical',
+    startDate: '2026-08-20',
+    endDate: '2026-08-22',
+    reason: 'High fever and viral infection. Doctor advised 3 days rest.',
+    documentName: 'medical_certificate_aug20.pdf',
+    documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    status: 'Pending',
+    appliedOn: '2026-08-19',
+    reviewedBy: 'Pending Review',
+    remarks: 'Awaiting faculty evaluation'
+  },
+  {
+    id: 'LV-2026-002',
+    leaveType: 'Official Event',
+    startDate: '2026-08-10',
+    endDate: '2026-08-11',
+    reason: 'Representing university at Inter-College Hackathon 2026.',
+    documentName: 'hackathon_permission_letter.pdf',
+    documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    status: 'Approved',
+    appliedOn: '2026-08-08',
+    reviewedBy: 'Dr. Sarah Jenkins',
+    remarks: 'Duty leave granted for hackathon competition.'
+  },
+  {
+    id: 'LV-2026-003',
+    leaveType: 'Personal Emergency',
+    startDate: '2026-08-01',
+    endDate: '2026-08-02',
+    reason: 'Family emergency requiring travel to hometown.',
+    documentName: '',
+    documentUrl: '',
+    status: 'Rejected',
+    appliedOn: '2026-07-31',
+    reviewedBy: 'Dr. John Smith',
+    remarks: 'Insufficient notice provided without supporting evidence.'
+  }
+];
+
+export const mockTeacherLeavesList = [
+  {
+    id: 'LV-2026-001',
+    student: {
+      _id: 'STU-001',
+      name: 'Alex Rivera',
+      rollNo: 'CS-2024-089',
+      email: 'alex.rivera@university.edu',
+      department: 'Computer Science & Engineering',
+      semester: 'Semester 4'
+    },
+    leaveType: 'Medical',
+    startDate: '2026-08-20',
+    endDate: '2026-08-22',
+    reason: 'High fever and viral infection. Doctor advised 3 days rest.',
+    documentName: 'medical_certificate_aug20.pdf',
+    documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    status: 'Pending',
+    appliedOn: '2026-08-19',
+    reviewedBy: null,
+    remarks: ''
+  },
+  {
+    id: 'LV-2026-002',
+    student: {
+      _id: 'STU-002',
+      name: 'Bella Thorne',
+      rollNo: 'CS-2024-002',
+      email: 'bella@univ.edu',
+      department: 'Computer Science & Engineering',
+      semester: 'Semester 4'
+    },
+    leaveType: 'Official Event',
+    startDate: '2026-08-10',
+    endDate: '2026-08-11',
+    reason: 'Representing university at Inter-College Hackathon 2026.',
+    documentName: 'hackathon_permission.pdf',
+    documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    status: 'Approved',
+    appliedOn: '2026-08-08',
+    reviewedBy: { name: 'Dr. Sarah Jenkins' },
+    remarks: 'Duty leave granted.'
+  },
+  {
+    id: 'LV-2026-003',
+    student: {
+      _id: 'STU-003',
+      name: 'Carlos Gomez',
+      rollNo: 'CS-2024-003',
+      email: 'carlos@univ.edu',
+      department: 'Computer Science & Engineering',
+      semester: 'Semester 4'
+    },
+    leaveType: 'Personal Emergency',
+    startDate: '2026-08-01',
+    endDate: '2026-08-02',
+    reason: 'Family emergency requiring travel to hometown.',
+    documentName: '',
+    documentUrl: '',
+    status: 'Rejected',
+    appliedOn: '2026-07-31',
+    reviewedBy: { name: 'Dr. John Smith' },
+    remarks: 'Insufficient notice provided.'
+  }
+];

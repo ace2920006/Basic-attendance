@@ -34,6 +34,7 @@ import TakeAttendance from './pages/teacher/TakeAttendance';
 import AttendanceHistory from './pages/teacher/AttendanceHistory';
 import StudentsList from './pages/teacher/StudentsList';
 import TeacherReports from './pages/teacher/TeacherReports';
+import TeacherLeave from './pages/teacher/TeacherLeave';
 
 // Admin Portal
 import AdminLayout from './pages/admin/AdminLayout';
@@ -101,6 +102,7 @@ export default function App() {
               <Route path="history" element={<AttendanceHistory />} />
               <Route path="students" element={<StudentsList />} />
               <Route path="reports" element={<TeacherReports />} />
+              <Route path="leave" element={<TeacherLeave />} />
               <Route path="charts" element={<ChartsPage />} />
               <Route path="notifications" element={<NotificationsList />} />
             </Route>
