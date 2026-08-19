@@ -57,6 +57,7 @@ export default function Sidebar({ role, user: userProp }) {
           { to: '/teacher/take-attendance', label: 'Take Attendance', icon: FiCheckSquare },
           { to: '/teacher/history', label: 'Attendance History', icon: FiClock },
           { to: '/teacher/students', label: 'Students List', icon: FiUsers },
+          { to: '/teacher/leave', label: 'Leave Requests', icon: FiFileText },
           { to: '/teacher/charts', label: 'Visual Charts', icon: FiPieChart },
           { to: '/teacher/reports', label: 'Reports & Export', icon: FiFileText },
         ];
