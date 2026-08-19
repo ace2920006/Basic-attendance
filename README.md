@@ -25,6 +25,8 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 🛡️ **Device Anti-Proxy Verification**: Persistent browser ID and device fingerprinting to prevent proxy attendance submissions from shared devices.
 - 🗓️ **Timetable Management**: Faculty schedules, edits, and manages weekly class slots; Students view Today's Classes, Tomorrow's Schedule, and complete Weekly Timetable matrix.
 - 📊 **Visual Charts & Analytics (Phase 11)**: Interactive graphical dashboards comparing Attendance %, Department averages, Monthly Trends with 75% benchmark threshold line, Subject-wise ratios, and Student Rankings powered by dual **Recharts** and **Chart.js** engines with an on-the-fly engine switcher.
+- 🔔 **Real-Time Notifications & Push Alerts (Phase 12)**: Socket.io WebSockets, Firebase Cloud Messaging (FCM) Web Push, audio chimes, drawer notifications hub, and toast alerts.
+- 📑 **Leave Management (Phase 13)**: Student leave application with document upload (`PDF`, `PNG`, `JPG`, `DOCX`), faculty authorization console (`/teacher/leave`), approve/reject workflows with custom remarks, and real-time status updates with full audit history.
 
 ---
 
@@ -53,6 +55,9 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **View Tomorrow's Classes Schedule** | ✅ | ✅ | ❌ |
 | **View Full Weekly Timetable Matrix** | ✅ | ✅ | ❌ |
 | **Apply for Medical / Absence Leave** | ✅ | ❌ | ❌ |
+| **Upload Leave Supporting Proof Document** | ✅ | ❌ | ❌ |
+| **Faculty Approve / Reject Student Leaves & Remarks** | ❌ | ✅ | ✅ |
+| **Maintain Full Leave Authorization History** | ✅ | ✅ | ✅ |
 | **Download Official Attendance Transcript** | ✅ | ✅ | ✅ |
 | **View Attendance % Ratio Chart (Doughnut/Pie)** | ✅ | ✅ | ✅ |
 | **View Department Comparison Chart** | ❌ | ✅ | ✅ |
@@ -60,6 +65,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **View Subject-Wise Attendance Chart** | ✅ | ✅ | ✅ |
 | **View Student Ranking & Leaderboard Chart** | ❌ | ✅ | ✅ |
 | **Switch Chart Library Engine (Recharts / Chart.js)** | ✅ | ✅ | ✅ |
+| **Real-Time Socket.io & FCM Push Notifications** | ✅ | ✅ | ✅ |
 
 ---
 

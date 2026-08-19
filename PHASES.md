@@ -365,8 +365,36 @@ This document provides a single, unified reference for all project implementatio
   - Toast Container: `client/src/components/common/ToastContainer.jsx`
   - Header Bell & Drawer: `client/src/components/layout/Header.jsx`
   - Announcement Modal: `client/src/components/common/CreateAnnouncementModal.jsx`
-  - Notifications Page: `client/src/pages/student/NotificationsList.jsx`
+- Notifications Page: `client/src/pages/student/NotificationsList.jsx`
   - API Client: `client/src/services/api.js`
+
+---
+
+## 📌 Phase 13 – Leave Management
+
+### Core Requirements & Features
+- **Student Leave Application**:
+  - Formal leave request form with Leave Category selection (`Medical`, `Personal Emergency`, `Official Event`, `Duty Leave`), date range pickers, and detailed reason explanation text area.
+  - Supporting document upload integration (`PDF`, `PNG`, `JPG`, `DOCX`) posting files to `/api/uploads` and linking file metadata to leave records.
+  - Active and past leave status tracking dashboard (`Pending`, `Approved`, `Rejected`) with real-time status counters and document preview modal.
+- **Teacher / Faculty Leave Approval Console**:
+  - Dedicated Faculty Leave Console (`/teacher/leave`) with metric overview cards (Total Applications, Pending Review, Approved Leaves, Rejected Requests).
+  - Status filter tabs (`Pending`, `Approved`, `Rejected`, `All`) and real-time student name / roll number search.
+  - Detailed student request inspector showing student roll number, department, requested absence period, detailed reason, and attached proof document viewer.
+  - One-click **Approve** & **Reject** authorization modal with optional custom faculty remarks.
+- **Real-Time Notification & History Maintenance**:
+  - Real-time Socket.io notification emission & persistent MongoDB notification record creation (`LEAVE_STATUS`) when faculty approves or rejects a request.
+  - Complete history maintained with reviewer details, review timestamps, and comments for audit compliance.
+
+### File Mapping
+- Student Leave Page: `client/src/pages/student/StudentLeave.jsx`
+- Teacher Leave Console: `client/src/pages/teacher/TeacherLeave.jsx`
+- Navigation & Routing: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`
+- Service & Upload API: `client/src/services/api.js`, `server/src/controllers/uploadController.js`, `server/src/routes/uploadRoutes.js`
+- Backend Infrastructure:
+  - Model: `server/src/models/Leave.js`, `server/src/models/Notification.js`
+  - Controller: `server/src/controllers/leaveController.js`
+  - Routes: `server/src/routes/leaveRoutes.js`
 
 ---
 
@@ -393,7 +421,10 @@ This document provides a single, unified reference for all project implementatio
 | **View Executive Dashboard Stats** | ❌ | ❌ | ✅ | Phase 5 |
 | **View Attendance Calendar** | ✅ | ❌ | ❌ | Phase 6 |
 | **Download Official Report & Transcript** | ✅ | ✅ | ✅ | Phase 6 & 10 |
-| **Apply for Absence / Medical Leave** | ✅ | ❌ | ❌ | Phase 6 |
+| **Apply for Absence / Medical Leave** | ✅ | ❌ | ❌ | Phase 6 & 13 |
+| **Upload Leave Supporting Proof Document** | ✅ | ❌ | ❌ | Phase 13 |
+| **Approve / Reject Student Leaves & Remarks** | ❌ | ✅ | ✅ | Phase 13 |
+| **Maintain Full Leave Authorization History** | ✅ | ✅ | ✅ | Phase 13 |
 | **Manage Profile & Security Settings** | ✅ | ✅ | ✅ | Phase 6 |
 | **Create Class Sessions (Faculty)** | ❌ | ✅ | ✅ | Phase 7 |
 | **Interactive Attendance Screen & Remarks** | ❌ | ✅ | ✅ | Phase 7 |
@@ -418,7 +449,7 @@ This document provides a single, unified reference for all project implementatio
 | **Receive Attendance Marked Real-Time Alert** | ✅ | ❌ | ❌ | Phase 12 |
 | **Receive Class Cancelled Real-Time Alert** | ✅ | ❌ | ❌ | Phase 12 |
 | **Receive Low Attendance Warning (<75%)** | ✅ | ❌ | ❌ | Phase 12 |
-| **Receive Leave Application Approved/Rejected Alert** | ✅ | ❌ | ❌ | Phase 12 |
+| **Receive Leave Application Approved/Rejected Alert** | ✅ | ❌ | ❌ | Phase 12 & 13 |
 | **Broadcast & Receive Campus Announcements** | ✅ | ✅ | ✅ | Phase 12 |
 
 ---

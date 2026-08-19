@@ -326,6 +326,58 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 12 – Real-Time Event Alerts & Push Notifications
+
+### Core Requirements & Features
+- **Real-Time WebSockets Engine**:
+  - Socket.io integration on HTTP server (`server/src/config/socket.js`) and React client (`client/src/services/socket.js`).
+  - Automatic authentication & connection lifecycle management joining user rooms, role rooms, and department rooms.
+  - Centralized `sendNotification` helper emitting WS events and persisting notifications in MongoDB.
+- **Firebase Cloud Messaging (FCM) / Web Push**:
+  - FCM push notification support via Firebase Admin SDK (`server/src/config/firebase.js`).
+  - Browser Web Push Service Worker (`client/public/firebase-messaging-sw.js`).
+  - User device FCM token registration (`POST /api/notifications/fcm-token`).
+- **5 Mandatory Event Triggers**:
+  - **Attendance Marked**: Notifies student in real-time when marked Present, Absent, or Late.
+  - **Class Cancelled**: Notifies enrolled students in real-time when a class session is cancelled.
+  - **Low Attendance Warning**: Automatically warns student when attendance drops below 75%.
+  - **Leave Status Updated**: Notifies student applicant in real-time when leave application is Approved or Rejected.
+  - **Announcements**: Broadcast or target real-time announcements from Admin/Teacher to Students, Teachers, or Campus-wide.
+- **Notification Center UI & Toast Suite**:
+  - Interactive top header Bell icon with unread badge count & pulse animation.
+  - Glassmorphism slide-out Notification Drawer with read/unread filters.
+  - Floating top-right real-time Toast alerts (`ToastContainer.jsx`) with Web Audio API chime sound.
+
+---
+
+## 📌 Phase 13 – Leave Management
+
+### Core Requirements & Features
+- **Student Leave Application**:
+  - Formal leave request form with Leave Category selection (`Medical`, `Personal Emergency`, `Official Event`, `Duty Leave`), date range pickers, and detailed reason explanation text area.
+  - Supporting document upload integration (`PDF`, `PNG`, `JPG`, `DOCX`) posting files to `/api/uploads` and linking file metadata to leave records.
+  - Active and past leave status tracking dashboard (`Pending`, `Approved`, `Rejected`) with real-time status counters and document preview modal.
+- **Teacher / Faculty Leave Approval Console**:
+  - Dedicated Faculty Leave Console (`/teacher/leave`) with metric overview cards (Total Applications, Pending Review, Approved Leaves, Rejected Requests).
+  - Status filter tabs (`Pending`, `Approved`, `Rejected`, `All`) and real-time student name / roll number search.
+  - Detailed student request inspector showing student roll number, department, requested absence period, detailed reason, and attached proof document viewer.
+  - One-click **Approve** & **Reject** authorization modal with optional custom faculty remarks.
+- **Real-Time Notification & History Maintenance**:
+  - Real-time Socket.io notification emission & persistent MongoDB notification record creation (`LEAVE_STATUS`) when faculty approves or rejects a request.
+  - Complete history maintained with reviewer details, review timestamps, and comments for audit compliance.
+
+### File Mapping
+- Student Leave Page: `client/src/pages/student/StudentLeave.jsx`
+- Teacher Leave Console: `client/src/pages/teacher/TeacherLeave.jsx`
+- Navigation & Routing: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`
+- Service & Upload API: `client/src/services/api.js`, `server/src/controllers/uploadController.js`, `server/src/routes/uploadRoutes.js`
+- Backend Infrastructure:
+  - Model: `server/src/models/Leave.js`, `server/src/models/Notification.js`
+  - Controller: `server/src/controllers/leaveController.js`
+  - Routes: `server/src/routes/leaveRoutes.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -335,7 +387,7 @@ This document provides a single, unified reference for all project implementatio
 | **Database Schemas & Models** | — | — | — | Phase 2 |
 | **View Personal Dashboard & Graph** | ✅ | ❌ | ❌ | Phase 3 & 6 |
 | **View Today's Classes Schedule** | ✅ | ✅ | ❌ | Phase 3, 4 & 9 |
-| **Receive Low Attendance Alerts** | ✅ | ❌ | ❌ | Phase 3 |
+| **Receive Low Attendance Alerts** | ✅ | ❌ | ❌ | Phase 3 & 12 |
 | **Take Class Attendance & Notes** | ❌ | ✅ | ✅ | Phase 4 & 7 |
 | **View & Edit Attendance History** | ❌ | ✅ | ✅ | Phase 4 & 7 |
 | **Export Class Attendance CSV** | ❌ | ✅ | ✅ | Phase 4 & 7 |
@@ -349,7 +401,10 @@ This document provides a single, unified reference for all project implementatio
 | **View Executive Dashboard Stats** | ❌ | ❌ | ✅ | Phase 5 |
 | **View Attendance Calendar** | ✅ | ❌ | ❌ | Phase 6 |
 | **Download Official Report & Transcript** | ✅ | ✅ | ✅ | Phase 6 & 10 |
-| **Apply for Absence / Medical Leave** | ✅ | ❌ | ❌ | Phase 6 |
+| **Apply for Absence / Medical Leave** | ✅ | ❌ | ❌ | Phase 6 & 13 |
+| **Upload Leave Supporting Proof Document** | ✅ | ❌ | ❌ | Phase 13 |
+| **Approve / Reject Student Leaves & Remarks** | ❌ | ✅ | ✅ | Phase 13 |
+| **Maintain Full Leave Authorization History** | ✅ | ✅ | ✅ | Phase 13 |
 | **Manage Profile & Security Settings** | ✅ | ✅ | ✅ | Phase 6 |
 | **Create Class Sessions (Faculty)** | ❌ | ✅ | ✅ | Phase 7 |
 | **Interactive Attendance Screen & Remarks** | ❌ | ✅ | ✅ | Phase 7 |
@@ -369,6 +424,13 @@ This document provides a single, unified reference for all project implementatio
 | **View Subject-Wise Attendance Chart** | ✅ | ✅ | ✅ | Phase 11 |
 | **View Student Ranking & Leaderboard Chart** | ❌ | ✅ | ✅ | Phase 11 |
 | **Switch Chart Library Engine (Recharts / Chart.js)** | ✅ | ✅ | ✅ | Phase 11 |
+| **Socket.io Real-Time Event Alerts & Audio Chime** | ✅ | ✅ | ✅ | Phase 12 |
+| **FCM Web Push Push Notifications Registration** | ✅ | ✅ | ✅ | Phase 12 |
+| **Receive Attendance Marked Real-Time Alert** | ✅ | ❌ | ❌ | Phase 12 |
+| **Receive Class Cancelled Real-Time Alert** | ✅ | ❌ | ❌ | Phase 12 |
+| **Receive Low Attendance Warning (<75%)** | ✅ | ❌ | ❌ | Phase 12 |
+| **Receive Leave Application Approved/Rejected Alert** | ✅ | ❌ | ❌ | Phase 12 & 13 |
+| **Broadcast & Receive Campus Announcements** | ✅ | ✅ | ✅ | Phase 12 |
 
 ---
 *Last Updated: August 2026*
