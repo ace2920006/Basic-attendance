@@ -18,6 +18,7 @@ const timetableRoutes = require('./routes/timetableRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const chartRoutes = require('./routes/chartRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -55,6 +56,7 @@ app.use('/api/timetable', timetableRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/charts', chartRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai', aiRoutes);
 
 
 

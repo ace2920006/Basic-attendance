@@ -476,6 +476,33 @@ export const registerFCMTokenApi = async (token) => {
   });
 };
 
+// AI Features APIs (Phase 14)
+export const getAttendancePredictionApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.studentId) queryParams.append('studentId', params.studentId);
+  if (params.target) queryParams.append('target', params.target);
+  if (params.remaining) queryParams.append('remaining', params.remaining);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/ai/predict${queryStr}`, { method: 'GET' });
+};
+
+export const sendAiChatMessageApi = async (message) => {
+  return apiRequest('/ai/chat', {
+    method: 'POST',
+    body: JSON.stringify({ message })
+  });
+};
+
+export const getSuspiciousAttendanceApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.type) queryParams.append('type', params.type);
+  if (params.severity) queryParams.append('severity', params.severity);
+  if (params.search) queryParams.append('search', params.search);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/ai/suspicious-detection${queryStr}`, { method: 'GET' });
+};
+
+
 
 
 
