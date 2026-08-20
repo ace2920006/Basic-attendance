@@ -17,6 +17,9 @@ This document provides a single, unified reference for all project implementatio
 10. [Phase 10 – Reports](#-phase-10--reports)
 11. [Phase 11 – Charts](#-phase-11--charts)
 12. [Phase 12 – Notifications](#-phase-12--notifications)
+13. [Phase 13 – Leave Management](#-phase-13--leave-management)
+14. [Phase 14 – AI Features](#-phase-14--ai-features)
+15. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
