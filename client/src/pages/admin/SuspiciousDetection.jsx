@@ -74,7 +74,7 @@ export default function SuspiciousDetection() {
       case 'OUTSIDE_CAMPUS':
         return <FiMapPin className="w-4 h-4 text-amber-400" />;
       case 'DUPLICATE_QR':
-        return <FiQrCode className="w-4 h-4 text-cyan-400" />;
+        return <HiOutlineQrCode className="w-4 h-4 text-cyan-400" />;
       default:
         return <FiNavigation className="w-4 h-4 text-rose-400" />;
     }
@@ -137,7 +137,7 @@ export default function SuspiciousDetection() {
         <div className="p-4 bg-slate-900/80 border border-slate-800 rounded-2xl">
           <div className="flex items-center justify-between">
             <span className="block text-[10px] text-slate-400 uppercase font-semibold">Duplicate QR</span>
-            <FiQrCode className="w-3.5 h-3.5 text-cyan-400" />
+            <HiOutlineQrCode className="w-3.5 h-3.5 text-cyan-400" />
           </div>
           <span className="text-2xl font-extrabold text-cyan-400 mt-1 block">{summary.duplicateQr || 0}</span>
           <span className="text-[10px] text-slate-400">Token Reuse</span>
