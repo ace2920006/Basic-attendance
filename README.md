@@ -27,6 +27,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 📊 **Visual Charts & Analytics (Phase 11)**: Interactive graphical dashboards comparing Attendance %, Department averages, Monthly Trends with 75% benchmark threshold line, Subject-wise ratios, and Student Rankings powered by dual **Recharts** and **Chart.js** engines with an on-the-fly engine switcher.
 - 🔔 **Real-Time Notifications & Push Alerts (Phase 12)**: Socket.io WebSockets, Firebase Cloud Messaging (FCM) Web Push, audio chimes, drawer notifications hub, and toast alerts.
 - 📑 **Leave Management (Phase 13)**: Student leave application with document upload (`PDF`, `PNG`, `JPG`, `DOCX`), faculty authorization console (`/teacher/leave`), approve/reject workflows with custom remarks, and real-time status updates with full audit history.
+- 🤖 **AI Features (Phase 14)**: Attendance Prediction Engine ("Can student reach 75%?", max skips allowed, "What-If" simulator slider), Natural Language AI Chatbot ("My attendance?", "Subjects below 75%", "Can I skip tomorrow?", "Attendance report", "Remaining lectures"), and automated Suspicious Attendance & Proxy Detection Console (repeated same device, outside campus scans, duplicate QR tokens, impossible location jumps).
 
 ---
 
@@ -66,6 +67,9 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **View Student Ranking & Leaderboard Chart** | ❌ | ✅ | ✅ |
 | **Switch Chart Library Engine (Recharts / Chart.js)** | ✅ | ✅ | ✅ |
 | **Real-Time Socket.io & FCM Push Notifications** | ✅ | ✅ | ✅ |
+| **Attendance Prediction Engine & "What-If" Simulator** | ✅ | ❌ | ❌ |
+| **Natural Language AI Chatbot ("Ask My Attendance")** | ✅ | ✅ | ✅ |
+| **Suspicious Attendance & Proxy Detection Console** | ❌ | ✅ | ✅ |
 
 ---
 

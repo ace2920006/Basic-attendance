@@ -398,6 +398,45 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 14 – AI Features
+
+### Core Requirements & Features
+- **Attendance Prediction Engine ("Can Student Reach 75%?")**:
+  - Trajectory & math engine calculating minimum required lectures to attend to achieve $\ge 75\%$ target across all enrolled subjects.
+  - Maximum allowed skips calculator ($S_{max}$) determining how many future lectures can be missed safely.
+  - Interactive "What-If" simulator slider (`AttendancePrediction.jsx`) enabling students to simulate future attendance rates (100%, 80%, 60%, 40%, 20%, 0%) and preview projected final percentages.
+  - Subject-by-subject risk breakdown with custom status badges (`Guaranteed`, `Achievable`, `At Risk`, `Impossible`) and AI strategic advice notes.
+- **Natural Language AI Chatbot ("Ask My Attendance")**:
+  - Contextual NLP engine handling natural language queries and parsing intent from preset prompt pills:
+    1. 💬 *"My attendance?"* $\rightarrow$ Returns overall status, present/absent breakdown, and compliance badge.
+    2. 💬 *"Subjects below 75%"* $\rightarrow$ Lists lagging defaulter subjects with shortage counts and urgent alerts.
+    3. 💬 *"Can I skip tomorrow?"* $\rightarrow$ Analyzes tomorrow's scheduled timetable slots and simulates attendance drop risks.
+    4. 💬 *"Attendance report"* $\rightarrow$ Summary metrics with direct link trigger to download official PDF/Excel report.
+    5. 💬 *"Remaining lectures"* $\rightarrow$ Breakdown of remaining conductable lectures per subject.
+  - Dual UI components: Global Floating Widget (`AiChatWidget.jsx`) available on all pages and full-screen AI Workspace (`AiChatPage.jsx`).
+- **Suspicious Attendance & Proxy Detection**:
+  - Automated anomaly detector (`/api/ai/suspicious-detection`) running 4 active security scanners across attendance logs:
+    1. **Repeated Same Device**: Flags multiple student accounts marking attendance using the exact same device fingerprint or browser ID.
+    2. **Outside Campus**: Identifies QR/GPS attendance marked outside the 500m campus boundary.
+    3. **Duplicate QR**: Identifies token reuse or duplicate scans within 5 minutes.
+    4. **Impossible Locations**: Identifies rapid sequence scans requiring impossible physical travel speed ($> 100\text{ km/h}$).
+  - Dedicated Faculty/Admin Security Console (`/admin/suspicious` & `/teacher/suspicious`) with category tabs, severity risk pills (`High`, `Medium`, `Low`), search filter, and full technical metadata inspector modal.
+
+### File Mapping
+- Backend Infrastructure:
+  - Controller: `server/src/controllers/aiController.js`
+  - Routes: `server/src/routes/aiRoutes.js`
+  - Server App Mount: `server/src/app.js` (`/api/ai`)
+- Frontend Infrastructure:
+  - API Service Client: `client/src/services/api.js` (`getAttendancePredictionApi`, `sendAiChatMessageApi`, `getSuspiciousAttendanceApi`)
+  - Global Floating Widget: `client/src/components/ai/AiChatWidget.jsx`
+  - Student Prediction Page: `client/src/pages/student/AttendancePrediction.jsx` (`/student/predict`)
+  - Student AI Workspace Page: `client/src/pages/student/AiChatPage.jsx` (`/student/ai-chat`)
+  - Admin/Teacher Security Console: `client/src/pages/admin/SuspiciousDetection.jsx` (`/admin/suspicious` & `/teacher/suspicious`)
+  - Navigation & Routing: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -451,6 +490,9 @@ This document provides a single, unified reference for all project implementatio
 | **Receive Low Attendance Warning (<75%)** | ✅ | ❌ | ❌ | Phase 12 |
 | **Receive Leave Application Approved/Rejected Alert** | ✅ | ❌ | ❌ | Phase 12 & 13 |
 | **Broadcast & Receive Campus Announcements** | ✅ | ✅ | ✅ | Phase 12 |
+| **Attendance Prediction Engine & "What-If" Simulator** | ✅ | ❌ | ❌ | Phase 14 |
+| **Natural Language AI Chatbot ("Ask My Attendance")** | ✅ | ✅ | ✅ | Phase 14 |
+| **Suspicious Attendance & Proxy Detection Console** | ❌ | ✅ | ✅ | Phase 14 |
 
 ---
 *Last Updated: August 2026*
