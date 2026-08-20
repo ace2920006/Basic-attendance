@@ -50,12 +50,19 @@ import AdminSettings from './pages/admin/AdminSettings';
 // Phase 11 Charts
 import ChartsPage from './pages/analytics/ChartsPage';
 
+// Phase 14 AI Features
+import AttendancePrediction from './pages/student/AttendancePrediction';
+import AiChatPage from './pages/student/AiChatPage';
+import SuspiciousDetection from './pages/admin/SuspiciousDetection';
+import AiChatWidget from './components/ai/AiChatWidget';
+
 export default function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
         <Router>
           <ToastContainer />
+          <AiChatWidget />
           <Routes>
             {/* Public & Authentication */}
             <Route path="/" element={<LandingPage />} />
@@ -74,6 +81,8 @@ export default function App() {
               }
             >
               <Route index element={<StudentDashboard />} />
+              <Route path="predict" element={<AttendancePrediction />} />
+              <Route path="ai-chat" element={<AiChatPage />} />
               <Route path="classes" element={<StudentTimetable />} />
               <Route path="timetable" element={<StudentTimetable />} />
               <Route path="calendar" element={<StudentCalendar />} />
@@ -96,6 +105,7 @@ export default function App() {
               }
             >
               <Route index element={<TeacherDashboard />} />
+              <Route path="suspicious" element={<SuspiciousDetection />} />
               <Route path="classes" element={<TeacherDashboard />} />
               <Route path="timetable" element={<TeacherTimetable />} />
               <Route path="take-attendance" element={<TakeAttendance />} />
@@ -117,6 +127,7 @@ export default function App() {
               }
             >
               <Route index element={<AdminAnalytics />} />
+              <Route path="suspicious" element={<SuspiciousDetection />} />
               <Route path="departments" element={<AdminDepartments />} />
               <Route path="courses" element={<AdminCourses />} />
               <Route path="subjects" element={<AdminSubjects />} />

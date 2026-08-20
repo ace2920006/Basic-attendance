@@ -17,7 +17,10 @@ import {
   FiUser, 
   FiSettings, 
   FiLogOut,
-  FiChevronLeft
+  FiChevronLeft,
+  FiTrendingUp,
+  FiZap,
+  FiShield
 } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
 import { useAuth } from '../../context/AuthContext';
@@ -39,6 +42,8 @@ export default function Sidebar({ role, user: userProp }) {
       case 'student':
         return [
           { to: '/student', label: 'Dashboard Overview', icon: FiHome, end: true },
+          { to: '/student/predict', label: 'AI Predictor (75%)', icon: FiTrendingUp },
+          { to: '/student/ai-chat', label: 'AI Assistant Chat', icon: FiZap },
           { to: '/student/classes', label: "Today's & Timetable", icon: FiCalendar },
           { to: '/student/calendar', label: 'Attendance Calendar', icon: FiGrid },
           { to: '/student/history', label: 'Attendance History', icon: FiClock },
@@ -52,6 +57,7 @@ export default function Sidebar({ role, user: userProp }) {
       case 'teacher':
         return [
           { to: '/teacher', label: 'Dashboard', icon: FiHome, end: true },
+          { to: '/teacher/suspicious', label: 'Suspicious Logs AI', icon: FiShield },
           { to: '/teacher/classes', label: "Today's Classes", icon: FiCalendar },
           { to: '/teacher/timetable', label: 'Timetable Manager', icon: FiGrid },
           { to: '/teacher/take-attendance', label: 'Take Attendance', icon: FiCheckSquare },
@@ -64,6 +70,7 @@ export default function Sidebar({ role, user: userProp }) {
       case 'admin':
         return [
           { to: '/admin', label: 'Analytics Console', icon: FiBarChart2, end: true },
+          { to: '/admin/suspicious', label: 'Suspicious Logs AI', icon: FiShield },
           { to: '/admin/charts', label: 'Visual Charts Hub', icon: FiPieChart },
           { to: '/admin/departments', label: 'Departments', icon: FiGrid },
           { to: '/admin/courses', label: 'Courses Management', icon: FiBookOpen },
