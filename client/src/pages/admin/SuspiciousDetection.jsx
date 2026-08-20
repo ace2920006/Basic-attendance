@@ -4,7 +4,6 @@ import {
   FiAlertTriangle,
   FiSmartphone,
   FiMapPin,
-  FiQrCode,
   FiNavigation,
   FiSearch,
   FiFilter,
@@ -14,6 +13,7 @@ import {
   FiRefreshCw,
   FiUser
 } from 'react-icons/fi';
+import { HiOutlineQrCode } from 'react-icons/hi2';
 import { getSuspiciousAttendanceApi } from '../../services/api';
 
 export default function SuspiciousDetection() {
