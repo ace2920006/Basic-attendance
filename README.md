@@ -80,6 +80,7 @@ Basic-attendance/
 ├── client/                      # Frontend Application (React + Vite + Tailwind CSS)
 │   ├── src/
 │   │   ├── components/          # Reusable UI Components & Role Modals
+│   │   │   ├── ai/              # Phase 14 Global Floating AI Chat Widget (AiChatWidget.jsx)
 │   │   │   ├── charts/          # Modular Recharts & Chart.js components (Pie, Dept, Monthly, Subject, Ranking)
 │   │   │   ├── layout/          # Navbar, Sidebar, Header layout wrappers
 │   │   │   ├── student/         # Student-specific components & widgets
@@ -87,13 +88,13 @@ Basic-attendance/
 │   │   │   └── ui/              # Buttons, Cards, Inputs, Badges, Modals
 │   │   ├── context/             # React AuthContext for state & token management
 │   │   ├── pages/
-│   │   │   ├── admin/           # Admin Dashboard, Departments, Courses, Subjects, Users
+│   │   │   ├── admin/           # Admin Dashboard, Departments, Courses, Subjects, Users, SuspiciousDetection
 │   │   │   ├── analytics/       # Phase 11 Visual Analytics Hub (ChartsPage.jsx)
 │   │   │   ├── auth/            # Login, Register, Forgot Password, Reset Password
 │   │   │   ├── landing/         # Public Landing Page
-│   │   │   ├── student/         # Student Dashboard, Calendar, History, Leave, Profile, StudentTimetable
+│   │   │   ├── student/         # Student Dashboard, Calendar, History, Leave, Profile, StudentTimetable, AttendancePrediction, AiChatPage
 │   │   │   └── teacher/         # Teacher Dashboard, Take Attendance, History, Reports, TeacherTimetable
-│   │   ├── services/            # Axios API client modules (api.js)
+│   │   ├── services/            # API client modules (api.js)
 │   │   ├── App.jsx              # React Router route configurations
 │   │   ├── index.css            # Global CSS & Tailwind imports
 │   │   └── main.jsx             # React DOM entry point
@@ -105,10 +106,10 @@ Basic-attendance/
 │   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
 │   ├── src/
 │   │   ├── config/              # MongoDB Mongoose database connection
-│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, etc.)
+│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, aiController, etc.)
 │   │   ├── middleware/          # JWT auth middleware, RBAC guards, Error handlers
 │   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification)
-│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart)
+│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes)
 │   │   ├── utils/               # JWT generator, Async handler wrappers
 │   │   ├── app.js               # Express application initialization & middleware setup
 │   │   └── server.js            # Node HTTP server launcher
