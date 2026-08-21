@@ -28,6 +28,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 🔔 **Real-Time Notifications & Push Alerts (Phase 12)**: Socket.io WebSockets, Firebase Cloud Messaging (FCM) Web Push, audio chimes, drawer notifications hub, and toast alerts.
 - 📑 **Leave Management (Phase 13)**: Student leave application with document upload (`PDF`, `PNG`, `JPG`, `DOCX`), faculty authorization console (`/teacher/leave`), approve/reject workflows with custom remarks, and real-time status updates with full audit history.
 - 🤖 **AI Features (Phase 14)**: Attendance Prediction Engine ("Can student reach 75%?", max skips allowed, "What-If" simulator slider), Natural Language AI Chatbot ("My attendance?", "Subjects below 75%", "Can I skip tomorrow?", "Attendance report", "Remaining lectures"), and automated Suspicious Attendance & Proxy Detection Console (repeated same device, outside campus scans, duplicate QR tokens, impossible location jumps).
+- 📈 **Executive Analytics Dashboard (Phase 15)**: Comprehensive Admin analytics hub featuring 5 specialized sub-modules: Most Absent Students (< 75% attendance with shortage deficit calculator $X = \lceil 3T - 4P \rceil$), Best Attendance Leaderboard (Gold/Silver/Bronze medals & 100% Perfect badges), Department Ranking (CSE, ECE, ME, CE, IT average comparison & HOD view), Teacher Performance Metrics (classes conducted, on-time marking rate %, student attendance average), and Daily Attendance Inspector (date picker, summary metrics, and hourly time-slot session distribution).
 
 ---
 
@@ -70,6 +71,11 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Attendance Prediction Engine & "What-If" Simulator** | ✅ | ❌ | ❌ |
 | **Natural Language AI Chatbot ("Ask My Attendance")** | ✅ | ✅ | ✅ |
 | **Suspicious Attendance & Proxy Detection Console** | ❌ | ✅ | ✅ |
+| **Most Absent Students & Deficit Calculator** | ❌ | ❌ | ✅ |
+| **Best Attendance Leaderboard & Perfect Badges** | ❌ | ❌ | ✅ |
+| **Department Attendance Ranking & HOD View** | ❌ | ❌ | ✅ |
+| **Teacher Performance & Marking Metrics** | ❌ | ❌ | ✅ |
+| **Daily Attendance Inspector & Time Slot Breakdown** | ❌ | ❌ | ✅ |
 
 ---
 
@@ -81,6 +87,7 @@ Basic-attendance/
 │   ├── src/
 │   │   ├── components/          # Reusable UI Components & Role Modals
 │   │   │   ├── ai/              # Phase 14 Global Floating AI Chat Widget (AiChatWidget.jsx)
+│   │   │   ├── analytics/       # Phase 15 Analytics Sub-Components (MostAbsentStudents, BestAttendance, DepartmentRanking, TeacherPerformance, DailyAttendance)
 │   │   │   ├── charts/          # Modular Recharts & Chart.js components (Pie, Dept, Monthly, Subject, Ranking)
 │   │   │   ├── layout/          # Navbar, Sidebar, Header layout wrappers
 │   │   │   ├── student/         # Student-specific components & widgets
@@ -88,7 +95,7 @@ Basic-attendance/
 │   │   │   └── ui/              # Buttons, Cards, Inputs, Badges, Modals
 │   │   ├── context/             # React AuthContext for state & token management
 │   │   ├── pages/
-│   │   │   ├── admin/           # Admin Dashboard, Departments, Courses, Subjects, Users, SuspiciousDetection
+│   │   │   ├── admin/           # Admin Dashboard (AdminAnalytics.jsx), Departments, Courses, Subjects, Users, SuspiciousDetection
 │   │   │   ├── analytics/       # Phase 11 Visual Analytics Hub (ChartsPage.jsx)
 │   │   │   ├── auth/            # Login, Register, Forgot Password, Reset Password
 │   │   │   ├── landing/         # Public Landing Page
@@ -106,15 +113,16 @@ Basic-attendance/
 │   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
 │   ├── src/
 │   │   ├── config/              # MongoDB Mongoose database connection
-│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, aiController, etc.)
+│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, aiController, analyticsController)
 │   │   ├── middleware/          # JWT auth middleware, RBAC guards, Error handlers
 │   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification)
-│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes)
+│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes, analyticsRoutes)
 │   │   ├── utils/               # JWT generator, Async handler wrappers
 │   │   ├── app.js               # Express application initialization & middleware setup
 │   │   └── server.js            # Node HTTP server launcher
 │   ├── .env.example             # Server environment variables configuration template
 │   └── package.json
+
 │
 ├── PHASES.md                    # Detailed consolidated specification across implementation phases
 └── README.md                    # Master documentation file (This document)
@@ -234,11 +242,17 @@ cd Basic-attendance
 - `PUT /api/timetable/:id` — Update existing timetable class slot (Teacher / Admin)
 - `DELETE /api/timetable/:id` — Remove a timetable class slot (Teacher / Admin)
 
-### 📊 Visual Charts & Analytics (`/api/charts`)
-- `GET /api/charts/analytics` — Fetch aggregated analytics data for Attendance %, Department comparison, Monthly trend, Subject breakdown, and Student rankings
+### 📊 Executive Analytics Dashboard (`/api/analytics`)
+- `GET /api/analytics/dashboard` — Fetch complete analytics dashboard metrics (All 5 sub-modules)
+- `GET /api/analytics/most-absent` — Fetch low attendance defaulter students & shortfall deficit
+- `GET /api/analytics/best-attendance` — Fetch high-achiever student leaderboard & perfect 100% badges
+- `GET /api/analytics/department-ranking` — Fetch comparative department attendance rankings
+- `GET /api/analytics/teacher-performance` — Fetch faculty performance metrics
+- `GET /api/analytics/daily-attendance` — Fetch date-filtered daily attendance session logs & time slots
 
 ### 🏥 System Health (`/api/health`)
 - `GET /api/health` — Check backend status, connected database, and API uptime
+
 
 ---
 
