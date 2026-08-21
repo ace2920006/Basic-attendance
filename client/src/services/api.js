@@ -502,6 +502,38 @@ export const getSuspiciousAttendanceApi = async (params = {}) => {
   return apiRequest(`/ai/suspicious-detection${queryStr}`, { method: 'GET' });
 };
 
+// Phase 15 Analytics Dashboard APIs
+export const getAnalyticsDashboardApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.date) queryParams.append('date', params.date);
+  if (params.department) queryParams.append('department', params.department);
+  if (params.search) queryParams.append('search', params.search);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/analytics/dashboard${queryStr}`, { method: 'GET' });
+};
+
+export const getMostAbsentStudentsApi = async () => {
+  return apiRequest('/analytics/most-absent', { method: 'GET' });
+};
+
+export const getBestAttendanceApi = async () => {
+  return apiRequest('/analytics/best-attendance', { method: 'GET' });
+};
+
+export const getDepartmentRankingApi = async () => {
+  return apiRequest('/analytics/department-ranking', { method: 'GET' });
+};
+
+export const getTeacherPerformanceApi = async () => {
+  return apiRequest('/analytics/teacher-performance', { method: 'GET' });
+};
+
+export const getDailyAttendanceApi = async (date) => {
+  const queryStr = date ? `?date=${encodeURIComponent(date)}` : '';
+  return apiRequest(`/analytics/daily-attendance${queryStr}`, { method: 'GET' });
+};
+
+
 
 
 
