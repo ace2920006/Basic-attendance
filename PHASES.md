@@ -19,7 +19,8 @@ This document provides a single, unified reference for all project implementatio
 12. [Phase 12 – Notifications](#-phase-12--notifications)
 13. [Phase 13 – Leave Management](#-phase-13--leave-management)
 14. [Phase 14 – AI Features](#-phase-14--ai-features)
-15. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+15. [Phase 15 – Analytics Dashboard](#-phase-15--analytics-dashboard)
+16. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -440,6 +441,49 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 15 – Analytics Dashboard
+
+### Core Requirements & Features
+- **Admin Analytics Dashboard Hub**:
+  - Executive administrative dashboard organizing institutional intelligence into 5 specialized interactive modules.
+- **1. Most Absent Students**:
+  - Aggregates defaulter students (< 75% attendance) across departments.
+  - Search filter (name/roll number) and department dropdown filter (CSE, ECE, ME, CE, IT).
+  - Shortage deficit calculator computing exact missing classes needed to reach 75% benchmark ($X = \lceil 3T - 4P \rceil$).
+  - Risk status indicators (`Critical Risk < 65%`, `Shortage Warning 65-74%`) and direct "Issue Warning Alert" trigger.
+- **2. Best Attendance Leaderboard**:
+  - Honor roll highlighting top-performing students (&ge; 90%).
+  - Podium cards for Gold (#1), Silver (#2), and Bronze (#3) rank medals.
+  - Perfect Attendance (100%) badges and direct "Send Honor Certificate / Commendation" alert trigger.
+- **3. Department Ranking**:
+  - Comparative departmental ranking comparing CSE, ECE, ME, CE, IT by average student attendance rate.
+  - Department Head (HOD) details, total enrolled students, total faculty staff, and performance tier badges (`Top Performer >= 88%`, `Solid Performance 80-87%`, `Needs Improvement < 80%`).
+  - Visual departmental progress bars comparing performance against campus benchmarks.
+- **4. Teacher Performance Metrics**:
+  - Faculty instructor performance evaluation directory.
+  - Metrics: Total classes scheduled & conducted, on-time attendance marking rate %, average student attendance in assigned subjects, and faculty performance rating score/tier (`Outstanding`, `Excellent`, `Good`, `Needs Support`).
+- **5. Daily Attendance Inspector**:
+  - Interactive calendar date picker (defaults to current date, selectable past/future dates).
+  - Summary metrics: Today's sessions held, present count, late arrivals, absent count, and daily attendance rate %.
+  - Hourly session distribution graph (Morning, Midday, Afternoon slots) and subject-by-subject daily session table.
+
+### File Mapping
+- Backend Infrastructure:
+  - Controller: `server/src/controllers/analyticsController.js`
+  - Routes: `server/src/routes/analyticsRoutes.js`
+  - Server App Mount: `server/src/app.js` (`/api/analytics`)
+- Frontend Infrastructure:
+  - API Service Client: `client/src/services/api.js` (`getAnalyticsDashboardApi`, `getMostAbsentStudentsApi`, `getBestAttendanceApi`, `getDepartmentRankingApi`, `getTeacherPerformanceApi`, `getDailyAttendanceApi`)
+  - Admin Analytics Dashboard: `client/src/pages/admin/AdminAnalytics.jsx`
+  - Analytics Sub-Components:
+    - `client/src/components/analytics/MostAbsentStudents.jsx`
+    - `client/src/components/analytics/BestAttendance.jsx`
+    - `client/src/components/analytics/DepartmentRanking.jsx`
+    - `client/src/components/analytics/TeacherPerformance.jsx`
+    - `client/src/components/analytics/DailyAttendance.jsx`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -496,6 +540,12 @@ This document provides a single, unified reference for all project implementatio
 | **Attendance Prediction Engine & "What-If" Simulator** | ✅ | ❌ | ❌ | Phase 14 |
 | **Natural Language AI Chatbot ("Ask My Attendance")** | ✅ | ✅ | ✅ | Phase 14 |
 | **Suspicious Attendance & Proxy Detection Console** | ❌ | ✅ | ✅ | Phase 14 |
+| **Most Absent Students & Shortage Deficit Calculator** | ❌ | ❌ | ✅ | Phase 15 |
+| **Best Attendance Leaderboard & Perfect 100% Badges** | ❌ | ❌ | ✅ | Phase 15 |
+| **Academic Department Attendance Ranking & HOD View** | ❌ | ❌ | ✅ | Phase 15 |
+| **Teacher Performance & On-Time Marking Metrics** | ❌ | ❌ | ✅ | Phase 15 |
+| **Daily Attendance Inspector & Time Slot Breakdown** | ❌ | ❌ | ✅ | Phase 15 |
+
 
 ---
 *Last Updated: August 2026*
