@@ -533,6 +533,49 @@ export const getDailyAttendanceApi = async (date) => {
   return apiRequest(`/analytics/daily-attendance${queryStr}`, { method: 'GET' });
 };
 
+// Phase 16 Security & Audit Log APIs
+export const getAuditLogsApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.search) queryParams.append('search', params.search);
+  if (params.status) queryParams.append('status', params.status);
+  if (params.role) queryParams.append('role', params.role);
+  if (params.action) queryParams.append('action', params.action);
+  if (params.resource) queryParams.append('resource', params.resource);
+  if (params.startDate) queryParams.append('startDate', params.startDate);
+  if (params.endDate) queryParams.append('endDate', params.endDate);
+  if (params.page) queryParams.append('page', params.page);
+  if (params.limit) queryParams.append('limit', params.limit);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/audit-logs${queryStr}`, { method: 'GET' });
+};
+
+export const getAuditLogStatsApi = async () => {
+  return apiRequest('/audit-logs/stats', { method: 'GET' });
+};
+
+export const exportAuditLogsApi = async () => {
+  const token = getStoredToken();
+  const response = await fetch(`${API_BASE_URL}/audit-logs/export`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    throw new Error('Failed to export audit logs');
+  }
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `security_audit_logs_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+};
+
+
 
 
 
