@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const asyncHandler = require('../utils/asyncHandler');
 const User = require('../models/User');
 const { generateAccessToken, generateRefreshToken } = require('../utils/generateToken');
+const { recordAuditLog } = require('../middleware/auditMiddleware');
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
@@ -13,6 +14,13 @@ const registerUser = asyncHandler(async (req, res) => {
   const userExists = await User.findOne({ email });
 
   if (userExists) {
+    recordAuditLog({
+      req,
+      action: 'REGISTER_FAILED_EXISTS',
+      resource: 'Auth',
+      status: 'FAILED',
+      details: { email, message: 'Email address already registered' }
+    });
     res.status(400);
     throw new Error('User already exists with this email');
   }
@@ -34,6 +42,15 @@ const registerUser = asyncHandler(async (req, res) => {
 
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
+
+    recordAuditLog({
+      req,
+      user,
+      action: 'USER_REGISTERED',
+      resource: 'Auth',
+      status: 'SUCCESS',
+      details: { role: user.role, email: user.email }
+    });
 
     res.status(201).json({
       success: true,
@@ -79,6 +96,15 @@ const loginUser = asyncHandler(async (req, res) => {
     user.refreshToken = refreshToken;
     await user.save({ validateBeforeSave: false });
 
+    recordAuditLog({
+      req,
+      user,
+      action: 'USER_LOGIN',
+      resource: 'Auth',
+      status: 'SUCCESS',
+      details: { role: user.role, email: user.email }
+    });
+
     res.json({
       success: true,
       message: 'Login successful',
@@ -98,6 +124,13 @@ const loginUser = asyncHandler(async (req, res) => {
       }
     });
   } else {
+    recordAuditLog({
+      req,
+      action: 'LOGIN_FAILED',
+      resource: 'Auth',
+      status: 'FAILED',
+      details: { email, message: 'Invalid credentials provided' }
+    });
     res.status(401);
     throw new Error('Invalid email or password');
   }
