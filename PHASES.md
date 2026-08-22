@@ -20,7 +20,8 @@ This document provides a single, unified reference for all project implementatio
 13. [Phase 13 – Leave Management](#-phase-13--leave-management)
 14. [Phase 14 – AI Features](#-phase-14--ai-features)
 15. [Phase 15 – Analytics Dashboard](#-phase-15--analytics-dashboard)
-16. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+16. [Phase 16 – Security](#-phase-16--security)
+17. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 

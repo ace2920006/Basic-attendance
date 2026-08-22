@@ -46,6 +46,7 @@ import AdminTeachers from './pages/admin/AdminTeachers';
 import AdminStudents from './pages/admin/AdminStudents';
 import AdminReports from './pages/admin/AdminReports';
 import AdminSettings from './pages/admin/AdminSettings';
+import AdminAuditLogs from './pages/admin/AdminAuditLogs';
 
 // Phase 11 Charts
 import ChartsPage from './pages/analytics/ChartsPage';
@@ -127,6 +128,7 @@ export default function App() {
               }
             >
               <Route index element={<AdminAnalytics />} />
+              <Route path="audit-logs" element={<AdminAuditLogs />} />
               <Route path="suspicious" element={<SuspiciousDetection />} />
               <Route path="departments" element={<AdminDepartments />} />
               <Route path="courses" element={<AdminCourses />} />
