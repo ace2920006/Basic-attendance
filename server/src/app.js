@@ -5,6 +5,13 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+// Security Middlewares
+const helmetMiddleware = require('./middleware/helmetMiddleware');
+const { globalLimiter } = require('./middleware/rateLimitMiddleware');
+const xssSanitizer = require('./middleware/xssMiddleware');
+const { autoAuditLogger } = require('./middleware/auditMiddleware');
+
+// Express Routes
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
@@ -20,14 +27,41 @@ const chartRoutes = require('./routes/chartRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const aiRoutes = require('./routes/aiRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const auditRoutes = require('./routes/auditRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
 
-// Security & Parsing Middlewares
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// Configured CORS settings
+const corsOptions = {
+  origin: process.env.CLIENT_URL || [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://127.0.0.1:5173'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: true
+};
+
+// 1. Helmet HTTP Security Headers
+app.use(helmetMiddleware);
+
+// 2. Cross-Origin Resource Sharing
+app.use(cors(corsOptions));
+
+// 3. Body Parsing
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// 4. XSS Payload Sanitization
+app.use(xssSanitizer);
+
+// 5. Global Rate Limiter
+app.use('/api', globalLimiter);
+
+// 6. Automatic State Mutation Audit Logger
+app.use(autoAuditLogger);
 
 // Serve Uploaded Static Files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
@@ -37,6 +71,13 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     system: 'Attendance Management System API',
+    security: {
+      helmet: 'enabled',
+      rateLimiter: 'enabled',
+      xssSanitizer: 'enabled',
+      auditLogger: 'enabled',
+      cors: 'configured'
+    },
     database: 'MongoDB',
     version: '1.0.0',
     timestamp: new Date().toISOString()
@@ -59,8 +100,7 @@ app.use('/api/charts', chartRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/analytics', analyticsRoutes);
-
-
+app.use('/api/audit-logs', auditRoutes);
 
 // Error Handling Middlewares
 app.use(notFound);
