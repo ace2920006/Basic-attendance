@@ -485,12 +485,66 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 16 – Security
+
+### Core Requirements & Features
+- **Helmet HTTP Security Headers**:
+  - Express security middleware setting standard HTTP headers (`Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, `X-XSS-Protection`, `Referrer-Policy`, `Cross-Origin-Resource-Policy`).
+  - Hides `X-Powered-By` header to mitigate technology stack disclosure risks.
+- **Rate Limiting Engine**:
+  - Sliding-window in-memory rate limiter protecting against brute-force attacks and DoS (`rateLimitMiddleware.js`).
+  - Global API rate limiter (200 requests / 15 mins).
+  - Auth rate limiter (15 requests / 15 mins on `/api/auth/login`, `/api/auth/register`, `/api/auth/refresh`).
+  - Sensitive operations rate limiter (10 requests / 15 mins for password resets & QR generation).
+- **Hardened JWT Authentication**:
+  - JWT token issuance, verification, and explicit expiration handling (`authMiddleware.js`, `generateToken.js`).
+  - Bearer token header scheme validation (`Authorization: Bearer <token>`).
+  - Explicit error handling for expired (`TokenExpiredError`) and tampered (`JsonWebTokenError`) session tokens.
+- **Password Hashing & Strength Governance**:
+  - Salt generation (`bcrypt.genSalt(10)`) and hashing for user passwords.
+  - Password strength validation enforcing minimum 6-character length and complexity rules.
+- **Role-Based Access Control (RBAC)**:
+  - Granular authorization middleware (`protect`, `authorize(...roles)`) shielding all sensitive administrative, teacher, and student API routes.
+  - Generates HTTP 403 Forbidden responses and security warning audit logs on role access violations.
+- **Input Validation Suite**:
+  - Sanitizes and validates request payload parameters (`validateRegister`, `validateLogin`, `validatePasswordChange`, `validateParamId`).
+  - Returns structured HTTP 400 Bad Request error schemas with field-level guidance.
+- **XSS Protection Middleware**:
+  - Recursive request payload sanitizer (`xssMiddleware.js`) stripping and escaping malicious script tags (`<script>`), inline handlers (`onload`, `onerror`), and `javascript:` URIs from `req.body`, `req.query`, and `req.params`.
+- **Configurable CORS Governance**:
+  - Cross-Origin Resource Sharing control with configurable origin whitelists (`CLIENT_URL` / localhost development ports), allowed headers, credentials handling, and preflight OPTIONS request resolution.
+- **Security Audit Logging System & Admin Console**:
+  - **Audit Mongoose Schema (`AuditLog.js`)**: Tracks user ID, role, name, email, action type, resource module, HTTP method, endpoint, IP address, User-Agent, status (`SUCCESS`, `FAILED`, `WARNING`), and metadata details.
+  - **Audit Helper (`auditMiddleware.js`)**: Asynchronous, non-blocking audit event logger.
+  - **Audit Controller & Express Router (`auditController.js`, `auditRoutes.js`)**: Endpoints for paginated audit log queries (`GET /api/audit-logs`), security stats (`GET /api/audit-logs/stats`), and CSV log export (`GET /api/audit-logs/export`).
+  - **Admin Security Console (`AdminAuditLogs.jsx`)**: Glassmorphism UI displaying real-time security metric cards, filterable event table (Search, Status, Role, Date Range), detail inspector modal, and CSV export.
+
+### File Mapping
+- Backend Infrastructure:
+  - Middlewares:
+    - `server/src/middleware/helmetMiddleware.js`
+    - `server/src/middleware/rateLimitMiddleware.js`
+    - `server/src/middleware/xssMiddleware.js`
+    - `server/src/middleware/validationMiddleware.js`
+    - `server/src/middleware/auditMiddleware.js`
+    - `server/src/middleware/authMiddleware.js`
+  - Model: `server/src/models/AuditLog.js`
+  - Controller: `server/src/controllers/auditController.js`
+  - Routes: `server/src/routes/auditRoutes.js`
+  - App Integration: `server/src/app.js`
+- Frontend Infrastructure:
+  - Security Console: `client/src/pages/admin/AdminAuditLogs.jsx`
+  - API Client Service: `client/src/services/api.js` (`getAuditLogsApi`, `getAuditLogStatsApi`, `exportAuditLogsApi`)
+  - Navigation & Routing: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
 | :--- | :---: | :---: | :---: | :---: |
 | **Authentication & Profile Reset** | ✅ | ✅ | ✅ | Phase 1 |
-| **User Role Access Control (RBAC)** | ✅ | ✅ | ✅ | Phase 1 |
+| **User Role Access Control (RBAC)** | ✅ | ✅ | ✅ | Phase 1 & 16 |
 | **Database Schemas & Models** | — | — | — | Phase 2 |
 | **View Personal Dashboard & Graph** | ✅ | ❌ | ❌ | Phase 3 & 6 |
 | **View Today's Classes Schedule** | ✅ | ✅ | ❌ | Phase 3, 4 & 9 |
@@ -546,11 +600,18 @@ This document provides a single, unified reference for all project implementatio
 | **Academic Department Attendance Ranking & HOD View** | ❌ | ❌ | ✅ | Phase 15 |
 | **Teacher Performance & On-Time Marking Metrics** | ❌ | ❌ | ✅ | Phase 15 |
 | **Daily Attendance Inspector & Time Slot Breakdown** | ❌ | ❌ | ✅ | Phase 15 |
-
+| **Helmet HTTP Security Headers** | ✅ | ✅ | ✅ | Phase 16 |
+| **Sliding-Window Rate Limiting Protection** | ✅ | ✅ | ✅ | Phase 16 |
+| **Hardened JWT Verification & Expiration Handling** | ✅ | ✅ | ✅ | Phase 16 |
+| **Password Hashing & Strength Governance** | ✅ | ✅ | ✅ | Phase 16 |
+| **Granular Multi-Role RBAC Authorization** | ✅ | ✅ | ✅ | Phase 16 |
+| **Payload Input Validation & Schema Sanitization** | ✅ | ✅ | ✅ | Phase 16 |
+| **XSS Payload Injection Protection** | ✅ | ✅ | ✅ | Phase 16 |
+| **Configurable CORS Domain Management** | ✅ | ✅ | ✅ | Phase 16 |
+| **Security Audit Logging & Admin Audit Console** | ❌ | ❌ | ✅ | Phase 16 |
 
 ---
 *Last Updated: August 2026*
-
 
 
 
