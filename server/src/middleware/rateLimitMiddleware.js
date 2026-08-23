@@ -11,7 +11,8 @@ class MemoryRateLimiter {
     this.hits = new Map();
 
     // Clean up expired buckets periodically (every 5 minutes)
-    setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    const cleanupInterval = setInterval(() => this.cleanup(), 5 * 60 * 1000);
+    if (cleanupInterval.unref) cleanupInterval.unref();
   }
 
   cleanup() {
@@ -25,6 +26,9 @@ class MemoryRateLimiter {
 
   middleware() {
     return (req, res, next) => {
+      if (process.env.NODE_ENV === 'test') {
+        return next();
+      }
       const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
       const now = Date.now();
 
