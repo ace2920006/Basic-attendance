@@ -30,6 +30,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 🤖 **AI Features (Phase 14)**: Attendance Prediction Engine ("Can student reach 75%?", max skips allowed, "What-If" simulator slider), Natural Language AI Chatbot ("My attendance?", "Subjects below 75%", "Can I skip tomorrow?", "Attendance report", "Remaining lectures"), and automated Suspicious Attendance & Proxy Detection Console (repeated same device, outside campus scans, duplicate QR tokens, impossible location jumps).
 - 📈 **Executive Analytics Dashboard (Phase 15)**: Comprehensive Admin analytics hub featuring 5 specialized sub-modules: Most Absent Students (< 75% attendance with shortage deficit calculator $X = \lceil 3T - 4P \rceil$), Best Attendance Leaderboard (Gold/Silver/Bronze medals & 100% Perfect badges), Department Ranking (CSE, ECE, ME, CE, IT average comparison & HOD view), Teacher Performance Metrics (classes conducted, on-time marking rate %, student attendance average), and Daily Attendance Inspector (date picker, summary metrics, and hourly time-slot session distribution).
 - 🛡️ **Enterprise Security & Audit Logging (Phase 16)**: Multi-layered security stack including **Helmet HTTP Security Headers** (`Content-Security-Policy`, `X-Frame-Options`, `HSTS`, `X-Powered-By` suppression), **Sliding-Window Rate Limiting** (Global API 200 req/15 min, Auth endpoints 15 req/15 min, Sensitive operations 10 req/15 min), **XSS Payload Sanitizer** (recursive body/query/param HTML tag escaping), **Payload Input Validation** (registration, login, password policy, ObjectId checks), **Hardened JWT & RBAC** (multi-role guard rails and explicit expiration handling), **CORS Governance**, and **Security Audit Logging System** with interactive Admin Audit Console (`/admin/audit-logs`), live metric cards, detail inspector modal, and CSV audit log export.
+- 🧪 **Automated Testing Suite (Phase 17)**: Comprehensive unit and integration test coverage (38/38 passing tests) covering 7 core modules (**Authentication**, **Attendance**, **Dynamic QR**, **GPS Geofencing**, **Reports Generation**, **Charts Analytics**, and **Notifications Hub**) powered by **Jest**, **Supertest**, and **mongodb-memory-server**.
 
 ---
 
@@ -85,6 +86,13 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **XSS Payload Injection Sanitization** | ✅ | ✅ | ✅ |
 | **Configurable CORS Domain Management** | ✅ | ✅ | ✅ |
 | **Security Audit Logging & Admin Audit Console** | ❌ | ❌ | ✅ |
+| **Authentication Module Automated Unit & Integration Tests** | ✅ | ✅ | ✅ |
+| **Attendance & 75% Defaulter Threshold Tests** | ✅ | ✅ | ✅ |
+| **30s Dynamic QR Token & Anti-Proxy Guard Tests** | ✅ | ✅ | ✅ |
+| **GPS Campus Geofencing (500m) Boundary Tests** | ✅ | ✅ | ✅ |
+| **Daily, Weekly, Monthly, Semester Report Generator Tests** | ✅ | ✅ | ✅ |
+| **Charts Analytics & Trend Datasets Tests** | ✅ | ✅ | ✅ |
+| **Notification Engine & FCM Web Push Tests** | ✅ | ✅ | ✅ |
 
 ---
 
@@ -119,6 +127,15 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                      # Backend REST API (Node.js + Express + MongoDB)
+│   ├── tests/                   # Phase 17 Automated Unit & Integration Test Suites
+│   │   ├── setup.js             # Global MongoDB in-memory / local test setup & cleanup
+│   │   ├── auth.test.js         # Authentication, Login, Register, JWT, RBAC tests
+│   │   ├── attendance.test.js   # Single/Bulk attendance, stats, defaulter threshold tests
+│   │   ├── qr.test.js           # 30s dynamic QR verification & anti-proxy guard tests
+│   │   ├── gps.test.js          # Haversine formula & campus 500m geofence tests
+│   │   ├── reports.test.js      # Daily/Weekly/Monthly/Semester report generator tests
+│   │   ├── charts.test.js       # Chart analytics datasets & student ranking tests
+│   │   └── notifications.test.js # Notification hub & FCM web push tests
 │   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
 │   ├── src/
 │   │   ├── config/              # MongoDB Mongoose database connection
@@ -129,6 +146,7 @@ Basic-attendance/
 │   │   ├── utils/               # JWT generator, Async handler wrappers
 │   │   ├── app.js               # Express application initialization & security stack setup
 │   │   └── server.js            # Node HTTP server launcher
+│   ├── jest.config.js           # Jest runner configuration
 │   ├── .env.example             # Server environment variables configuration template
 │   └── package.json
 
@@ -207,6 +225,28 @@ cd Basic-attendance
 
 ---
 
+### 4. Running Automated Tests (`server`)
+
+Run the complete Phase 17 backend test suite (38 unit and integration tests across 7 test suites):
+
+```bash
+cd server
+npm test
+```
+
+To run a specific module test suite:
+```bash
+npx jest tests/auth.test.js
+npx jest tests/attendance.test.js
+npx jest tests/qr.test.js
+npx jest tests/gps.test.js
+npx jest tests/reports.test.js
+npx jest tests/charts.test.js
+npx jest tests/notifications.test.js
+```
+
+---
+
 ## 📡 API Endpoint Reference
 
 ### 🔐 Authentication (`/api/auth`)
@@ -278,6 +318,7 @@ cd Basic-attendance
 - **Backend Framework**: Node.js, Express.js
 - **Database Layer**: MongoDB, Mongoose ODM
 - **Authentication**: JSON Web Tokens (JWT), bcryptjs password hashing
+- **Testing Suite**: Jest, Supertest, mongodb-memory-server
 - **File System**: Multer static file upload handler
 
 ---
