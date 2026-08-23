@@ -8,9 +8,23 @@ process.env.JWT_SECRET = 'test_jwt_super_secret_key_2026';
 process.env.JWT_REFRESH_SECRET = 'test_jwt_refresh_secret_key_2026';
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
-  const uri = mongoServer.getUri();
-  await mongoose.connect(uri);
+  try {
+    // Try connecting to local MongoDB server if running
+    await mongoose.connect('mongodb://127.0.0.1:27017/attendance_test_db', {
+      serverSelectionTimeoutMS: 2000
+    });
+    console.log('🍃 Connected to local MongoDB test database');
+  } catch (err) {
+    // Fallback to MongoMemoryServer
+    console.log('⚡ Local MongoDB not found, starting MongoMemoryServer...');
+    mongoServer = await MongoMemoryServer.create({
+      binary: {
+        version: '6.0.6'
+      }
+    });
+    const uri = mongoServer.getUri();
+    await mongoose.connect(uri);
+  }
 });
 
 afterEach(async () => {

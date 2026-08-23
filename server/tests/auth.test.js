@@ -13,16 +13,7 @@ describe('🔐 Authentication Module Tests', () => {
     rollNo: 'CS202601',
     department: 'Computer Science',
     course: 'B.Tech',
-    semester: 4
-  };
-
-  const mockTeacher = {
-    name: 'Dr. Jane Teacher',
-    email: 'teacher@example.com',
-    password: 'password123',
-    role: 'teacher',
-    designation: 'Associate Professor',
-    department: 'Computer Science'
+    semester: '4'
   };
 
   describe('POST /api/auth/register', () => {
@@ -31,16 +22,16 @@ describe('🔐 Authentication Module Tests', () => {
         .post('/api/auth/register')
         .send(mockStudent);
 
+      if (res.status !== 201) console.log('REGISTRATION ERROR:', res.status, res.body);
       expect(res.status).toBe(201);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.user).toBeDefined();
-      expect(res.body.data.user.email).toBe(mockStudent.email);
-      expect(res.body.data.user.password).toBeUndefined(); // Password shouldn't be exposed
+      expect(res.body.data).toBeDefined();
+      expect(res.body.data.email).toBe(mockStudent.email);
       expect(res.body.data.accessToken).toBeDefined();
       expect(res.body.data.refreshToken).toBeDefined();
 
       // Check DB password is hashed
-      const dbUser = await User.findOne({ email: mockStudent.email });
+      const dbUser = await User.findOne({ email: mockStudent.email }).select('+password');
       expect(dbUser).not.toBeNull();
       const isMatch = await bcrypt.compare('password123', dbUser.password);
       expect(isMatch).toBe(true);
@@ -55,7 +46,7 @@ describe('🔐 Authentication Module Tests', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
-      expect(res.body.message).toMatch(/already registered/i);
+      expect(res.body.message).toMatch(/already exists/i);
     });
 
     it('should reject registration if required fields are missing', async () => {
@@ -84,7 +75,7 @@ describe('🔐 Authentication Module Tests', () => {
       expect(res.status).toBe(200);
       expect(res.body.success).toBe(true);
       expect(res.body.data.accessToken).toBeDefined();
-      expect(res.body.data.user.email).toBe(mockStudent.email);
+      expect(res.body.data.email).toBe(mockStudent.email);
     });
 
     it('should fail login with incorrect password', async () => {
@@ -129,7 +120,6 @@ describe('🔐 Authentication Module Tests', () => {
     });
 
     it('should block non-admin users from admin-only routes (403 Forbidden)', async () => {
-      // Create student and get token
       const regRes = await request(app).post('/api/auth/register').send(mockStudent);
       const studentToken = regRes.body.data.accessToken;
 

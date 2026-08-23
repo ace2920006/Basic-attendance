@@ -21,7 +21,8 @@ This document provides a single, unified reference for all project implementatio
 14. [Phase 14 – AI Features](#-phase-14--ai-features)
 15. [Phase 15 – Analytics Dashboard](#-phase-15--analytics-dashboard)
 16. [Phase 16 – Security](#-phase-16--security)
-17. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+17. [Phase 17 – Testing](#-phase-17--testing)
+18. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -539,6 +540,42 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 17 – Testing
+
+### Core Requirements & Features
+- **Automated Testing Suite**:
+  - Comprehensive unit and integration test suites for backend APIs built using **Jest**, **Supertest**, and **mongodb-memory-server**.
+- **1. Authentication Tests (`tests/auth.test.js`)**:
+  - User registration (`student`, `teacher`, `admin`), password hashing with `bcrypt`, user login validation, JWT access & refresh token generation, and multi-role RBAC authorization guard tests.
+- **2. Attendance Tests (`tests/attendance.test.js`)**:
+  - Single & bulk attendance marking, attendance stats calculations, 75% defaulter threshold math, date/subject filtering, record updates, and record deletion.
+- **3. QR Code Tests (`tests/qr.test.js`)**:
+  - 30-second expiring dynamic QR JWT token signature validation, rejection of expired tokens, attendance marking via QR, and anti-proxy device fingerprint / browser ID duplicate detection.
+- **4. GPS Geofencing Tests (`tests/gps.test.js`)**:
+  - Haversine distance formula calculations (`getDistanceInMeters`), campus 500m radius geofence boundary enforcement, and outside campus location rejection.
+- **5. Reports Tests (`tests/reports.test.js`)**:
+  - Date range bound calculations (`getReportDateRange`) for daily, weekly, monthly, and semester reports, query filtering by department/course/semester/student, and student role data isolation.
+- **6. Charts Tests (`tests/charts.test.js`)**:
+  - Overall attendance ratio breakdown, departmental comparison stats, 6-month monthly trend dataset structure, subject-wise attendance stats, and student ranking leaderboard datasets.
+- **7. Notifications Tests (`tests/notifications.test.js`)**:
+  - User notification query & unread badge counters, marking individual/all notifications as read, deletion, FCM web push token registration, and broadcasting campus announcements.
+
+### File Mapping
+- Test Environment & Configuration:
+  - `server/jest.config.js`
+  - `server/tests/setup.js`
+  - `server/package.json` (`npm test`)
+- Module Test Suites:
+  - `server/tests/auth.test.js`
+  - `server/tests/attendance.test.js`
+  - `server/tests/qr.test.js`
+  - `server/tests/gps.test.js`
+  - `server/tests/reports.test.js`
+  - `server/tests/charts.test.js`
+  - `server/tests/notifications.test.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -609,6 +646,13 @@ This document provides a single, unified reference for all project implementatio
 | **XSS Payload Injection Protection** | ✅ | ✅ | ✅ | Phase 16 |
 | **Configurable CORS Domain Management** | ✅ | ✅ | ✅ | Phase 16 |
 | **Security Audit Logging & Admin Audit Console** | ❌ | ❌ | ✅ | Phase 16 |
+| **Authentication Module Automated Unit & Integration Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **Attendance & Defaulter Threshold Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **30s Dynamic QR Token & Anti-Proxy Guard Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **GPS Campus Geofencing (500m) Boundary Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **Daily/Weekly/Monthly/Semester Report Generator Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **Charts Analytics & Trend Datasets Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **Notification Engine & FCM Web Push Tests** | ✅ | ✅ | ✅ | Phase 17 |
 
 ---
 *Last Updated: August 2026*
