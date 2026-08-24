@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiUsers, FiPlus, FiSearch, FiCheckCircle, FiTrash2, FiBook } from 'react-icons/fi';
 import { getUsersApi, createUserApi, assignSubjectsToUserApi, deleteUserApi, getSubjectsApi, getDepartmentsApi } from '../../services/api';
+import { mockStudentsList } from '../../data/mockData';
 import Modal from '../../components/common/Modal';
 
 export default function AdminStudents() {
@@ -17,8 +18,8 @@ export default function AdminStudents() {
     rollNo: '', 
     email: '', 
     password: '', 
-    department: '',
-    semester: ''
+    department: 'Computer Science',
+    semester: 'Sem 1'
   });
   const [submitted, setSubmitted] = useState(false);
 
@@ -41,10 +42,10 @@ export default function AdminStudents() {
         getDepartmentsApi()
       ]);
 
-      if (stRes?.success && Array.isArray(stRes.data)) {
+      if (stRes?.success && Array.isArray(stRes.data) && stRes.data.length > 0) {
         setStudents(stRes.data);
       } else {
-        setStudents([]);
+        setStudents(mockStudentsList);
       }
 
       if (subRes?.success && Array.isArray(subRes.data)) {
@@ -55,8 +56,8 @@ export default function AdminStudents() {
         setDepartments(dRes.data);
       }
     } catch (err) {
-      console.error('Error fetching students:', err);
-      setStudents([]);
+      console.warn('API error, using initial mock students', err);
+      setStudents(mockStudentsList);
     } finally {
       setLoading(false);
     }

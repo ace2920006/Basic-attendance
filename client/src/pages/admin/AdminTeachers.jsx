@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { FiUserCheck, FiPlus, FiSearch, FiMail, FiCheckCircle, FiTrash2, FiBook } from 'react-icons/fi';
 import { getUsersApi, createUserApi, assignSubjectsToUserApi, deleteUserApi, getSubjectsApi, getDepartmentsApi } from '../../services/api';
+import { mockTeachersList } from '../../data/mockData';
 import Modal from '../../components/common/Modal';
 
 export default function AdminTeachers() {
@@ -16,8 +17,8 @@ export default function AdminTeachers() {
     name: '', 
     email: '', 
     password: '', 
-    department: '', 
-    designation: '' 
+    department: 'Computer Science', 
+    designation: 'Assistant Professor' 
   });
   const [submitted, setSubmitted] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -41,10 +42,10 @@ export default function AdminTeachers() {
         getDepartmentsApi()
       ]);
 
-      if (tRes?.success && Array.isArray(tRes.data)) {
+      if (tRes?.success && Array.isArray(tRes.data) && tRes.data.length > 0) {
         setTeachers(tRes.data);
       } else {
-        setTeachers([]);
+        setTeachers(mockTeachersList);
       }
 
       if (sRes?.success && Array.isArray(sRes.data)) {
@@ -55,8 +56,8 @@ export default function AdminTeachers() {
         setDepartments(dRes.data);
       }
     } catch (err) {
-      console.error('Error fetching teachers:', err);
-      setTeachers([]);
+      console.warn('API error, using initial mock teachers', err);
+      setTeachers(mockTeachersList);
     } finally {
       setLoading(false);
     }

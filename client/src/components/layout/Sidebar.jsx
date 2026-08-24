@@ -113,17 +113,11 @@ export default function Sidebar({ role, user: userProp }) {
       {/* User Info Quick Badge */}
       <div className="p-4 border-b border-slate-800/60 bg-slate-950/40">
         <div className="flex items-center gap-3">
-          {activeUser?.avatar ? (
-            <img 
-              src={activeUser.avatar} 
-              alt={activeUser?.name || 'User'} 
-              className="w-10 h-10 rounded-xl object-cover border border-indigo-500/30"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-xl bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 flex items-center justify-center font-bold text-sm">
-              {activeUser?.name ? activeUser.name.charAt(0).toUpperCase() : <FiUser />}
-            </div>
-          )}
+          <img 
+            src={activeUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'} 
+            alt={activeUser?.name || 'User'} 
+            className="w-10 h-10 rounded-xl object-cover border border-indigo-500/30"
+          />
           <div className="overflow-hidden">
             <div className="text-sm font-semibold text-white truncate">{activeUser?.name || 'User'}</div>
             <div className="text-[11px] text-slate-400 truncate">{activeUser?.email || ''}</div>

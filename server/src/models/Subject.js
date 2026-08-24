@@ -16,7 +16,7 @@ const subjectSchema = new mongoose.Schema(
     },
     department: {
       type: String,
-      default: ''
+      default: 'Computer Science'
     },
     course: {
       type: String,

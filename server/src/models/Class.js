@@ -15,7 +15,7 @@ const classSchema = new mongoose.Schema(
     },
     section: {
       type: String,
-      default: '',
+      default: 'Sec A',
       trim: true
     },
     room: {
@@ -30,7 +30,7 @@ const classSchema = new mongoose.Schema(
     },
     department: {
       type: String,
-      default: ''
+      default: 'Computer Science'
     },
     instructor: {
       type: String,
