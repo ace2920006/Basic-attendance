@@ -139,7 +139,7 @@ const startQRAttendance = asyncHandler(async (req, res) => {
       subject: classItem.subject,
       nonce
     },
-    process.env.JWT_SECRET || 'fallback_secret',
+    process.env.JWT_SECRET,
     { expiresIn: '30s' }
   );
 
@@ -183,7 +183,7 @@ const getQRSessionToken = asyncHandler(async (req, res) => {
         subject: classItem.subject,
         nonce
       },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '30s' }
     );
     classItem.qrExpiresAt = new Date(Date.now() + 30000);

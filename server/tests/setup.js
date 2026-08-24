@@ -4,13 +4,14 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 let mongoServer;
 
 process.env.NODE_ENV = 'test';
+process.env.MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/attendance_test_db';
 process.env.JWT_SECRET = 'test_jwt_super_secret_key_2026';
 process.env.JWT_REFRESH_SECRET = 'test_jwt_refresh_secret_key_2026';
 
 beforeAll(async () => {
   try {
     // Try connecting to local MongoDB server if running
-    await mongoose.connect('mongodb://127.0.0.1:27017/attendance_test_db', {
+    await mongoose.connect(process.env.MONGODB_URI, {
       serverSelectionTimeoutMS: 2000
     });
     console.log('🍃 Connected to local MongoDB test database');
@@ -23,6 +24,7 @@ beforeAll(async () => {
       }
     });
     const uri = mongoServer.getUri();
+    process.env.MONGODB_URI = uri;
     await mongoose.connect(uri);
   }
 });

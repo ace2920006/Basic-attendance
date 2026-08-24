@@ -1,9 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const dotenv = require('dotenv');
-
-dotenv.config();
+const envConfig = require('./config/env');
 
 // Security Middlewares
 const helmetMiddleware = require('./middleware/helmetMiddleware');

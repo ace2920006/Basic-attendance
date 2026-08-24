@@ -56,11 +56,11 @@ describe('📱 QR Code & Anti-Proxy Test Suite', () => {
         timestamp: Date.now()
       };
 
-      const qrToken = jwt.sign(payload, process.env.JWT_SECRET || 'test_jwt_super_secret_key_2026', {
+      const qrToken = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: '30s'
       });
 
-      const decoded = jwt.verify(qrToken, process.env.JWT_SECRET || 'test_jwt_super_secret_key_2026');
+      const decoded = jwt.verify(qrToken, process.env.JWT_SECRET);
       expect(decoded.classId).toBe(mockClass._id.toString());
       expect(decoded.subjectCode).toBe('CS302');
     });
@@ -73,7 +73,7 @@ describe('📱 QR Code & Anti-Proxy Test Suite', () => {
         timestamp: Date.now() - 40000
       };
 
-      const expiredQrToken = jwt.sign(payload, process.env.JWT_SECRET || 'test_jwt_super_secret_key_2026', {
+      const expiredQrToken = jwt.sign(payload, process.env.JWT_SECRET, {
         expiresIn: '-1s'
       });
 
@@ -102,7 +102,7 @@ describe('📱 QR Code & Anti-Proxy Test Suite', () => {
           subjectCode: mockClass.subjectCode,
           timestamp: Date.now()
         },
-        process.env.JWT_SECRET || 'test_jwt_super_secret_key_2026',
+        process.env.JWT_SECRET,
         { expiresIn: '30s' }
       );
 
@@ -155,7 +155,7 @@ describe('📱 QR Code & Anti-Proxy Test Suite', () => {
           subjectCode: mockClass.subjectCode,
           timestamp: Date.now()
         },
-        process.env.JWT_SECRET || 'test_jwt_super_secret_key_2026',
+        process.env.JWT_SECRET,
         { expiresIn: '30s' }
       );
 

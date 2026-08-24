@@ -1,12 +1,10 @@
+const envConfig = require('./config/env');
 const http = require('http');
 const app = require('./app');
 const connectDB = require('./config/db');
-const dotenv = require('dotenv');
 const { initSocket } = require('./config/socket');
 
-dotenv.config();
-
-const PORT = process.env.PORT || 5000;
+const PORT = envConfig.PORT;
 const server = http.createServer(app);
 
 // Initialize Socket.io Server

@@ -74,7 +74,7 @@ describe('📍 GPS Geofencing Test Suite', () => {
           subjectCode: mockClass.subjectCode,
           timestamp: Date.now()
         },
-        process.env.JWT_SECRET || 'test_jwt_super_secret_key_2026',
+        process.env.JWT_SECRET,
         { expiresIn: '30s' }
       );
 
@@ -102,7 +102,7 @@ describe('📍 GPS Geofencing Test Suite', () => {
           subjectCode: mockClass.subjectCode,
           timestamp: Date.now()
         },
-        process.env.JWT_SECRET || 'test_jwt_super_secret_key_2026',
+        process.env.JWT_SECRET,
         { expiresIn: '30s' }
       );
 

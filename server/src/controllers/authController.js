@@ -169,7 +169,7 @@ const refreshToken = asyncHandler(async (req, res) => {
   try {
     decoded = jwt.verify(
       reqRefreshToken,
-      process.env.JWT_REFRESH_SECRET || 'attendance_jwt_refresh_secret_key_2026_spec'
+      process.env.JWT_REFRESH_SECRET
     );
   } catch (err) {
     res.status(401);

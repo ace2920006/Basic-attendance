@@ -309,7 +309,7 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
   // 1. Verify 30-second expiring QR token signature
   let decoded;
   try {
-    decoded = jwt.verify(qrToken, process.env.JWT_SECRET || 'fallback_secret');
+    decoded = jwt.verify(qrToken, process.env.JWT_SECRET);
   } catch (err) {
     res.status(400);
     throw new Error('Expired or invalid QR code (30s timeout). Please ask instructor for fresh QR.');
