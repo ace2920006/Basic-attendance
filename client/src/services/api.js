@@ -575,6 +575,104 @@ export const exportAuditLogsApi = async () => {
   window.URL.revokeObjectURL(url);
 };
 
+// Phase 18 Academic Year & Semester Engine APIs
+export const getAcademicHierarchyApi = async () => {
+  return apiRequest('/academic/hierarchy', { method: 'GET' });
+};
+
+export const getAcademicYearsApi = async () => {
+  return apiRequest('/academic/years', { method: 'GET' });
+};
+
+export const createAcademicYearApi = async (data) => {
+  return apiRequest('/academic/years', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const updateAcademicYearApi = async (id, data) => {
+  return apiRequest(`/academic/years/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
+
+export const deleteAcademicYearApi = async (id) => {
+  return apiRequest(`/academic/years/${id}`, { method: 'DELETE' });
+};
+
+export const setCurrentAcademicYearApi = async (id) => {
+  return apiRequest(`/academic/years/${id}/set-current`, { method: 'PATCH' });
+};
+
+export const getSemestersApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.academicYear) queryParams.append('academicYear', params.academicYear);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/academic/semesters${queryStr}`, { method: 'GET' });
+};
+
+export const createSemesterApi = async (data) => {
+  return apiRequest('/academic/semesters', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const updateSemesterApi = async (id, data) => {
+  return apiRequest(`/academic/semesters/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
+
+export const deleteSemesterApi = async (id) => {
+  return apiRequest(`/academic/semesters/${id}`, { method: 'DELETE' });
+};
+
+export const getDivisionsApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.academicYear) queryParams.append('academicYear', params.academicYear);
+  if (params.semester) queryParams.append('semester', params.semester);
+  if (params.department) queryParams.append('department', params.department);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/academic/divisions${queryStr}`, { method: 'GET' });
+};
+
+export const createDivisionApi = async (data) => {
+  return apiRequest('/academic/divisions', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const deleteDivisionApi = async (id) => {
+  return apiRequest(`/academic/divisions/${id}`, { method: 'DELETE' });
+};
+
+export const promoteStudentsApi = async (data) => {
+  return apiRequest('/academic/promote', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const enrollStudentsApi = async (data) => {
+  return apiRequest('/academic/enroll', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const allocateSubjectApi = async (data) => {
+  return apiRequest('/academic/allocations', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+
 
 
 
