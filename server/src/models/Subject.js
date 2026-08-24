@@ -22,6 +22,22 @@ const subjectSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
+    academicYearRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'AcademicYear'
+    },
+    semesterRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Semester'
+    },
+    divisionRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Division'
+    },
+    divisionName: {
+      type: String,
+      default: ''
+    },
     instructor: {
       type: String,
       default: ''

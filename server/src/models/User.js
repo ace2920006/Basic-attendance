@@ -54,6 +54,22 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
+    academicYearId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'AcademicYear'
+    },
+    semesterId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Semester'
+    },
+    divisionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Division'
+    },
+    divisionName: {
+      type: String,
+      default: ''
+    },
     assignedSubjects: [
       {
         type: mongoose.Schema.Types.ObjectId,
