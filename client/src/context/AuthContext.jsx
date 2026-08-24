@@ -49,75 +49,34 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener('auth_session_expired', handleSessionExpired);
   }, []);
 
-  const login = async (email, password, fallbackRole = 'student') => {
-    try {
-      const response = await loginApi(email, password);
-      if (response?.success && response?.data) {
-        const userData = response.data;
-        const accessToken = userData.accessToken || userData.token;
-        const refreshToken = userData.refreshToken;
+  const login = async (email, password) => {
+    const response = await loginApi(email, password);
+    if (response?.success && response?.data) {
+      const userData = response.data;
+      const accessToken = userData.accessToken || userData.token;
+      const refreshToken = userData.refreshToken;
 
-        setUser(userData);
-        setToken(accessToken);
-        setAuthSession(accessToken, refreshToken, userData);
-        return { success: true, user: userData };
-      }
-      throw new Error(response?.message || 'Login failed');
-    } catch (error) {
-      // Demo/Fallback mode if backend is not running live
-      console.warn('Backend unavailable, operating in client demo mode:', error);
-      const demoUser = {
-        _id: 'demo_' + Date.now(),
-        name: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-        email,
-        role: fallbackRole,
-        department: 'Computer Science & Engineering',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'
-      };
-      const demoToken = 'demo_access_token_' + Date.now();
-      const demoRefreshToken = 'demo_refresh_token_' + Date.now();
-
-      setUser(demoUser);
-      setToken(demoToken);
-      setAuthSession(demoToken, demoRefreshToken, demoUser);
-      return { success: true, user: demoUser, isDemo: true };
+      setUser(userData);
+      setToken(accessToken);
+      setAuthSession(accessToken, refreshToken, userData);
+      return { success: true, user: userData };
     }
+    throw new Error(response?.message || 'Login failed');
   };
 
   const register = async (formData) => {
-    try {
-      const response = await registerApi(formData);
-      if (response?.success && response?.data) {
-        const userData = response.data;
-        const accessToken = userData.accessToken || userData.token;
-        const refreshToken = userData.refreshToken;
+    const response = await registerApi(formData);
+    if (response?.success && response?.data) {
+      const userData = response.data;
+      const accessToken = userData.accessToken || userData.token;
+      const refreshToken = userData.refreshToken;
 
-        setUser(userData);
-        setToken(accessToken);
-        setAuthSession(accessToken, refreshToken, userData);
-        return { success: true, user: userData };
-      }
-      throw new Error(response?.message || 'Registration failed');
-    } catch (error) {
-      // Demo/Fallback mode if backend is offline
-      console.warn('Backend unavailable, using client demo registration:', error);
-      const demoUser = {
-        _id: 'demo_' + Date.now(),
-        name: formData.name,
-        email: formData.email,
-        role: formData.role || 'student',
-        rollNo: formData.idNumber || formData.rollNo || '',
-        department: formData.department || 'Computer Science & Engineering',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'
-      };
-      const demoToken = 'demo_access_token_' + Date.now();
-      const demoRefreshToken = 'demo_refresh_token_' + Date.now();
-
-      setUser(demoUser);
-      setToken(demoToken);
-      setAuthSession(demoToken, demoRefreshToken, demoUser);
-      return { success: true, user: demoUser, isDemo: true };
+      setUser(userData);
+      setToken(accessToken);
+      setAuthSession(accessToken, refreshToken, userData);
+      return { success: true, user: userData };
     }
+    throw new Error(response?.message || 'Registration failed');
   };
 
   const logout = async () => {

@@ -243,11 +243,17 @@ export default function Header({ title, subtitle, user: userProp }) {
 
         {/* User Mini Avatar */}
         <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
-          <img
-            src={activeUser?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=250'}
-            alt={activeUser?.name || 'User'}
-            className="w-8 h-8 rounded-lg object-cover border border-slate-700"
-          />
+          {activeUser?.avatar ? (
+            <img
+              src={activeUser.avatar}
+              alt={activeUser?.name || 'User'}
+              className="w-8 h-8 rounded-lg object-cover border border-slate-700"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 flex items-center justify-center font-bold text-xs">
+              {activeUser?.name ? activeUser.name.charAt(0).toUpperCase() : <FiUser className="w-4 h-4" />}
+            </div>
+          )}
           <div className="hidden sm:block text-left">
             <span className="block text-xs font-semibold text-white leading-tight">
               {activeUser?.name?.split(' ')[0] || 'User'}
