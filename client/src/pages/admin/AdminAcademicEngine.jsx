@@ -18,7 +18,6 @@ import {
   FiSquare
 } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
-import { useNotification } from '../../context/NotificationContext';
 import { 
   getAcademicHierarchyApi, 
   getAcademicYearsApi, 
@@ -36,7 +35,12 @@ import {
 } from '../../services/api';
 
 export default function AdminAcademicEngine() {
-  const { addNotification } = useNotification();
+  const [toastMsg, setToastMsg] = useState(null);
+
+  const addNotification = (message, type = 'info') => {
+    setToastMsg({ message, type });
+    setTimeout(() => setToastMsg(null), 4000);
+  };
 
   const [activeTab, setActiveTab] = useState('tree'); // 'tree', 'years', 'divisions', 'promotion', 'subjects'
   const [loading, setLoading] = useState(true);
@@ -267,6 +271,16 @@ export default function AdminAcademicEngine() {
 
   return (
     <div className="space-y-6">
+      {toastMsg && (
+        <div className={`p-4 rounded-xl text-xs font-semibold border transition-all flex items-center justify-between ${
+          toastMsg.type === 'error' ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' :
+          toastMsg.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' :
+          'bg-indigo-500/10 border-indigo-500/30 text-indigo-300'
+        }`}>
+          <span>{toastMsg.message}</span>
+          <button onClick={() => setToastMsg(null)} className="p-1 hover:opacity-80">✕</button>
+        </div>
+      )}
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-indigo-900/60 via-slate-900 to-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl relative overflow-hidden backdrop-blur-xl">
         <div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
