@@ -1,6 +1,6 @@
 # Attendance Management System - Consolidated Phases Specification
 
-This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 5**) of the **Attendance Management System**.
+This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 18**) of the **Attendance Management System**.
 
 ---
 
@@ -16,9 +16,14 @@ This document provides a single, unified reference for all project implementatio
 9. [Phase 9 – Timetable](#-phase-9--timetable)
 10. [Phase 10 – Reports](#-phase-10--reports)
 11. [Phase 11 – Charts](#-phase-11--charts)
-12. [Phase 12 – Real-Time Event Alerts & Push Notifications](#-phase-12--real-time-event-alerts--push-notifications)
+12. [Phase 12 – Notifications](#-phase-12--notifications)
 13. [Phase 13 – Leave Management](#-phase-13--leave-management)
-14. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+14. [Phase 14 – AI Features](#-phase-14--ai-features)
+15. [Phase 15 – Analytics Dashboard](#-phase-15--analytics-dashboard)
+16. [Phase 16 – Security](#-phase-16--security)
+17. [Phase 17 – Testing](#-phase-17--testing)
+18. [Phase 18 – Academic Year & Semester Engine](#-phase-18--academic-year--semester-engine)
+19. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -328,27 +333,47 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
-## 📌 Phase 12 – Real-Time Event Alerts & Push Notifications
+## 📌 Phase 12 – Notifications
 
 ### Core Requirements & Features
 - **Real-Time WebSockets Engine**:
   - Socket.io integration on HTTP server (`server/src/config/socket.js`) and React client (`client/src/services/socket.js`).
-  - Automatic authentication & connection lifecycle management joining user rooms, role rooms, and department rooms.
+  - Automatic authentication & connection lifecycle management joining user rooms (`user_${id}`), role rooms (`role_${role}`), and department rooms (`dept_${dept}`).
   - Centralized `sendNotification` helper emitting WS events and persisting notifications in MongoDB.
 - **Firebase Cloud Messaging (FCM) / Web Push**:
-  - FCM push notification support via Firebase Admin SDK (`server/src/config/firebase.js`).
+  - FCM push notification support via Firebase Admin SDK (`server/src/config/firebase.js`) with dev fallback mode.
   - Browser Web Push Service Worker (`client/public/firebase-messaging-sw.js`).
   - User device FCM token registration (`POST /api/notifications/fcm-token`).
 - **5 Mandatory Event Triggers**:
-  - **Attendance Marked**: Notifies student in real-time when marked Present, Absent, or Late.
-  - **Class Cancelled**: Notifies enrolled students in real-time when a class session is cancelled.
-  - **Low Attendance Warning**: Automatically warns student when attendance drops below 75%.
+  - **Attendance Marked**: Notifies student in real-time when marked Present, Absent, or Late via manual roster or QR scan.
+  - **Class Cancelled**: Notifies enrolled students in real-time when a class session or schedule is cancelled or removed.
+  - **Low Attendance Warning**: Automatically warns student when cumulative or subject attendance drops below the 75% threshold.
   - **Leave Status Updated**: Notifies student applicant in real-time when leave application is Approved or Rejected.
   - **Announcements**: Broadcast or target real-time announcements from Admin/Teacher to Students, Teachers, or Campus-wide.
 - **Notification Center UI & Toast Suite**:
-  - Interactive top header Bell icon with unread badge count & pulse animation.
-  - Glassmorphism slide-out Notification Drawer with read/unread filters.
-  - Floating top-right real-time Toast alerts (`ToastContainer.jsx`) with Web Audio API chime sound.
+  - Interactive top header Bell icon (`Header.jsx`) with live unread badge count & pulse animation.
+  - Glassmorphism slide-out Notification Drawer with read/unread filters, Web Push toggle, and audio chime toggle.
+  - Floating top-right real-time Toast alerts (`ToastContainer.jsx`) with custom event icons and Web Audio API chime sound.
+  - Dedicated Notifications Hub Page (`NotificationsList.jsx`) with category filter tabs.
+  - Broadcast Announcement Modal (`CreateAnnouncementModal.jsx`) for Admins and Teachers.
+
+### File Mapping
+- Backend Infrastructure:
+  - Socket Config & Helper: `server/src/config/socket.js`
+  - Firebase FCM Helper: `server/src/config/firebase.js`
+  - Controller: `server/src/controllers/notificationController.js`
+  - Routes: `server/src/routes/notificationRoutes.js`
+  - Model Updates: `server/src/models/Notification.js`, `server/src/models/User.js`
+  - Server Entry: `server/src/server.js`, `server/src/app.js`
+- Frontend Infrastructure:
+  - Socket Manager: `client/src/services/socket.js`
+  - FCM Config: `client/src/config/firebase.js`, `client/public/firebase-messaging-sw.js`
+  - Global Context: `client/src/context/NotificationContext.jsx`
+  - Toast Container: `client/src/components/common/ToastContainer.jsx`
+  - Header Bell & Drawer: `client/src/components/layout/Header.jsx`
+  - Announcement Modal: `client/src/components/common/CreateAnnouncementModal.jsx`
+  - Notifications Page: `client/src/pages/student/NotificationsList.jsx`
+  - API Client: `client/src/services/api.js`
 
 ---
 
@@ -380,12 +405,236 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 📌 Phase 14 – AI Features
+
+### Core Requirements & Features
+- **Attendance Prediction Engine ("Can Student Reach 75%?")**:
+  - Trajectory & math engine calculating minimum required lectures to attend to achieve $\ge 75\%$ target across all enrolled subjects.
+  - Maximum allowed skips calculator ($S_{max}$) determining how many future lectures can be missed safely.
+  - Interactive "What-If" simulator slider (`AttendancePrediction.jsx`) enabling students to simulate future attendance rates (100%, 80%, 60%, 40%, 20%, 0%) and preview projected final percentages.
+  - Subject-by-subject risk breakdown with custom status badges (`Guaranteed`, `Achievable`, `At Risk`, `Impossible`) and AI strategic advice notes.
+- **Natural Language AI Chatbot ("Ask My Attendance")**:
+  - Contextual NLP engine handling natural language queries and parsing intent from preset prompt pills:
+    1. 💬 *"My attendance?"* $\rightarrow$ Returns overall status, present/absent breakdown, and compliance badge.
+    2. 💬 *"Subjects below 75%"* $\rightarrow$ Lists lagging defaulter subjects with shortage counts and urgent alerts.
+    3. 💬 *"Can I skip tomorrow?"* $\rightarrow$ Analyzes tomorrow's scheduled timetable slots and simulates attendance drop risks.
+    4. 💬 *"Attendance report"* $\rightarrow$ Summary metrics with direct link trigger to download official PDF/Excel report.
+    5. 💬 *"Remaining lectures"* $\rightarrow$ Breakdown of remaining conductable lectures per subject.
+  - Dual UI components: Global Floating Widget (`AiChatWidget.jsx`) available on all pages and full-screen AI Workspace (`AiChatPage.jsx`).
+- **Suspicious Attendance & Proxy Detection**:
+  - Automated anomaly detector (`/api/ai/suspicious-detection`) running 4 active security scanners across attendance logs:
+    1. **Repeated Same Device**: Flags multiple student accounts marking attendance using the exact same device fingerprint or browser ID.
+    2. **Outside Campus**: Identifies QR/GPS attendance marked outside the 500m campus boundary.
+    3. **Duplicate QR**: Identifies token reuse or duplicate scans within 5 minutes.
+    4. **Impossible Locations**: Identifies rapid sequence scans requiring impossible physical travel speed ($> 100\text{ km/h}$).
+  - Dedicated Faculty/Admin Security Console (`/admin/suspicious` & `/teacher/suspicious`) with category tabs, severity risk pills (`High`, `Medium`, `Low`), search filter, and full technical metadata inspector modal.
+
+### File Mapping
+- Backend Infrastructure:
+  - Controller: `server/src/controllers/aiController.js`
+  - Routes: `server/src/routes/aiRoutes.js`
+  - Server App Mount: `server/src/app.js` (`/api/ai`)
+- Frontend Infrastructure:
+  - API Service Client: `client/src/services/api.js` (`getAttendancePredictionApi`, `sendAiChatMessageApi`, `getSuspiciousAttendanceApi`)
+  - Global Floating Widget: `client/src/components/ai/AiChatWidget.jsx`
+  - Student Prediction Page: `client/src/pages/student/AttendancePrediction.jsx` (`/student/predict`)
+  - Student AI Workspace Page: `client/src/pages/student/AiChatPage.jsx` (`/student/ai-chat`)
+  - Admin/Teacher Security Console: `client/src/pages/admin/SuspiciousDetection.jsx` (`/admin/suspicious` & `/teacher/suspicious`)
+  - Navigation & Routing: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`
+
+---
+
+## 📌 Phase 15 – Analytics Dashboard
+
+### Core Requirements & Features
+- **Admin Analytics Dashboard Hub**:
+  - Executive administrative dashboard organizing institutional intelligence into 5 specialized interactive modules.
+- **1. Most Absent Students**:
+  - Aggregates defaulter students (< 75% attendance) across departments.
+  - Search filter (name/roll number) and department dropdown filter (CSE, ECE, ME, CE, IT).
+  - Shortage deficit calculator computing exact missing classes needed to reach 75% benchmark ($X = \lceil 3T - 4P \rceil$).
+  - Risk status indicators (`Critical Risk < 65%`, `Shortage Warning 65-74%`) and direct "Issue Warning Alert" trigger.
+- **2. Best Attendance Leaderboard**:
+  - Honor roll highlighting top-performing students (&ge; 90%).
+  - Podium cards for Gold (#1), Silver (#2), and Bronze (#3) rank medals.
+  - Perfect Attendance (100%) badges and direct "Send Honor Certificate / Commendation" alert trigger.
+- **3. Department Ranking**:
+  - Comparative departmental ranking comparing CSE, ECE, ME, CE, IT by average student attendance rate.
+  - Department Head (HOD) details, total enrolled students, total faculty staff, and performance tier badges (`Top Performer >= 88%`, `Solid Performance 80-87%`, `Needs Improvement < 80%`).
+  - Visual departmental progress bars comparing performance against campus benchmarks.
+- **4. Teacher Performance Metrics**:
+  - Faculty instructor performance evaluation directory.
+  - Metrics: Total classes scheduled & conducted, on-time attendance marking rate %, average student attendance in assigned subjects, and faculty performance rating score/tier (`Outstanding`, `Excellent`, `Good`, `Needs Support`).
+- **5. Daily Attendance Inspector**:
+  - Interactive calendar date picker (defaults to current date, selectable past/future dates).
+  - Summary metrics: Today's sessions held, present count, late arrivals, absent count, and daily attendance rate %.
+  - Hourly session distribution graph (Morning, Midday, Afternoon slots) and subject-by-subject daily session table.
+
+### File Mapping
+- Backend Infrastructure:
+  - Controller: `server/src/controllers/analyticsController.js`
+  - Routes: `server/src/routes/analyticsRoutes.js`
+  - Server App Mount: `server/src/app.js` (`/api/analytics`)
+- Frontend Infrastructure:
+  - API Service Client: `client/src/services/api.js` (`getAnalyticsDashboardApi`, `getMostAbsentStudentsApi`, `getBestAttendanceApi`, `getDepartmentRankingApi`, `getTeacherPerformanceApi`, `getDailyAttendanceApi`)
+  - Admin Analytics Dashboard: `client/src/pages/admin/AdminAnalytics.jsx`
+  - Analytics Sub-Components:
+    - `client/src/components/analytics/MostAbsentStudents.jsx`
+    - `client/src/components/analytics/BestAttendance.jsx`
+    - `client/src/components/analytics/DepartmentRanking.jsx`
+    - `client/src/components/analytics/TeacherPerformance.jsx`
+    - `client/src/components/analytics/DailyAttendance.jsx`
+
+---
+
+## 📌 Phase 16 – Security
+
+### Core Requirements & Features
+- **Helmet HTTP Security Headers**:
+  - Express security middleware setting standard HTTP headers (`Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Strict-Transport-Security`, `X-XSS-Protection`, `Referrer-Policy`, `Cross-Origin-Resource-Policy`).
+  - Hides `X-Powered-By` header to mitigate technology stack disclosure risks.
+- **Rate Limiting Engine**:
+  - Sliding-window in-memory rate limiter protecting against brute-force attacks and DoS (`rateLimitMiddleware.js`).
+  - Global API rate limiter (200 requests / 15 mins).
+  - Auth rate limiter (15 requests / 15 mins on `/api/auth/login`, `/api/auth/register`, `/api/auth/refresh`).
+  - Sensitive operations rate limiter (10 requests / 15 mins for password resets & QR generation).
+- **Hardened JWT Authentication**:
+  - JWT token issuance, verification, and explicit expiration handling (`authMiddleware.js`, `generateToken.js`).
+  - Bearer token header scheme validation (`Authorization: Bearer <token>`).
+  - Explicit error handling for expired (`TokenExpiredError`) and tampered (`JsonWebTokenError`) session tokens.
+- **Password Hashing & Strength Governance**:
+  - Salt generation (`bcrypt.genSalt(10)`) and hashing for user passwords.
+  - Password strength validation enforcing minimum 6-character length and complexity rules.
+- **Role-Based Access Control (RBAC)**:
+  - Granular authorization middleware (`protect`, `authorize(...roles)`) shielding all sensitive administrative, teacher, and student API routes.
+  - Generates HTTP 403 Forbidden responses and security warning audit logs on role access violations.
+- **Input Validation Suite**:
+  - Sanitizes and validates request payload parameters (`validateRegister`, `validateLogin`, `validatePasswordChange`, `validateParamId`).
+  - Returns structured HTTP 400 Bad Request error schemas with field-level guidance.
+- **XSS Protection Middleware**:
+  - Recursive request payload sanitizer (`xssMiddleware.js`) stripping and escaping malicious script tags (`<script>`), inline handlers (`onload`, `onerror`), and `javascript:` URIs from `req.body`, `req.query`, and `req.params`.
+- **Configurable CORS Governance**:
+  - Cross-Origin Resource Sharing control with configurable origin whitelists (`CLIENT_URL` / localhost development ports), allowed headers, credentials handling, and preflight OPTIONS request resolution.
+- **Security Audit Logging System & Admin Console**:
+  - **Audit Mongoose Schema (`AuditLog.js`)**: Tracks user ID, role, name, email, action type, resource module, HTTP method, endpoint, IP address, User-Agent, status (`SUCCESS`, `FAILED`, `WARNING`), and metadata details.
+  - **Audit Helper (`auditMiddleware.js`)**: Asynchronous, non-blocking audit event logger.
+  - **Audit Controller & Express Router (`auditController.js`, `auditRoutes.js`)**: Endpoints for paginated audit log queries (`GET /api/audit-logs`), security stats (`GET /api/audit-logs/stats`), and CSV log export (`GET /api/audit-logs/export`).
+  - **Admin Security Console (`AdminAuditLogs.jsx`)**: Glassmorphism UI displaying real-time security metric cards, filterable event table (Search, Status, Role, Date Range), detail inspector modal, and CSV export.
+
+### File Mapping
+- Backend Infrastructure:
+  - Middlewares:
+    - `server/src/middleware/helmetMiddleware.js`
+    - `server/src/middleware/rateLimitMiddleware.js`
+    - `server/src/middleware/xssMiddleware.js`
+    - `server/src/middleware/validationMiddleware.js`
+    - `server/src/middleware/auditMiddleware.js`
+    - `server/src/middleware/authMiddleware.js`
+  - Model: `server/src/models/AuditLog.js`
+  - Controller: `server/src/controllers/auditController.js`
+  - Routes: `server/src/routes/auditRoutes.js`
+  - App Integration: `server/src/app.js`
+- Frontend Infrastructure:
+  - Security Console: `client/src/pages/admin/AdminAuditLogs.jsx`
+  - API Client Service: `client/src/services/api.js` (`getAuditLogsApi`, `getAuditLogStatsApi`, `exportAuditLogsApi`)
+  - Navigation & Routing: `client/src/App.jsx`, `client/src/components/layout/Sidebar.jsx`
+
+---
+
+## 📌 Phase 17 – Testing
+
+### Core Requirements & Features
+- **Automated Testing Suite**:
+  - Comprehensive unit and integration test suites for backend APIs built using **Jest**, **Supertest**, and **mongodb-memory-server**.
+- **1. Authentication Tests (`tests/auth.test.js`)**:
+  - User registration (`student`, `teacher`, `admin`), password hashing with `bcrypt`, user login validation, JWT access & refresh token generation, and multi-role RBAC authorization guard tests.
+- **2. Attendance Tests (`tests/attendance.test.js`)**:
+  - Single & bulk attendance marking, attendance stats calculations, 75% defaulter threshold math, date/subject filtering, record updates, and record deletion.
+- **3. QR Code Tests (`tests/qr.test.js`)**:
+  - 30-second expiring dynamic QR JWT token signature validation, rejection of expired tokens, attendance marking via QR, and anti-proxy device fingerprint / browser ID duplicate detection.
+- **4. GPS Geofencing Tests (`tests/gps.test.js`)**:
+  - Haversine distance formula calculations (`getDistanceInMeters`), campus 500m radius geofence boundary enforcement, and outside campus location rejection.
+- **5. Reports Tests (`tests/reports.test.js`)**:
+  - Date range bound calculations (`getReportDateRange`) for daily, weekly, monthly, and semester reports, query filtering by department/course/semester/student, and student role data isolation.
+- **6. Charts Tests (`tests/charts.test.js`)**:
+  - Overall attendance ratio breakdown, departmental comparison stats, 6-month monthly trend dataset structure, subject-wise attendance stats, and student ranking leaderboard datasets.
+- **7. Notifications Tests (`tests/notifications.test.js`)**:
+  - User notification query & unread badge counters, marking individual/all notifications as read, deletion, FCM web push token registration, and broadcasting campus announcements.
+
+### File Mapping
+- Test Environment & Configuration:
+  - `server/jest.config.js`
+  - `server/tests/setup.js`
+  - `server/package.json` (`npm test`)
+- Module Test Suites:
+  - `server/tests/auth.test.js`
+  - `server/tests/attendance.test.js`
+  - `server/tests/qr.test.js`
+  - `server/tests/gps.test.js`
+  - `server/tests/reports.test.js`
+  - `server/tests/charts.test.js`
+  - `server/tests/notifications.test.js`
+
+---
+
+## 📌 Phase 18 – Academic Year & Semester Engine
+
+### Core Requirements & Features
+- **Dynamic Academic Hierarchy Engine**: Replaced hard-coded semester assumptions with a dynamic, multi-tiered hierarchy:
+  ```
+  Academic Year (e.g., 2026-27)
+      ↓
+  Semester (e.g., Semester 5, Semester 6)
+      ↓
+  Department (e.g., Information Technology, Computer Science)
+      ↓
+  Class/Division (e.g., IT-A, IT-B, IT-C)
+      ↓
+  Subjects (e.g., Data Structures, Operating Systems)
+  ```
+- **Academic Year Management**:
+  - Define custom Academic Years with start and end dates (e.g. `2026-27`).
+  - Active session flag (`isCurrent`) automatically enforcing singleton active sessions across the institution.
+  - Track session status (`Upcoming`, `Active`, `Completed`, `Archived`).
+- **Dynamic Semester Engine**:
+  - Dynamically attach term schedules (`Semester 1` to `Semester 10`) under specific Academic Years without static code limitations.
+- **Class Division / Section Management**:
+  - Configure Class Divisions (`IT-A`, `IT-B`, `IT-C`) linked to Department, Semester, and Academic Year.
+  - Section capacity tracking and live enrolled student counters.
+- **Student Batch Promotion Engine**:
+  - Wizard-driven batch student promotion from current Academic Year/Semester/Division to target Academic Year/Semester/Division.
+  - Automatic historical audit tracking via `StudentEnrollment` model recording promotion dates, previous sessions, and admin remarks.
+- **Subject Allocation**:
+  - Assign subjects to dynamic semesters, class divisions, and faculty instructors.
+- **Visual Academic Hierarchy Tree UI**:
+  - Admin Portal console (`/admin/academic`) featuring interactive, expandable tree representation displaying student counts, semester statuses, and allocated subjects per division.
+
+### File Mapping
+- Backend Models:
+  - `server/src/models/AcademicYear.js`
+  - `server/src/models/Semester.js`
+  - `server/src/models/Division.js`
+  - `server/src/models/StudentEnrollment.js`
+  - `server/src/models/User.js` (updated with dynamic refs)
+  - `server/src/models/Subject.js` (updated with dynamic refs)
+- Backend Controller & Routes:
+  - `server/src/controllers/academicController.js`
+  - `server/src/routes/academicRoutes.js`
+  - `server/src/app.js` (registered `/api/academic`)
+- Frontend UI & API Client:
+  - `client/src/services/api.js`
+  - `client/src/pages/admin/AdminAcademicEngine.jsx`
+  - `client/src/App.jsx` (`/admin/academic` route)
+  - `client/src/components/layout/Sidebar.jsx` (Admin Sidebar item)
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
 | :--- | :---: | :---: | :---: | :---: |
 | **Authentication & Profile Reset** | ✅ | ✅ | ✅ | Phase 1 |
-| **User Role Access Control (RBAC)** | ✅ | ✅ | ✅ | Phase 1 |
+| **User Role Access Control (RBAC)** | ✅ | ✅ | ✅ | Phase 1 & 16 |
 | **Database Schemas & Models** | — | — | — | Phase 2 |
 | **View Personal Dashboard & Graph** | ✅ | ❌ | ❌ | Phase 3 & 6 |
 | **View Today's Classes Schedule** | ✅ | ✅ | ❌ | Phase 3, 4 & 9 |
@@ -433,6 +682,36 @@ This document provides a single, unified reference for all project implementatio
 | **Receive Low Attendance Warning (<75%)** | ✅ | ❌ | ❌ | Phase 12 |
 | **Receive Leave Application Approved/Rejected Alert** | ✅ | ❌ | ❌ | Phase 12 & 13 |
 | **Broadcast & Receive Campus Announcements** | ✅ | ✅ | ✅ | Phase 12 |
+| **Attendance Prediction Engine & "What-If" Simulator** | ✅ | ❌ | ❌ | Phase 14 |
+| **Natural Language AI Chatbot ("Ask My Attendance")** | ✅ | ✅ | ✅ | Phase 14 |
+| **Suspicious Attendance & Proxy Detection Console** | ❌ | ✅ | ✅ | Phase 14 |
+| **Most Absent Students & Shortage Deficit Calculator** | ❌ | ❌ | ✅ | Phase 15 |
+| **Best Attendance Leaderboard & Perfect 100% Badges** | ❌ | ❌ | ✅ | Phase 15 |
+| **Academic Department Attendance Ranking & HOD View** | ❌ | ❌ | ✅ | Phase 15 |
+| **Teacher Performance & On-Time Marking Metrics** | ❌ | ❌ | ✅ | Phase 15 |
+| **Daily Attendance Inspector & Time Slot Breakdown** | ❌ | ❌ | ✅ | Phase 15 |
+| **Helmet HTTP Security Headers** | ✅ | ✅ | ✅ | Phase 16 |
+| **Sliding-Window Rate Limiting Protection** | ✅ | ✅ | ✅ | Phase 16 |
+| **Hardened JWT Verification & Expiration Handling** | ✅ | ✅ | ✅ | Phase 16 |
+| **Password Hashing & Strength Governance** | ✅ | ✅ | ✅ | Phase 16 |
+| **Granular Multi-Role RBAC Authorization** | ✅ | ✅ | ✅ | Phase 16 |
+| **Payload Input Validation & Schema Sanitization** | ✅ | ✅ | ✅ | Phase 16 |
+| **XSS Payload Injection Protection** | ✅ | ✅ | ✅ | Phase 16 |
+| **Configurable CORS Domain Management** | ✅ | ✅ | ✅ | Phase 16 |
+| **Security Audit Logging & Admin Audit Console** | ❌ | ❌ | ✅ | Phase 16 |
+| **Authentication Module Automated Unit & Integration Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **Attendance & Defaulter Threshold Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **30s Dynamic QR Token & Anti-Proxy Guard Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **GPS Campus Geofencing (500m) Boundary Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **Daily/Weekly/Monthly/Semester Report Generator Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **Charts Analytics & Trend Datasets Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **Notification Engine & FCM Web Push Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **Create & Manage Academic Years** | ❌ | ❌ | ✅ | Phase 18 |
+| **Dynamic Semesters Setup (No hardcoding)** | ❌ | ❌ | ✅ | Phase 18 |
+| **Class Divisions & Sections (IT-A, IT-B, etc.)** | ❌ | ❌ | ✅ | Phase 18 |
+| **Visual Academic Hierarchy Tree Console** | ✅ | ✅ | ✅ | Phase 18 |
+| **Student Batch Promotion Engine** | ❌ | ❌ | ✅ | Phase 18 |
+| **Student Enrollment & Session History Tracking** | ✅ | ✅ | ✅ | Phase 18 |
 
 ---
 *Last Updated: August 2026*

@@ -31,6 +31,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 📈 **Executive Analytics Dashboard (Phase 15)**: Comprehensive Admin analytics hub featuring 5 specialized sub-modules: Most Absent Students (< 75% attendance with shortage deficit calculator $X = \lceil 3T - 4P \rceil$), Best Attendance Leaderboard (Gold/Silver/Bronze medals & 100% Perfect badges), Department Ranking (CSE, ECE, ME, CE, IT average comparison & HOD view), Teacher Performance Metrics (classes conducted, on-time marking rate %, student attendance average), and Daily Attendance Inspector (date picker, summary metrics, and hourly time-slot session distribution).
 - 🛡️ **Enterprise Security & Audit Logging (Phase 16)**: Multi-layered security stack including **Helmet HTTP Security Headers** (`Content-Security-Policy`, `X-Frame-Options`, `HSTS`, `X-Powered-By` suppression), **Sliding-Window Rate Limiting** (Global API 200 req/15 min, Auth endpoints 15 req/15 min, Sensitive operations 10 req/15 min), **XSS Payload Sanitizer** (recursive body/query/param HTML tag escaping), **Payload Input Validation** (registration, login, password policy, ObjectId checks), **Hardened JWT & RBAC** (multi-role guard rails and explicit expiration handling), **CORS Governance**, and **Security Audit Logging System** with interactive Admin Audit Console (`/admin/audit-logs`), live metric cards, detail inspector modal, and CSV audit log export.
 - 🧪 **Automated Testing Suite (Phase 17)**: Comprehensive unit and integration test coverage (38/38 passing tests) covering 7 core modules (**Authentication**, **Attendance**, **Dynamic QR**, **GPS Geofencing**, **Reports Generation**, **Charts Analytics**, and **Notifications Hub**) powered by **Jest**, **Supertest**, and **mongodb-memory-server**.
+- 🏫 **Academic Year & Semester Engine (Phase 18)**: Dynamic institutional hierarchy engine (`Academic Year ➔ Semester ➔ Department ➔ Division ➔ Subjects`). Features custom session dates, active year status singletons, dynamic terms without hardcoding, class section capacity management (`IT-A`, `IT-B`, `IT-C`), interactive visual hierarchy tree, and wizard-driven student batch promotion engine with audit logs.
 
 ---
 
@@ -93,6 +94,11 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Daily, Weekly, Monthly, Semester Report Generator Tests** | ✅ | ✅ | ✅ |
 | **Charts Analytics & Trend Datasets Tests** | ✅ | ✅ | ✅ |
 | **Notification Engine & FCM Web Push Tests** | ✅ | ✅ | ✅ |
+| **Academic Year Management & Active Session Toggle** | ❌ | ❌ | ✅ |
+| **Dynamic Semesters Setup (No hardcoded terms)** | ❌ | ❌ | ✅ |
+| **Class Divisions & Sections (IT-A, IT-B, etc.)** | ❌ | ❌ | ✅ |
+| **Visual Academic Hierarchy Tree Console** | ✅ | ✅ | ✅ |
+| **Student Batch Promotion Engine & Audit History** | ❌ | ❌ | ✅ |
 
 ---
 
@@ -112,7 +118,7 @@ Basic-attendance/
 │   │   │   └── ui/              # Buttons, Cards, Inputs, Badges, Modals
 │   │   ├── context/             # React AuthContext for state & token management
 │   │   ├── pages/
-│   │   │   ├── admin/           # Admin Dashboard (AdminAnalytics.jsx), Departments, Courses, Subjects, Users, SuspiciousDetection, AdminAuditLogs.jsx
+│   │   │   ├── admin/           # Admin Dashboard (AdminAnalytics.jsx), AdminAcademicEngine.jsx, Departments, Courses, Subjects, Users, SuspiciousDetection, AdminAuditLogs.jsx
 │   │   │   ├── analytics/       # Phase 11 Visual Analytics Hub (ChartsPage.jsx)
 │   │   │   ├── auth/            # Login, Register, Forgot Password, Reset Password
 │   │   │   ├── landing/         # Public Landing Page
@@ -139,10 +145,10 @@ Basic-attendance/
 │   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
 │   ├── src/
 │   │   ├── config/              # MongoDB Mongoose database connection
-│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, aiController, analyticsController, auditController)
+│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, aiController, analyticsController, auditController, academicController)
 │   │   ├── middleware/          # Helmet, Rate Limiter, XSS Sanitizer, Input Validation, Audit Logger, JWT auth middleware, RBAC guards
-│   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog)
-│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes, analyticsRoutes, auditRoutes)
+│   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment)
+│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes, analyticsRoutes, auditRoutes, academicRoutes)
 │   │   ├── utils/               # JWT generator, Async handler wrappers
 │   │   ├── app.js               # Express application initialization & security stack setup
 │   │   └── server.js            # Node HTTP server launcher
@@ -303,6 +309,18 @@ npx jest tests/notifications.test.js
 - `GET /api/audit-logs` — Fetch paginated security audit logs with search, role, status, action, and date filters (Admin only)
 - `GET /api/audit-logs/stats` — Fetch audit overview metrics (total events, today's events, failed logins, warnings, top actions) (Admin only)
 - `GET /api/audit-logs/export` — Download filtered audit log ledger as a CSV file (Admin only)
+
+### 🏫 Academic Year & Semester Engine (`/api/academic`)
+- `GET /api/academic/hierarchy` — Fetch complete visual academic hierarchy tree (`Academic Year ➔ Semester ➔ Department ➔ Division ➔ Subjects`)
+- `GET / POST /api/academic/years` — Get list of academic years / Create new academic year
+- `PUT / DELETE /api/academic/years/:id` — Update / Delete academic year
+- `PATCH /api/academic/years/:id/set-current` — Set specified academic year as active singleton
+- `GET / POST /api/academic/semesters` — Get dynamic semesters / Create semester under an Academic Year
+- `PUT / DELETE /api/academic/semesters/:id` — Update / Delete semester
+- `GET / POST / DELETE /api/academic/divisions` — Manage class divisions/sections (`IT-A`, `IT-B`, `IT-C`)
+- `POST /api/academic/promote` — Execute student batch promotion to target Academic Year/Semester/Division
+- `POST /api/academic/enroll` — Execute batch student enrollment into dynamic semesters/divisions
+- `POST /api/academic/allocations` — Allocate subjects to dynamic semesters, class divisions, and instructors
 
 ### 🏥 System Health (`/api/health`)
 - `GET /api/health` — Check backend status, connected database, security stack status, and API uptime

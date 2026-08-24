@@ -22,7 +22,8 @@ This document provides a single, unified reference for all project implementatio
 15. [Phase 15 – Analytics Dashboard](#-phase-15--analytics-dashboard)
 16. [Phase 16 – Security](#-phase-16--security)
 17. [Phase 17 – Testing](#-phase-17--testing)
-18. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+18. [Phase 18 – Academic Year & Semester Engine](#-phase-18--academic-year--semester-engine)
+19. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -574,6 +575,59 @@ This document provides a single, unified reference for all project implementatio
   - `server/tests/charts.test.js`
   - `server/tests/notifications.test.js`
 
+
+---
+
+## 📌 Phase 18 – Academic Year & Semester Engine
+
+### Core Requirements & Features
+- **Dynamic Academic Hierarchy Engine**: Replaced hard-coded semester assumptions with a dynamic, multi-tiered hierarchy:
+  ```
+  Academic Year (e.g., 2026-27)
+      ↓
+  Semester (e.g., Semester 5, Semester 6)
+      ↓
+  Department (e.g., Information Technology, Computer Science)
+      ↓
+  Class/Division (e.g., IT-A, IT-B, IT-C)
+      ↓
+  Subjects (e.g., Data Structures, Operating Systems)
+  ```
+- **Academic Year Management**:
+  - Define custom Academic Years with start and end dates (e.g. `2026-27`).
+  - Active session flag (`isCurrent`) automatically enforcing singleton active sessions across the institution.
+  - Track session status (`Upcoming`, `Active`, `Completed`, `Archived`).
+- **Dynamic Semester Engine**:
+  - Dynamically attach term schedules (`Semester 1` to `Semester 10`) under specific Academic Years without static code limitations.
+- **Class Division / Section Management**:
+  - Configure Class Divisions (`IT-A`, `IT-B`, `IT-C`) linked to Department, Semester, and Academic Year.
+  - Section capacity tracking and live enrolled student counters.
+- **Student Batch Promotion Engine**:
+  - Wizard-driven batch student promotion from current Academic Year/Semester/Division to target Academic Year/Semester/Division.
+  - Automatic historical audit tracking via `StudentEnrollment` model recording promotion dates, previous sessions, and admin remarks.
+- **Subject Allocation**:
+  - Assign subjects to dynamic semesters, class divisions, and faculty instructors.
+- **Visual Academic Hierarchy Tree UI**:
+  - Admin Portal console (`/admin/academic`) featuring interactive, expandable tree representation displaying student counts, semester statuses, and allocated subjects per division.
+
+### File Mapping
+- Backend Models:
+  - `server/src/models/AcademicYear.js`
+  - `server/src/models/Semester.js`
+  - `server/src/models/Division.js`
+  - `server/src/models/StudentEnrollment.js`
+  - `server/src/models/User.js` (updated with dynamic refs)
+  - `server/src/models/Subject.js` (updated with dynamic refs)
+- Backend Controller & Routes:
+  - `server/src/controllers/academicController.js`
+  - `server/src/routes/academicRoutes.js`
+  - `server/src/app.js` (registered `/api/academic`)
+- Frontend UI & API Client:
+  - `client/src/services/api.js`
+  - `client/src/pages/admin/AdminAcademicEngine.jsx`
+  - `client/src/App.jsx` (`/admin/academic` route)
+  - `client/src/components/layout/Sidebar.jsx` (Admin Sidebar item)
+
 ---
 
 ## 📊 Access Control & Feature Matrix Across All Phases
@@ -653,6 +707,12 @@ This document provides a single, unified reference for all project implementatio
 | **Daily/Weekly/Monthly/Semester Report Generator Tests** | ✅ | ✅ | ✅ | Phase 17 |
 | **Charts Analytics & Trend Datasets Tests** | ✅ | ✅ | ✅ | Phase 17 |
 | **Notification Engine & FCM Web Push Tests** | ✅ | ✅ | ✅ | Phase 17 |
+| **Create & Manage Academic Years** | ❌ | ❌ | ✅ | Phase 18 |
+| **Dynamic Semesters Setup (No hardcoding)** | ❌ | ❌ | ✅ | Phase 18 |
+| **Class Divisions & Sections (IT-A, IT-B, etc.)** | ❌ | ❌ | ✅ | Phase 18 |
+| **Visual Academic Hierarchy Tree Console** | ✅ | ✅ | ✅ | Phase 18 |
+| **Student Batch Promotion Engine** | ❌ | ❌ | ✅ | Phase 18 |
+| **Student Enrollment & Session History Tracking** | ✅ | ✅ | ✅ | Phase 18 |
 
 ---
 *Last Updated: August 2026*
