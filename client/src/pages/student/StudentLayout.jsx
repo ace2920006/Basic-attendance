@@ -2,12 +2,10 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../../components/layout/Sidebar';
 import Header from '../../components/layout/Header';
-import { currentUser } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
 
 export default function StudentLayout() {
-  const { user: authUser } = useAuth();
-  const user = authUser || currentUser.student;
+  const { user } = useAuth();
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">

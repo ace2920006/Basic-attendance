@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { FiGrid, FiPlus, FiUsers, FiUserCheck, FiCheckCircle, FiTrash2 } from 'react-icons/fi';
 import { getDepartmentsApi, createDepartmentApi, deleteDepartmentApi } from '../../services/api';
-import { mockDepartments } from '../../data/mockData';
 import Modal from '../../components/common/Modal';
 
 export default function AdminDepartments() {
@@ -20,14 +19,14 @@ export default function AdminDepartments() {
     setLoading(true);
     try {
       const res = await getDepartmentsApi();
-      if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
+      if (res?.success && Array.isArray(res.data)) {
         setDepartments(res.data);
       } else {
-        setDepartments(mockDepartments);
+        setDepartments([]);
       }
     } catch (err) {
-      console.warn('Backend fetch failed, using fallback mock departments', err);
-      setDepartments(mockDepartments);
+      console.error('Error fetching departments:', err);
+      setDepartments([]);
     } finally {
       setLoading(false);
     }

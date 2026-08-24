@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { FiUsers, FiSearch, FiMail, FiCheckCircle, FiAlertTriangle } from 'react-icons/fi';
-import { mockStudentsList } from '../../data/mockData';
 import Modal from '../../components/common/Modal';
 import { getUsersApi } from '../../services/api';
 
 export default function StudentsList() {
   const [search, setSearch] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
-  const [students, setStudents] = useState(mockStudentsList);
+  const [students, setStudents] = useState([]);
   const [emailSent, setEmailSent] = useState(false);
 
   useEffect(() => {
@@ -17,21 +16,22 @@ export default function StudentsList() {
   const fetchStudents = async () => {
     try {
       const res = await getUsersApi({ role: 'student' });
-      if (res?.success && res.data.length > 0) {
+      if (res?.success && Array.isArray(res.data)) {
         const formatted = res.data.map(s => ({
           id: s._id,
-          rollNo: s.rollNo || 'CS-2024-099',
+          rollNo: s.rollNo || '',
           name: s.name,
           email: s.email,
-          department: s.department || 'Computer Science',
-          semester: s.semester || 'Sem 4',
-          attendanceRate: s.attendanceRate || 85.0,
-          status: s.attendanceRate < 75 ? 'Warning' : 'Active'
+          department: s.department || '',
+          semester: s.semester || '',
+          attendanceRate: s.attendanceRate || 0,
+          status: s.status || (s.attendanceRate && s.attendanceRate < 75 ? 'Warning' : 'Active')
         }));
         setStudents(formatted);
       }
     } catch (err) {
-      console.warn('Using default student roster:', err);
+      console.error('Error fetching student roster:', err);
+      setStudents([]);
     }
   };
 
