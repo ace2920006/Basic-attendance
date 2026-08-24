@@ -40,7 +40,7 @@ const userSchema = new mongoose.Schema(
     },
     department: {
       type: String,
-      default: 'Computer Science & Engineering'
+      default: ''
     },
     course: {
       type: String,
