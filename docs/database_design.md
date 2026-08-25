@@ -19,9 +19,9 @@ This document outlines the MongoDB Mongoose database schema, collection definiti
                                                    |                                      |
                                                    | 1:N                                  | 1:N
                                                    v                                      v
-                                         +--------------------+                 +--------------------+
-                                         |     Attendance     | <-------------- |      Classes       |
-                                         +--------------------+                 +--------------------+
+  +--------------------+                 +--------------------+                 +--------------------+
+  |  AttendanceRules   | --------------> |     Attendance     | <-------------- |      Classes       |
+  +--------------------+  (Evaluator)    +--------------------+                 +--------------------+
                                                    ^
                                                    | 1:N
                                          +--------------------+
@@ -176,7 +176,7 @@ Granular daily attendance session logs.
 | `subject` | String | REQUIRED | Subject name |
 | `subjectCode` | String | UPPERCASE, REQUIRED | Subject code |
 | `date` | Date | REQUIRED | Session date |
-| `status` | String | ENUM (`Present`, `Absent`, `Late`), REQUIRED | Attendance status |
+| `status` | String | ENUM (`Present`, `Absent`, `Late`, `Excused`, `On Leave`, `Holiday`, `Cancelled Lecture`), REQUIRED | Attendance status |
 | `arrivalTime` | String | DEFAULT '' | Arrival time timestamp |
 | `departureTime` | String | DEFAULT '' | Departure time timestamp |
 | `notes` | String | DEFAULT '' | Custom session remarks |
@@ -202,6 +202,24 @@ Security and system state mutation audit ledger.
 | `ipAddress` | String | DEFAULT '' | Client IP |
 | `userAgent` | String | DEFAULT '' | Client User-Agent |
 | `metadata` | Schema.Types.Mixed | OPTIONAL | Arbitrary context payload |
+
+---
+
+### 10. `AttendanceRules`
+Institutional thresholds engine and 7-status matrix definitions.
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `_id` | ObjectId | PRIMARY KEY | Unique Rules Configuration ID |
+| `minAttendancePercentage` | Number | DEFAULT 75 (0 to 100) | Minimum attendance percentage requirement |
+| `lateThresholdMinutes` | Number | DEFAULT 10 (0 to 120) | Arrival time cutoff minutes for Late status |
+| `gracePeriodMinutes` | Number | DEFAULT 5 (0 to 60) | On-time arrival grace period window |
+| `qrValidityMinutes` | Number | DEFAULT 1 (0.25 to 30) | Dynamic QR session token validity window |
+| `gpsRadiusMeters` | Number | DEFAULT 100 (10 to 5000) | Geofence campus radius limit in meters |
+| `autoMarkAbsentMinutes` | Number | DEFAULT 30 | Auto-absent trigger delay |
+| `allowStudentSelfCheckIn` | Boolean | DEFAULT true | Student self-service check-in toggle |
+| `consecutiveAbsentAlertThreshold` | Number | DEFAULT 3 | Alert trigger for consecutive absentees |
+| `statusConfigs` | Array [Object] | REQUIRED (7 Statuses) | Matrix rules defining `statusCode`, `label`, `countsAsAttended`, `countsAsConducted`, `attendanceWeight`, and `color` |
 
 ---
 

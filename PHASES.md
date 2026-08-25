@@ -23,7 +23,8 @@ This document provides a single, unified reference for all project implementatio
 16. [Phase 16 – Security](#-phase-16--security)
 17. [Phase 17 – Testing](#-phase-17--testing)
 18. [Phase 18 – Academic Year & Semester Engine](#-phase-18--academic-year--semester-engine)
-19. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+19. [Phase 19 – Advanced Attendance Rules Engine](#-phase-19--advanced-attendance-rules-engine)
+20. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -761,6 +762,9 @@ This document provides a single, unified reference for all project implementatio
 | **Visual Academic Hierarchy Tree Console** | ✅ | ✅ | ✅ | Phase 18 |
 | **Student Batch Promotion Engine** | ❌ | ❌ | ✅ | Phase 18 |
 | **Student Enrollment & Session History Tracking** | ✅ | ✅ | ✅ | Phase 18 |
+| **Configurable Attendance Rules & Thresholds Engine** | ❌ | ❌ | ✅ | Phase 19 |
+| **7-Status Matrix Rules & Attendance Weights** | ❌ | ❌ | ✅ | Phase 19 |
+| **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ | Phase 19 |
 
 ---
 *Last Updated: August 2026*

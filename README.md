@@ -32,6 +32,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 🛡️ **Enterprise Security & Audit Logging (Phase 16)**: Multi-layered security stack including **Helmet HTTP Security Headers** (`Content-Security-Policy`, `X-Frame-Options`, `HSTS`, `X-Powered-By` suppression), **Sliding-Window Rate Limiting** (Global API 200 req/15 min, Auth endpoints 15 req/15 min, Sensitive operations 10 req/15 min), **XSS Payload Sanitizer** (recursive body/query/param HTML tag escaping), **Payload Input Validation** (registration, login, password policy, ObjectId checks), **Hardened JWT & RBAC** (multi-role guard rails and explicit expiration handling), **CORS Governance**, and **Security Audit Logging System** with interactive Admin Audit Console (`/admin/audit-logs`), live metric cards, detail inspector modal, and CSV audit log export.
 - 🧪 **Automated Testing Suite (Phase 17)**: Comprehensive unit and integration test coverage (38/38 passing tests) covering 7 core modules (**Authentication**, **Attendance**, **Dynamic QR**, **GPS Geofencing**, **Reports Generation**, **Charts Analytics**, and **Notifications Hub**) powered by **Jest**, **Supertest**, and **mongodb-memory-server**.
 - 🏫 **Academic Year & Semester Engine (Phase 18)**: Dynamic institutional hierarchy engine (`Academic Year ➔ Semester ➔ Department ➔ Division ➔ Subjects`). Features custom session dates, active year status singletons, dynamic terms without hardcoding, class section capacity management (`IT-A`, `IT-B`, `IT-C`), interactive visual hierarchy tree, and wizard-driven student batch promotion engine with audit logs.
+- ⚙️ **Advanced Attendance Rules Engine (Phase 19)**: Institution-wide configurable rules engine replacing hardcoded logic. Allows Admins to customize thresholds (Minimum Attendance %, Late Cutoff mins, Grace Period mins, Dynamic QR Validity mins, GPS Geofence Radius meters, Auto-Absent delay mins) and define advanced rules for 7 core statuses (`Present`, `Absent`, `Late`, `Excused`, `On Leave`, `Holiday`, `Cancelled Lecture`) with attendance inclusion weights (`countsAsAttended`, `countsAsConducted`, `attendanceWeight`). Includes an interactive real-time Rule Simulator / Sandbox.
 
 ---
 
@@ -99,6 +100,9 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Class Divisions & Sections (IT-A, IT-B, etc.)** | ❌ | ❌ | ✅ |
 | **Visual Academic Hierarchy Tree Console** | ✅ | ✅ | ✅ |
 | **Student Batch Promotion Engine & Audit History** | ❌ | ❌ | ✅ |
+| **Configurable Attendance Rules & Thresholds Engine** | ❌ | ❌ | ✅ |
+| **7-Status Matrix Rules & Attendance Weights** | ❌ | ❌ | ✅ |
+| **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ |
 
 ---
 
@@ -118,7 +122,7 @@ Basic-attendance/
 │   │   │   └── ui/              # Buttons, Cards, Inputs, Badges, Modals
 │   │   ├── context/             # React AuthContext for state & token management
 │   │   ├── pages/
-│   │   │   ├── admin/           # Admin Dashboard (AdminAnalytics.jsx), AdminAcademicEngine.jsx, Departments, Courses, Subjects, Users, SuspiciousDetection, AdminAuditLogs.jsx
+│   │   │   ├── admin/           # Admin Dashboard (AdminAnalytics.jsx), AdminAcademicEngine.jsx, AdminRulesEngine.jsx, Departments, Courses, Subjects, Users, SuspiciousDetection, AdminAuditLogs.jsx
 │   │   │   ├── analytics/       # Phase 11 Visual Analytics Hub (ChartsPage.jsx)
 │   │   │   ├── auth/            # Login, Register, Forgot Password, Reset Password
 │   │   │   ├── landing/         # Public Landing Page
@@ -133,7 +137,7 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                      # Backend REST API (Node.js + Express + MongoDB)
-│   ├── tests/                   # Phase 17 Automated Unit & Integration Test Suites
+│   ├── tests/                   # Phase 17 & Phase 19 Automated Unit & Integration Test Suites
 │   │   ├── setup.js             # Global MongoDB in-memory / local test setup & cleanup
 │   │   ├── auth.test.js         # Authentication, Login, Register, JWT, RBAC tests
 │   │   ├── attendance.test.js   # Single/Bulk attendance, stats, defaulter threshold tests
@@ -141,15 +145,16 @@ Basic-attendance/
 │   │   ├── gps.test.js          # Haversine formula & campus 500m geofence tests
 │   │   ├── reports.test.js      # Daily/Weekly/Monthly/Semester report generator tests
 │   │   ├── charts.test.js       # Chart analytics datasets & student ranking tests
-│   │   └── notifications.test.js # Notification hub & FCM web push tests
+│   │   ├── notifications.test.js # Notification hub & FCM web push tests
+│   │   └── rules.test.js        # Phase 19 Attendance rules engine & sandbox tests
 │   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
 │   ├── src/
 │   │   ├── config/              # MongoDB Mongoose database connection
-│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, aiController, analyticsController, auditController, academicController)
+│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, aiController, analyticsController, auditController, academicController, rulesController)
 │   │   ├── middleware/          # Helmet, Rate Limiter, XSS Sanitizer, Input Validation, Audit Logger, JWT auth middleware, RBAC guards
-│   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment)
-│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes, analyticsRoutes, auditRoutes, academicRoutes)
-│   │   ├── utils/               # JWT generator, Async handler wrappers
+│   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule)
+│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes, analyticsRoutes, auditRoutes, academicRoutes, rulesRoutes)
+│   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js
 │   │   ├── app.js               # Express application initialization & security stack setup
 │   │   └── server.js            # Node HTTP server launcher
 │   ├── jest.config.js           # Jest runner configuration
@@ -321,6 +326,12 @@ npx jest tests/notifications.test.js
 - `POST /api/academic/promote` — Execute student batch promotion to target Academic Year/Semester/Division
 - `POST /api/academic/enroll` — Execute batch student enrollment into dynamic semesters/divisions
 - `POST /api/academic/allocations` — Allocate subjects to dynamic semesters, class divisions, and instructors
+
+### ⚙️ Advanced Attendance Rules Engine (`/api/attendance-rules`)
+- `GET /api/attendance-rules` — Fetch active system rules & 7-status matrix definitions
+- `PUT /api/attendance-rules` — Update system thresholds & status weights (Admin only)
+- `POST /api/attendance-rules/reset` — Reset rules to factory defaults (Admin only)
+- `POST /api/attendance-rules/evaluate` — Interactive check-in evaluation simulator sandbox
 
 ### 🏥 System Health (`/api/health`)
 - `GET /api/health` — Check backend status, connected database, security stack status, and API uptime

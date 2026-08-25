@@ -12,6 +12,7 @@ This document contains comprehensive flowcharts and system diagrams for the **At
 5. [Real-Time Socket.io & FCM Web Push Notification Flow](#5-real-time-socketio--fcm-web-push-notification-flow)
 6. [Student Leave Application & Authorization Flow](#6-student-leave-application--authorization-flow)
 7. [AI Attendance Prediction & Proxy Anomaly Detection Flow](#7-ai-attendance-prediction--proxy-anomaly-detection-flow)
+8. [Advanced Attendance Rules Engine Evaluation & Sandbox Flow](#8-advanced-attendance-rules-engine-evaluation--sandbox-flow)
 
 ---
 
@@ -202,5 +203,36 @@ flowchart TD
         Scanner4 --> Flag
         
         Flag --> AdminConsole["Display in Suspicious Logs Console <br/> (/admin/suspicious)"]
+    end
+```
+
+---
+
+## 8. Advanced Attendance Rules Engine Evaluation & Sandbox Flow
+
+Process flow showing rules caching, dynamic QR & GPS boundary check-in evaluation, and interactive sandbox simulator:
+
+```mermaid
+flowchart TD
+    CheckInTrigger["Student Scans QR / Check-In Request"] --> FetchRules["getSystemRules() <br/> (Check 60s In-Memory Cache)"]
+    
+    FetchRules --> Evaluator["attendanceRulesEngine.evaluateCheckInStatus()"]
+    
+    Evaluator --> QRCheck{"Is QR Timestamp > qrValidityMinutes?"}
+    QRCheck -- Yes --> RejectQR["❌ Status: Absent <br/> Error: EXPIRED_QR"]
+    
+    QRCheck -- No --> GPSCheck{"Is GPS Distance > gpsRadiusMeters?"}
+    GPSCheck -- Yes --> RejectGPS["❌ Status: Absent <br/> Error: OUT_OF_BOUNDS"]
+    
+    GPSCheck -- No --> TimeCheck{"Calculate Arrival Delay <br/> (checkInTime - classStartTime)"}
+    
+    TimeCheck -- Delay <= gracePeriodMinutes --> Present["✅ Status: Present <br/> (Within Grace Period)"]
+    TimeCheck -- Delay <= lateThresholdMinutes --> Late["⚠️ Status: Late <br/> (Past Grace, Within Cutoff)"]
+    TimeCheck -- Delay > lateThresholdMinutes --> Absent["❌ Status: Absent <br/> (Past Late Threshold Cutoff)"]
+    
+    subgraph SandboxSimulator ["Admin Rule Sandbox Simulator (/admin/rules)"]
+        SandboxInput["Input Test Parameters: Delay Mins, Distance, QR Age"] --> RunSandbox["POST /api/attendance-rules/evaluate"]
+        RunSandbox --> Evaluator
+        Evaluator --> RenderResult["Render Evaluated Status Pill, Color, and Weight Score"]
     end
 ```

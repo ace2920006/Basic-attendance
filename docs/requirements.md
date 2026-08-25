@@ -1,6 +1,6 @@
 # Multi-Role Attendance System - Requirements & Features Specification
 
-This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 18**) for the **Attendance Management System**.
+This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 19**) for the **Attendance Management System**.
 
 ---
 
@@ -62,6 +62,10 @@ This document details the functional specifications, feature requirements, and a
   - **Class Division / Section Management**: Create sections (`IT-A`, `IT-B`, `IT-C`) with capacity tracking and live enrolled student counters.
   - **Student Batch Promotion Engine**: Promote student cohorts across academic terms with automatic historical audit tracking (`StudentEnrollment`).
   - **Visual Hierarchy Tree Console**: Interactive tree view displaying student counts, semester statuses, and allocated subjects per division.
+- **Advanced Attendance Rules Engine (Phase 19)**:
+  - **Configurable Rules & Thresholds**: Configure Minimum Attendance %, Late Arrival cutoff mins, Grace Period mins, Dynamic QR Token Validity, GPS Geofence Radius meters, and Auto-Absent delay.
+  - **7-Status Matrix Rules**: Customize status definitions (`Present`, `Absent`, `Late`, `Excused`, `On Leave`, `Holiday`, `Cancelled Lecture`) with custom attendance weights (`0.0` to `1.0`), `countsAsAttended`, and `countsAsConducted` toggles.
+  - **Interactive Check-In Simulator**: Test check-in arrival parameters (minutes delayed, distance, QR age) in real-time before saving rules.
 - **Enterprise Security & Audit Logging (Phase 16)**:
   - **Security Headers**: Helmet HTTP headers (`CSP`, `HSTS`, `X-Frame-Options`).
   - **Rate Limiting**: Sliding-window rate limiters protecting API endpoints against brute-force attacks.
@@ -93,6 +97,9 @@ This document details the functional specifications, feature requirements, and a
 | **Suspicious Proxy Detection Console** | ❌ | ✅ | ✅ |
 | **Executive Analytics Hub (5 Sub-Modules)** | ❌ | ❌ | ✅ |
 | **Security Audit Logs Console & CSV Export** | ❌ | ❌ | ✅ |
+| **Configurable Attendance Rules & Thresholds Engine** | ❌ | ❌ | ✅ |
+| **7-Status Matrix Rules & Attendance Weights** | ❌ | ❌ | ✅ |
+| **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ |
 
 ---
 
