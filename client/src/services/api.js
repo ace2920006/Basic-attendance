@@ -672,6 +672,30 @@ export const allocateSubjectApi = async (data) => {
   });
 };
 
+// Phase 19 Advanced Attendance Rules Engine APIs
+export const getAttendanceRulesApi = async () => {
+  return apiRequest('/attendance-rules', { method: 'GET' });
+};
+
+export const updateAttendanceRulesApi = async (data) => {
+  return apiRequest('/attendance-rules', {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
+
+export const resetAttendanceRulesApi = async () => {
+  return apiRequest('/attendance-rules/reset', { method: 'POST' });
+};
+
+export const evaluateRuleSandboxApi = async (data) => {
+  return apiRequest('/attendance-rules/evaluate', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+
 
 
 

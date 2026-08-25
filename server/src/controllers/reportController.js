@@ -174,12 +174,15 @@ const generateReport = asyncHandler(async (req, res) => {
     else if (rec.status === 'Late') stat.late += 1;
   });
 
+  const rules = await getSystemRules();
+  const minRequired = rules.minAttendancePercentage || 75;
+
   // Calculate final rates per student
   const studentList = Object.values(studentStatsMap).map(stat => {
     const rate = stat.totalClasses > 0 
       ? Number(((stat.present / stat.totalClasses) * 100).toFixed(1))
       : 88.5; // Fallback mock average if no attendance entries yet for range
-    const isEligible = rate >= 75;
+    const isEligible = rate >= minRequired;
     return {
       ...stat,
       attendanceRate: rate,
@@ -204,8 +207,8 @@ const generateReport = asyncHandler(async (req, res) => {
     ? Number(((eligibleCount / totalStudents) * 100).toFixed(1)) 
     : 100;
 
-  // At-risk students array (< 75% attendance)
-  const atRiskStudents = studentList.filter(s => s.attendanceRate < 75);
+  // At-risk students array (< minRequired % attendance)
+  const atRiskStudents = studentList.filter(s => s.attendanceRate < minRequired);
 
   res.json({
     success: true,
@@ -276,9 +279,12 @@ const exportReport = asyncHandler(async (req, res) => {
     }
   });
 
+  const rules = await getSystemRules();
+  const minRequired = rules.minAttendancePercentage || 75;
+
   const rows = Object.values(studentStatsMap).map(s => {
     const rate = s.total > 0 ? ((s.present / s.total) * 100).toFixed(1) : '88.5';
-    const status = Number(rate) >= 75 ? 'Eligible' : 'Shortage Warning';
+    const status = Number(rate) >= minRequired ? 'Eligible' : 'Shortage Warning';
     return { ...s, rate: `${rate}%`, status };
   });
 
