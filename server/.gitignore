@@ -7,9 +7,14 @@
 # Dependencies
 node_modules/
 
+# Build & Output
+dist/
+build/
+
 # Uploads & Temp files
 uploads/*
 !uploads/.gitkeep
 
 # Logs
 *.log
+
