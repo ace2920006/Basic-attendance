@@ -69,8 +69,9 @@ export default function Sidebar({ role, user: userProp }) {
         ];
       case 'admin':
         return [
-          { to: '/admin', label: 'Analytics Console', icon: FiBarChart2, end: true },
+          { to: '/admin', label: 'Analytics Console', icon: FiHome, end: true },
           { to: '/admin/academic', label: 'Academic Engine', icon: HiOutlineAcademicCap },
+          { to: '/admin/rules', label: 'Rules Engine', icon: FiShield },
           { to: '/admin/audit-logs', label: 'Security Audit Logs', icon: FiShield },
           { to: '/admin/suspicious', label: 'Suspicious Logs AI', icon: FiShield },
           { to: '/admin/charts', label: 'Visual Charts Hub', icon: FiPieChart },
