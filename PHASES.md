@@ -630,6 +630,54 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 🔥 Phase 19 – Advanced Attendance Rules Engine
+
+### Core Requirements & Features
+- **Configurable Thresholds Engine**:
+  - Replaced hard-coded attendance logic with institution-wide configurable rules:
+    - Minimum Attendance Required % (Default: `75%`)
+    - Late Arrival Threshold (Default: `10 minutes`)
+    - On-Time Grace Period (Default: `5 minutes`)
+    - Dynamic QR Token Validity (Default: `1 minute` / `60 seconds`)
+    - GPS Geofence Campus Radius (Default: `100 meters`)
+    - Auto-Mark Absent Delay (Default: `30 minutes`)
+    - Consecutive Absentees Alert Threshold (Default: `3 classes`)
+- **Advanced 7-Status Attendance Matrix**:
+  - Fully configurable status rules for 7 core statuses:
+    - `Present`: Attended = Yes, Conducted = Yes, Weight = 1.0
+    - `Absent`: Attended = No, Conducted = Yes, Weight = 0.0
+    - `Late`: Attended = Yes, Conducted = Yes, Weight = 0.8 (configurable)
+    - `Excused`: Attended = Yes, Conducted = Yes, Weight = 1.0 (approved exceptions)
+    - `On Leave`: Attended = No, Conducted = No (excluded from denominator)
+    - `Holiday`: Attended = No, Conducted = No (scheduled institutional holiday)
+    - `Cancelled Lecture`: Attended = No, Conducted = No (cancelled by faculty)
+- **Real-Time Check-In Evaluation Engine**:
+  - Centralized `attendanceRulesEngine.js` evaluator validating QR expiration, GPS distance, grace period, and late cutoff in real-time.
+- **Admin Rules Console & Interactive Simulator**:
+  - Admin Portal UI (`/admin/rules`) featuring threshold sliders, 7-status matrix editor, and an interactive check-in sandbox/simulator to test check-in parameters before saving.
+
+### File Mapping
+- Backend Models:
+  - `server/src/models/AttendanceRule.js`
+  - `server/src/models/Attendance.js` (expanded status enum)
+- Backend Engine, Controller & Routes:
+  - `server/src/utils/attendanceRulesEngine.js`
+  - `server/src/controllers/rulesController.js`
+  - `server/src/routes/rulesRoutes.js`
+  - `server/src/controllers/classController.js` (updated)
+  - `server/src/controllers/attendanceController.js` (updated)
+  - `server/src/controllers/reportController.js` (updated)
+  - `server/src/app.js` (mounted `/api/attendance-rules`)
+- Frontend UI & API Client:
+  - `client/src/services/api.js`
+  - `client/src/pages/admin/AdminRulesEngine.jsx`
+  - `client/src/App.jsx` (`/admin/rules` route)
+  - `client/src/components/layout/Sidebar.jsx` (Rules Engine sidebar link)
+- Tests:
+  - `server/tests/rules.test.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
