@@ -3,33 +3,36 @@ const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const { sendNotification } = require('../config/socket');
 
+const { getSystemRules, calculateAttendanceStats } = require('../utils/attendanceRulesEngine');
+
 // Helper to send real-time notification for Attendance Marked & Low Attendance Warning
 async function checkAndSendAttendanceAlerts(studentId, subject, status) {
   try {
+    const rules = await getSystemRules();
+    const minPercentage = rules.minAttendancePercentage || 75;
+
     // 1. Send Attendance Marked notification
     await sendNotification({
       recipientId: studentId,
       title: 'Attendance Marked',
       message: `You were marked ${status} for ${subject}.`,
-      type: status === 'Present' ? 'success' : status === 'Late' ? 'warning' : 'error',
+      type: status === 'Present' ? 'success' : status === 'Late' || status === 'Excused' ? 'warning' : 'error',
       eventType: 'ATTENDANCE_MARKED',
       data: { subject, status }
     });
 
     // 2. Check cumulative attendance percentage for Low Attendance Warning
     const allRecords = await Attendance.find({ student: studentId, subject });
-    const total = allRecords.length;
-    if (total >= 2) {
-      const presentCount = allRecords.filter(r => r.status === 'Present').length;
-      const percentage = Number(((presentCount / total) * 100).toFixed(1));
-      if (percentage < 75) {
+    if (allRecords.length >= 2) {
+      const stats = calculateAttendanceStats(allRecords, rules);
+      if (stats.weightedPercentage < minPercentage) {
         await sendNotification({
           recipientId: studentId,
           title: 'Low Attendance Warning',
-          message: `Warning: Your attendance in ${subject} is ${percentage}%, which is below the 75% requirement.`,
+          message: `Warning: Your attendance in ${subject} is ${stats.weightedPercentage}%, which is below the mandatory ${minPercentage}% requirement.`,
           type: 'warning',
           eventType: 'LOW_ATTENDANCE',
-          data: { subject, percentage }
+          data: { subject, percentage: stats.weightedPercentage, minRequired: minPercentage }
         });
       }
     }

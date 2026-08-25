@@ -112,7 +112,9 @@ const deleteClass = asyncHandler(async (req, res) => {
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 
-// @desc    Start QR Attendance session (generates dynamic 30-sec token)
+const { getSystemRules } = require('../utils/attendanceRulesEngine');
+
+// @desc    Start QR Attendance session (generates dynamic QR token based on system rules)
 // @route   POST /api/classes/:id/start-qr
 // @access  Private (Teacher/Admin)
 const startQRAttendance = asyncHandler(async (req, res) => {
@@ -122,12 +124,16 @@ const startQRAttendance = asyncHandler(async (req, res) => {
     throw new Error('Class session not found');
   }
 
+  const rules = await getSystemRules();
+  const validitySeconds = Math.max(15, Math.round((rules.qrValidityMinutes || 1) * 60));
+  const defaultGpsRadius = rules.gpsRadiusMeters || 100;
+
   const { latitude, longitude, maxRadiusMeters } = req.body;
   if (latitude !== undefined && longitude !== undefined) {
     classItem.campusLocation = {
       latitude: Number(latitude),
       longitude: Number(longitude),
-      maxRadiusMeters: Number(maxRadiusMeters) || 500
+      maxRadiusMeters: Number(maxRadiusMeters) || defaultGpsRadius
     };
   }
 
@@ -140,12 +146,12 @@ const startQRAttendance = asyncHandler(async (req, res) => {
       nonce
     },
     process.env.JWT_SECRET,
-    { expiresIn: '30s' }
+    { expiresIn: `${validitySeconds}s` }
   );
 
   classItem.qrActive = true;
   classItem.qrSecretToken = token;
-  classItem.qrExpiresAt = new Date(Date.now() + 30000);
+  classItem.qrExpiresAt = new Date(Date.now() + validitySeconds * 1000);
   await classItem.save();
 
   res.json({
@@ -153,11 +159,12 @@ const startQRAttendance = asyncHandler(async (req, res) => {
     message: 'QR Attendance session started',
     token,
     expiresAt: classItem.qrExpiresAt,
+    validitySeconds,
     campusLocation: classItem.campusLocation
   });
 });
 
-// @desc    Get or auto-rotate active 30s QR session token
+// @desc    Get or auto-rotate active QR session token
 // @route   GET /api/classes/:id/qr-token
 // @access  Private (Teacher/Admin/Student)
 const getQRSessionToken = asyncHandler(async (req, res) => {
@@ -172,7 +179,10 @@ const getQRSessionToken = asyncHandler(async (req, res) => {
     throw new Error('QR Attendance is not active for this class');
   }
 
-  // Generate a fresh 30-second token if current is expired or missing
+  const rules = await getSystemRules();
+  const validitySeconds = Math.max(15, Math.round((rules.qrValidityMinutes || 1) * 60));
+
+  // Generate a fresh token if current is expired or missing
   const now = new Date();
   if (!classItem.qrExpiresAt || classItem.qrExpiresAt <= now || !classItem.qrSecretToken) {
     const nonce = crypto.randomBytes(8).toString('hex');
@@ -184,9 +194,9 @@ const getQRSessionToken = asyncHandler(async (req, res) => {
         nonce
       },
       process.env.JWT_SECRET,
-      { expiresIn: '30s' }
+      { expiresIn: `${validitySeconds}s` }
     );
-    classItem.qrExpiresAt = new Date(Date.now() + 30000);
+    classItem.qrExpiresAt = new Date(Date.now() + validitySeconds * 1000);
     await classItem.save();
   }
 
@@ -194,6 +204,7 @@ const getQRSessionToken = asyncHandler(async (req, res) => {
     success: true,
     token: classItem.qrSecretToken,
     expiresAt: classItem.qrExpiresAt,
+    validitySeconds,
     campusLocation: classItem.campusLocation
   });
 });
