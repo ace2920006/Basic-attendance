@@ -154,20 +154,28 @@ const getStudentStats = asyncHandler(async (req, res) => {
   const targetStudentId = req.user.role === 'student' ? req.user._id : req.params.studentId;
 
   const records = await Attendance.find({ student: targetStudentId });
-  const total = records.length;
-  const present = records.filter(r => r.status === 'Present').length;
-  const absent = records.filter(r => r.status === 'Absent').length;
-  const late = records.filter(r => r.status === 'Late').length;
-  const percentage = total > 0 ? Number(((present / total) * 100).toFixed(1)) : 0;
+  const rules = await getSystemRules();
+  const stats = calculateAttendanceStats(records, rules);
 
   res.json({
     success: true,
     data: {
-      totalClasses: total,
-      present,
-      absent,
-      late,
-      percentage
+      totalClasses: stats.totalRecords,
+      totalConducted: stats.totalConducted,
+      totalAttended: stats.totalAttended,
+      present: stats.statusBreakdown.Present || 0,
+      absent: stats.statusBreakdown.Absent || 0,
+      late: stats.statusBreakdown.Late || 0,
+      excused: stats.statusBreakdown.Excused || 0,
+      onLeave: stats.statusBreakdown['On Leave'] || 0,
+      holiday: stats.statusBreakdown.Holiday || 0,
+      cancelled: stats.statusBreakdown['Cancelled Lecture'] || 0,
+      percentage: stats.weightedPercentage,
+      rawPercentage: stats.rawPercentage,
+      minRequiredPercentage: stats.minRequiredPercentage,
+      isEligible: stats.isEligible,
+      isShortage: stats.isShortage,
+      statusBreakdown: stats.statusBreakdown
     }
   });
 });
