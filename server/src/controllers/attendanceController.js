@@ -45,7 +45,7 @@ async function checkAndSendAttendanceAlerts(studentId, subject, status) {
 // @route   POST /api/attendance
 // @access  Private (Teacher/Admin)
 const markAttendance = asyncHandler(async (req, res) => {
-  const { studentId, subject, subjectCode, status, date, arrivalTime, departureTime, notes } = req.body;
+  const { studentId, subject, subjectCode, status, date, arrivalTime, departureTime, notes, classId, sessionId } = req.body;
 
   if (!studentId || !subject || !status) {
     res.status(400);
@@ -64,6 +64,8 @@ const markAttendance = asyncHandler(async (req, res) => {
     arrivalTime: arrivalTime || '',
     departureTime: departureTime || '',
     notes: notes || '',
+    classId: classId || null,
+    sessionId: sessionId || null,
     markedBy: req.user._id
   });
 
@@ -80,7 +82,7 @@ const markAttendance = asyncHandler(async (req, res) => {
 // @route   POST /api/attendance/bulk
 // @access  Private (Teacher/Admin)
 const markBulkAttendance = asyncHandler(async (req, res) => {
-  const { records, subject, subjectCode, date } = req.body;
+  const { records, subject, subjectCode, date, classId, sessionId } = req.body;
 
   if (!records || !Array.isArray(records) || records.length === 0) {
     res.status(400);
@@ -96,6 +98,8 @@ const markBulkAttendance = asyncHandler(async (req, res) => {
     status: item.status || 'Present',
     date: attendanceDate,
     notes: item.notes || '',
+    classId: classId || item.classId || null,
+    sessionId: sessionId || item.sessionId || null,
     markedBy: req.user._id
   }));
 
@@ -390,6 +394,8 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
     }
   }
 
+  const AttendanceSession = require('../models/AttendanceSession');
+
   // 6. Record attendance
   const record = await Attendance.create({
     student: req.user._id,
@@ -400,6 +406,7 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
     arrivalTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     verificationMethod: 'QR',
     classId: classItem._id,
+    sessionId: decoded.sessionId || null,
     location: {
       latitude: latitude || null,
       longitude: longitude || null,
@@ -419,6 +426,13 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
   classItem.present = (classItem.present || 0) + 1;
   classItem.marked = true;
   await classItem.save();
+
+  // Update active AttendanceSession stats if linked
+  if (decoded.sessionId) {
+    await AttendanceSession.findByIdAndUpdate(decoded.sessionId, {
+      $inc: { 'stats.presentCount': 1 }
+    });
+  }
 
   // Update student device profile
   await User.findByIdAndUpdate(req.user._id, {

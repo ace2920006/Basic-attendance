@@ -28,6 +28,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const auditRoutes = require('./routes/auditRoutes');
 const academicRoutes = require('./routes/academicRoutes');
 const rulesRoutes = require('./routes/rulesRoutes');
+const sessionRoutes = require('./routes/sessionRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -103,6 +104,7 @@ app.use('/api/analytics', analyticsRoutes);
 app.use('/api/audit-logs', auditRoutes);
 app.use('/api/academic', academicRoutes);
 app.use('/api/attendance-rules', rulesRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 // Error Handling Middlewares
 app.use(notFound);

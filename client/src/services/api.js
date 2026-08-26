@@ -695,6 +695,36 @@ export const evaluateRuleSandboxApi = async (data) => {
   });
 };
 
+// Phase 20 Attendance Session Engine APIs
+export const startAttendanceSessionApi = async (data) => {
+  return apiRequest('/sessions/start', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const getActiveSessionApi = async (classId = '') => {
+  const query = classId ? `?classId=${classId}` : '';
+  return apiRequest(`/sessions/active${query}`, { method: 'GET' });
+};
+
+export const getSessionQRTokenApi = async (sessionId) => {
+  return apiRequest(`/sessions/${sessionId}/qr-token`, { method: 'GET' });
+};
+
+export const stopAttendanceSessionApi = async (sessionId) => {
+  return apiRequest(`/sessions/${sessionId}/stop`, { method: 'POST' });
+};
+
+export const getSessionDetailsApi = async (sessionId) => {
+  return apiRequest(`/sessions/${sessionId}`, { method: 'GET' });
+};
+
+export const getAttendanceSessionsApi = async (params = {}) => {
+  const queryString = new URLSearchParams(params).toString();
+  return apiRequest(`/sessions?${queryString}`, { method: 'GET' });
+};
+
 
 
 

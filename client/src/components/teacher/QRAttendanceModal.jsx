@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { QrCode, RefreshCw, Clock, MapPin, X, Copy, Check, Users, ShieldCheck } from 'lucide-react';
 
 export default function QRAttendanceModal({ isOpen, onClose, classSession }) {
+  const [sessionData, setSessionData] = useState(null);
   const [token, setToken] = useState('');
   const [expiresAt, setExpiresAt] = useState(null);
   const [timeLeft, setTimeLeft] = useState(30);
@@ -9,47 +10,49 @@ export default function QRAttendanceModal({ isOpen, onClose, classSession }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Start / Fetch active QR token
+  // Start / Fetch active Attendance Session
   const fetchQRToken = async () => {
     if (!classSession?._id) return;
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`/api/classes/${classSession._id}/qr-token`, {
+      // 1. Try to start or fetch active session
+      const startRes = await fetch('/api/sessions/start', {
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
+        },
+        body: JSON.stringify({
+          classId: classSession._id,
+          mode: 'QR',
+          latitude: 28.6139,
+          longitude: 77.2090,
+          maxRadiusMeters: 100
+        })
       });
-      const data = await res.json();
-      if (res.ok && data.token) {
-        setToken(data.token);
-        setExpiresAt(new Date(data.expiresAt));
-        setTimeLeft(30);
+      const startData = await startRes.json();
+      if (startRes.ok && startData.data) {
+        setSessionData(startData.data);
+        setToken(startData.token);
+        setExpiresAt(new Date(startData.data.qrExpiresAt || Date.now() + 30000));
+        setTimeLeft(startData.validitySeconds || 30);
       } else {
-        // If not started yet, call start-qr
-        const startRes = await fetch(`/api/classes/${classSession._id}/start-qr`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          },
-          body: JSON.stringify({
-            latitude: 28.6139,
-            longitude: 77.2090,
-            maxRadiusMeters: 500
-          })
+        // Fallback to class token endpoint if needed
+        const classRes = await fetch(`/api/classes/${classSession._id}/qr-token`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
-        const startData = await startRes.json();
-        if (startRes.ok && startData.token) {
-          setToken(startData.token);
-          setExpiresAt(new Date(startData.expiresAt));
+        const classData = await classRes.json();
+        if (classRes.ok && classData.token) {
+          setToken(classData.token);
+          setExpiresAt(new Date(classData.expiresAt));
           setTimeLeft(30);
         } else {
-          setError(startData.message || 'Failed to start QR attendance session');
+          setError(startData.message || 'Failed to initialize Attendance Session');
         }
       }
     } catch (err) {
-      setError('Network error while initializing QR token');
+      setError('Network error while initializing Attendance Session');
     } finally {
       setLoading(false);
     }
@@ -68,7 +71,22 @@ export default function QRAttendanceModal({ isOpen, onClose, classSession }) {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
-          fetchQRToken(); // Refresh token when 30s expires
+          if (sessionData?._id) {
+            // Fetch fresh QR token for session
+            fetch(`/api/sessions/${sessionData._id}/qr-token`, {
+              headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+            })
+              .then((res) => res.json())
+              .then((d) => {
+                if (d.token) {
+                  setToken(d.token);
+                  setExpiresAt(new Date(d.expiresAt));
+                }
+              })
+              .catch(() => fetchQRToken());
+          } else {
+            fetchQRToken();
+          }
           return 30;
         }
         return prev - 1;
@@ -76,20 +94,28 @@ export default function QRAttendanceModal({ isOpen, onClose, classSession }) {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isOpen, token]);
+  }, [isOpen, token, sessionData]);
 
   // Handle Stop Session
   const handleStopSession = async () => {
-    if (!classSession?._id) return;
-    try {
-      await fetch(`/api/classes/${classSession._id}/stop-qr`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-    } catch (e) {
-      console.error(e);
+    if (sessionData?._id) {
+      try {
+        await fetch(`/api/sessions/${sessionData._id}/stop`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    } else if (classSession?._id) {
+      try {
+        await fetch(`/api/classes/${classSession._id}/stop-qr`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+      } catch (e) {
+        console.error(e);
+      }
     }
     onClose();
   };
@@ -139,9 +165,16 @@ export default function QRAttendanceModal({ isOpen, onClose, classSession }) {
               <QrCode className="w-6 h-6" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white">Dynamic 30s QR Attendance</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white">Dynamic Attendance Session</h2>
+                {sessionData?.sessionId && (
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                    {sessionData.sessionId}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-400">
-                {classSession?.subject} ({classSession?.subjectCode}) • Room {classSession?.room}
+                {classSession?.subject} ({classSession?.subjectCode}) • Division: {sessionData?.division || classSession?.section || 'Sec A'}
               </p>
             </div>
           </div>
