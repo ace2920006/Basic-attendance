@@ -13,6 +13,7 @@ This document contains comprehensive flowcharts and system diagrams for the **At
 6. [Student Leave Application & Authorization Flow](#6-student-leave-application--authorization-flow)
 7. [AI Attendance Prediction & Proxy Anomaly Detection Flow](#7-ai-attendance-prediction--proxy-anomaly-detection-flow)
 8. [Advanced Attendance Rules Engine Evaluation & Sandbox Flow](#8-advanced-attendance-rules-engine-evaluation--sandbox-flow)
+9. [Attendance Session Engine & 4-Tier Hierarchy Flow](#9-attendance-session-engine--4-tier-hierarchy-flow)
 
 ---
 
@@ -234,5 +235,35 @@ flowchart TD
         SandboxInput["Input Test Parameters: Delay Mins, Distance, QR Age"] --> RunSandbox["POST /api/attendance-rules/evaluate"]
         RunSandbox --> Evaluator
         Evaluator --> RenderResult["Render Evaluated Status Pill, Color, and Weight Score"]
+    end
+```
+
+---
+
+## 9. Attendance Session Engine & 4-Tier Hierarchy Flow
+
+Hierarchy and Session Lifecycle workflow:
+
+```mermaid
+flowchart TD
+    subgraph DomainHierarchy ["4-Tier Domain Hierarchy"]
+        Subject["Subject (e.g. CS201 Data Structures)"] --> ClassSchedule["Scheduled Class (Room 302, 10:00 AM)"]
+        ClassSchedule --> SessionInstance["Attendance Session (SESS-20260826-A1B2C3)"]
+        SessionInstance --> StudentAtt["Student Attendance Record"]
+    end
+
+    subgraph SessionLifecycle ["Session Creation & Completion Lifecycle"]
+        TeacherClick["Teacher Clicks 'Start Attendance'"] --> InitSession["POST /api/sessions/start"]
+        InitSession --> GenId["Generate Unique Session ID + Start Time"]
+        GenId --> GenQR["Sign 30s Dynamic JWT QR Token (Session Linked)"]
+        GenQR --> SessionActive["Status: Active <br/> (Teacher UI Displays Session ID Badge & Countdown)"]
+        
+        SessionActive --> StudentScan["Student Scans QR Code"]
+        StudentScan --> LinkAtt["Record Attendance (Linked to sessionId & classId)"]
+        LinkAtt --> IncStats["$inc Session Stats: presentCount"]
+        
+        SessionActive --> TeacherStop["Teacher Clicks 'Stop Session'"]
+        TeacherStop --> CompleteSession["POST /api/sessions/:id/stop"]
+        CompleteSession --> FinalStats["Set Status: Completed & Record endTime"]
     end
 ```

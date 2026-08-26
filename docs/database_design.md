@@ -20,13 +20,13 @@ This document outlines the MongoDB Mongoose database schema, collection definiti
                                                    | 1:N                                  | 1:N
                                                    v                                      v
   +--------------------+                 +--------------------+                 +--------------------+
-  |  AttendanceRules   | --------------> |     Attendance     | <-------------- |      Classes       |
+  |  AttendanceRules   | --------------> | AttendanceSessions | --------------> |     Attendance     |
   +--------------------+  (Evaluator)    +--------------------+                 +--------------------+
-                                                   ^
-                                                   | 1:N
-                                         +--------------------+
-                                         |     AuditLogs      |
-                                         +--------------------+
+                                                   ^                                      ^
+                                                   | 1:N                                  | 1:N
+                                         +--------------------+                 +--------------------+
+                                         |      Classes       |                 |     AuditLogs      |
+                                         +--------------------+                 +--------------------+
 ```
 
 ---
@@ -181,6 +181,8 @@ Granular daily attendance session logs.
 | `departureTime` | String | DEFAULT '' | Departure time timestamp |
 | `notes` | String | DEFAULT '' | Custom session remarks |
 | `markedBy` | ObjectId | REF `User` | Evaluator ID |
+| `classId` | ObjectId | REF `Class` | Scheduled Class reference |
+| `sessionId` | ObjectId | REF `AttendanceSession` | Active Attendance Session reference |
 
 ---
 
@@ -220,6 +222,32 @@ Institutional thresholds engine and 7-status matrix definitions.
 | `allowStudentSelfCheckIn` | Boolean | DEFAULT true | Student self-service check-in toggle |
 | `consecutiveAbsentAlertThreshold` | Number | DEFAULT 3 | Alert trigger for consecutive absentees |
 | `statusConfigs` | Array [Object] | REQUIRED (7 Statuses) | Matrix rules defining `statusCode`, `label`, `countsAsAttended`, `countsAsConducted`, `attendanceWeight`, and `color` |
+
+---
+
+### 11. `AttendanceSessions`
+Live attendance session instances.
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `_id` | ObjectId | PRIMARY KEY | Unique Attendance Session Mongo ID |
+| `sessionId` | String | UNIQUE, REQUIRED | Readable formatted session ID (e.g. `SESS-20260826-A1B2C3`) |
+| `class` | ObjectId | REF `Class`, REQUIRED | Scheduled Class reference |
+| `subject` | String | REQUIRED | Subject title |
+| `subjectCode` | String | UPPERCASE, REQUIRED | Subject code (e.g. `CS201`) |
+| `division` | String | DEFAULT 'Sec A' | Division/Section (e.g. `IT-A`) |
+| `teacher` | ObjectId | REF `User`, REQUIRED | Faculty instructor user ID |
+| `teacherName` | String | DEFAULT '' | Faculty instructor name |
+| `department` | String | DEFAULT 'Computer Science' | Department name |
+| `room` | String | DEFAULT '' | Classroom venue |
+| `startTime` | Date | DEFAULT Date.now | Session start timestamp |
+| `endTime` | Date | OPTIONAL | Session completion timestamp |
+| `mode` | String | ENUM (`QR`, `Manual`, `GPS`, `Hybrid`) | Attendance verification mode |
+| `status` | String | ENUM (`Active`, `Completed`, `Cancelled`, `Expired`) | Session status |
+| `qrSecretToken` | String | DEFAULT '' | Expiring 30s dynamic QR JWT token |
+| `qrExpiresAt` | Date | OPTIONAL | QR token expiration timestamp |
+| `campusLocation` | Object | `{ latitude, longitude, maxRadiusMeters: 100 }` | Session GPS geofence location |
+| `stats` | Object | `{ totalStudents, presentCount, absentCount, lateCount, excusedCount }` | Real-time session stats |
 
 ---
 

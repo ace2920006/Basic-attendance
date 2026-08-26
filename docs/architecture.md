@@ -52,14 +52,14 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                     # Backend REST API Server (Node.js + Express + MongoDB)
-│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (auth, attendance, qr, gps, reports, charts, notifications, rules.test.js)
+│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (auth, attendance, qr, gps, reports, charts, notifications, rules, sessions.test.js)
 │   ├── uploads/                # Static Uploaded File Attachments (Medical Certificates, Avatars)
 │   ├── src/
 │   │   ├── config/             # DB Connection (db.js), WebSockets (socket.js), Firebase FCM (firebase.js)
-│   │   ├── controllers/        # Request Controllers (auth, user, attendance, class, timetable, report, chart, notification, leave, ai, analytics, audit, academicController, rulesController)
+│   │   ├── controllers/        # Request Controllers (auth, user, attendance, class, timetable, report, chart, notification, leave, ai, analytics, audit, academicController, rulesController, sessionController)
 │   │   ├── middleware/         # Security Stack (Helmet, Rate Limiter, XSS, Input Validation, Audit Logger, JWT Auth, RBAC Authorization)
-│   │   ├── models/             # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule)
-│   │   ├── routes/             # Express API Endpoints (auth, users, departments, courses, subjects, classes, attendance, leaves, timetable, reports, charts, notifications, ai, analytics, audit, academicRoutes, rulesRoutes)
+│   │   ├── models/             # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession)
+│   │   ├── routes/             # Express API Endpoints (auth, users, departments, courses, subjects, classes, attendance, leaves, timetable, reports, charts, notifications, ai, analytics, audit, academicRoutes, rulesRoutes, sessionRoutes)
 │   │   ├── utils/              # GeoUtils (Haversine formula), JWT Generator, Async Handler, attendanceRulesEngine.js
 │   │   ├── app.js              # Express Application Bootstrap & Security Layer
 │   │   └── server.js           # Node HTTP Server Launcher
@@ -70,7 +70,7 @@ Basic-attendance/
     ├── architecture.md         # System Architecture & Technical Specs
     ├── database_design.md      # Database ERD & Schema Specs
     ├── FLOW_DIAGRAMS.md        # Comprehensive System Flow Diagrams (Mermaid)
-    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-19)
+    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-20)
 ```
 
 ---
@@ -105,4 +105,5 @@ Basic-attendance/
 - `/api/audit-logs` $\rightarrow$ Security audit event ledger, Metric statistics, CSV audit log export
 - `/api/academic` $\rightarrow$ Academic hierarchy tree, Academic Years, Dynamic Semesters, Divisions (`IT-A`), Batch Student Promotion Engine
 - `/api/attendance-rules` $\rightarrow$ Institutional rule thresholds, 7-status matrix definitions, Sandbox check-in simulator
+- `/api/sessions` $\rightarrow$ Attendance Session Engine, Session ID generator, QR/GPS session start & stop lifecycle
 - `/api/health` $\rightarrow$ Infrastructure health check & security stack status

@@ -1,6 +1,6 @@
 # Multi-Role Attendance System - Requirements & Features Specification
 
-This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 19**) for the **Attendance Management System**.
+This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 20**) for the **Attendance Management System**.
 
 ---
 
@@ -35,6 +35,9 @@ This document details the functional specifications, feature requirements, and a
 - **Class & Schedule Management**:
   - Create active class sessions (`CreateClassModal.jsx`) specifying Subject Name, Code, Venue Room, Time Slot, and Capacity.
   - Schedule and manage weekly master timetable slots.
+- **Attendance Session Engine (Phase 20)**:
+  - 4-Tier domain separation: `Subject ➔ Scheduled Class ➔ Attendance Session ➔ Student Attendance`.
+  - When teacher clicks "Start Attendance", system initializes a dedicated `AttendanceSession` instance with unique Session ID (`SESS-YYYYMMDD-XXXX`), Start Time, End Time, Mode (`QR`, `Manual`, `GPS`), QR secret token, campus location, and real-time session stats counters.
 - **Attendance Operations**:
   - **30s Dynamic QR Generator**: Launch dynamic QR attendance session with live 30-second countdown timer and automatic token rotation.
   - **Interactive Attendance Screen**: Toggle student status (`Present`, `Absent`, `Late`), add session remarks, and execute one-click batch marking.
@@ -100,6 +103,8 @@ This document details the functional specifications, feature requirements, and a
 | **Configurable Attendance Rules & Thresholds Engine** | ❌ | ❌ | ✅ |
 | **7-Status Matrix Rules & Attendance Weights** | ❌ | ❌ | ✅ |
 | **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ |
+| **Attendance Session Engine (Session ID, Start/End Timestamps)** | ❌ | ✅ | ✅ |
+| **Session-Linked Attendance Logs & QR/GPS Session Management** | ✅ | ✅ | ✅ |
 
 ---
 
