@@ -51,6 +51,10 @@ const attendanceSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Class'
     },
+    sessionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'AttendanceSession'
+    },
     location: {
       latitude: { type: Number },
       longitude: { type: Number },
