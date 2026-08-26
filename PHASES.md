@@ -24,7 +24,8 @@ This document provides a single, unified reference for all project implementatio
 17. [Phase 17 – Testing](#-phase-17--testing)
 18. [Phase 18 – Academic Year & Semester Engine](#-phase-18--academic-year--semester-engine)
 19. [Phase 19 – Advanced Attendance Rules Engine](#-phase-19--advanced-attendance-rules-engine)
-20. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+20. [Phase 20 – Attendance Session Engine](#-phase-20--attendance-session-engine)
+21. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -679,6 +680,44 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 🔥 Phase 20 – Attendance Session Engine
+
+### Core Requirements & Features
+- **4-Tier Domain Hierarchy**:
+  - Separated static scheduled class definitions (`Class`) from live attendance session instances (`AttendanceSession`):
+    $$\text{Subject} \longrightarrow \text{Scheduled Class} \longrightarrow \text{Attendance Session} \longrightarrow \text{Student Attendance}$$
+- **Dynamic Attendance Session Instance Creation**:
+  - When a teacher clicks **"Start Attendance"**, the system initializes a dedicated `AttendanceSession` model storing:
+    - `sessionId`: Unique formatted string code (e.g. `SESS-20260826-A1B2C3`)
+    - `startTime` & `endTime`: Timestamps marking session lifecycle
+    - `teacher`, `subject`, `subjectCode`, `division`, `room`, `department`: Class metadata
+    - `mode`: ENUM (`QR`, `Manual`, `GPS`, `Hybrid`)
+    - `status`: ENUM (`Active`, `Completed`, `Cancelled`, `Expired`)
+    - `qrSecretToken` & `qrExpiresAt`: Expiring 30s QR session token
+    - `campusLocation`: GPS coordinates (`latitude`, `longitude`, `maxRadiusMeters`)
+    - `stats`: Live counts for `totalStudents`, `presentCount`, `absentCount`, `lateCount`, `excusedCount`
+- **Granular Attendance Tracking**:
+  - `Attendance` records directly store `sessionId` linking individual student check-ins to specific session instances.
+- **Session Lifecycle APIs**:
+  - Endpoints for starting sessions (`POST /api/sessions/start`), stopping sessions (`POST /api/sessions/:id/stop`), getting active session (`GET /api/sessions/active`), fetching session token (`GET /api/sessions/:id/qr-token`), and retrieving session history (`GET /api/sessions`).
+
+### File Mapping
+- Backend Models:
+  - `server/src/models/AttendanceSession.js`
+  - `server/src/models/Attendance.js` (updated with `sessionId` ref)
+- Backend Controller & Routes:
+  - `server/src/controllers/sessionController.js`
+  - `server/src/routes/sessionRoutes.js`
+  - `server/src/app.js` (mounted `/api/sessions`)
+  - `server/src/controllers/attendanceController.js` (updated)
+- Frontend UI & API Client:
+  - `client/src/services/api.js` (`startAttendanceSessionApi`, `getActiveSessionApi`, `stopAttendanceSessionApi`, etc.)
+  - `client/src/components/teacher/QRAttendanceModal.jsx` (updated with Session ID badge and session APIs)
+- Tests:
+  - `server/tests/sessions.test.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -765,6 +804,8 @@ This document provides a single, unified reference for all project implementatio
 | **Configurable Attendance Rules & Thresholds Engine** | ❌ | ❌ | ✅ | Phase 19 |
 | **7-Status Matrix Rules & Attendance Weights** | ❌ | ❌ | ✅ | Phase 19 |
 | **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ | Phase 19 |
+| **Attendance Session Engine (Session ID, Start/End Timestamps)** | ❌ | ✅ | ✅ | Phase 20 |
+| **Session-Linked Attendance Logs & QR/GPS Session Management** | ✅ | ✅ | ✅ | Phase 20 |
 
 ---
 *Last Updated: August 2026*

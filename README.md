@@ -33,6 +33,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 🧪 **Automated Testing Suite (Phase 17)**: Comprehensive unit and integration test coverage (38/38 passing tests) covering 7 core modules (**Authentication**, **Attendance**, **Dynamic QR**, **GPS Geofencing**, **Reports Generation**, **Charts Analytics**, and **Notifications Hub**) powered by **Jest**, **Supertest**, and **mongodb-memory-server**.
 - 🏫 **Academic Year & Semester Engine (Phase 18)**: Dynamic institutional hierarchy engine (`Academic Year ➔ Semester ➔ Department ➔ Division ➔ Subjects`). Features custom session dates, active year status singletons, dynamic terms without hardcoding, class section capacity management (`IT-A`, `IT-B`, `IT-C`), interactive visual hierarchy tree, and wizard-driven student batch promotion engine with audit logs.
 - ⚙️ **Advanced Attendance Rules Engine (Phase 19)**: Institution-wide configurable rules engine replacing hardcoded logic. Allows Admins to customize thresholds (Minimum Attendance %, Late Cutoff mins, Grace Period mins, Dynamic QR Validity mins, GPS Geofence Radius meters, Auto-Absent delay mins) and define advanced rules for 7 core statuses (`Present`, `Absent`, `Late`, `Excused`, `On Leave`, `Holiday`, `Cancelled Lecture`) with attendance inclusion weights (`countsAsAttended`, `countsAsConducted`, `attendanceWeight`). Includes an interactive real-time Rule Simulator / Sandbox.
+- ⏱️ **Attendance Session Engine (Phase 20)**: Explicit 4-tier domain hierarchy (`Subject ➔ Scheduled Class ➔ Attendance Session ➔ Student Attendance`) separating static scheduled class definitions from active attendance sessions. When a teacher clicks "Start Attendance", the system creates a dedicated `AttendanceSession` instance with unique Session ID (`SESS-YYYYMMDD-XXXX`), start/end timestamps, QR secret token, GPS geofence location, teacher details, subject, and section.
 
 ---
 
@@ -103,6 +104,8 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Configurable Attendance Rules & Thresholds Engine** | ❌ | ❌ | ✅ |
 | **7-Status Matrix Rules & Attendance Weights** | ❌ | ❌ | ✅ |
 | **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ |
+| **Attendance Session Engine (Session ID, Start/End Timestamps)** | ❌ | ✅ | ✅ |
+| **Session-Linked Attendance Logs & QR/GPS Session Management** | ✅ | ✅ | ✅ |
 
 ---
 
@@ -137,7 +140,7 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                      # Backend REST API (Node.js + Express + MongoDB)
-│   ├── tests/                   # Phase 17 & Phase 19 Automated Unit & Integration Test Suites
+│   ├── tests/                   # Phase 17, 19 & 20 Automated Unit & Integration Test Suites
 │   │   ├── setup.js             # Global MongoDB in-memory / local test setup & cleanup
 │   │   ├── auth.test.js         # Authentication, Login, Register, JWT, RBAC tests
 │   │   ├── attendance.test.js   # Single/Bulk attendance, stats, defaulter threshold tests
@@ -146,14 +149,15 @@ Basic-attendance/
 │   │   ├── reports.test.js      # Daily/Weekly/Monthly/Semester report generator tests
 │   │   ├── charts.test.js       # Chart analytics datasets & student ranking tests
 │   │   ├── notifications.test.js # Notification hub & FCM web push tests
-│   │   └── rules.test.js        # Phase 19 Attendance rules engine & sandbox tests
+│   │   ├── rules.test.js        # Attendance rules engine & sandbox tests
+│   │   └── sessions.test.js     # Phase 20 Attendance session lifecycle tests
 │   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
 │   ├── src/
 │   │   ├── config/              # MongoDB Mongoose database connection
-│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, aiController, analyticsController, auditController, academicController, rulesController)
+│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, aiController, analyticsController, auditController, academicController, rulesController, sessionController)
 │   │   ├── middleware/          # Helmet, Rate Limiter, XSS Sanitizer, Input Validation, Audit Logger, JWT auth middleware, RBAC guards
-│   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule)
-│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes, analyticsRoutes, auditRoutes, academicRoutes, rulesRoutes)
+│   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession)
+│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes, analyticsRoutes, auditRoutes, academicRoutes, rulesRoutes, sessionRoutes)
 │   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js
 │   │   ├── app.js               # Express application initialization & security stack setup
 │   │   └── server.js            # Node HTTP server launcher
@@ -332,6 +336,14 @@ npx jest tests/notifications.test.js
 - `PUT /api/attendance-rules` — Update system thresholds & status weights (Admin only)
 - `POST /api/attendance-rules/reset` — Reset rules to factory defaults (Admin only)
 - `POST /api/attendance-rules/evaluate` — Interactive check-in evaluation simulator sandbox
+
+### ⏱️ Attendance Session Engine (`/api/sessions`)
+- `POST /api/sessions/start` — Start new active Attendance Session & generate unique Session ID
+- `GET /api/sessions/active` — Fetch currently active session for a class or instructor
+- `GET /api/sessions` — List all attendance sessions with search, subject, and status filters
+- `GET /api/sessions/:id` — Get detailed session metadata and enrolled attendance logs
+- `GET /api/sessions/:id/qr-token` — Get or auto-rotate 30s dynamic QR session token
+- `POST /api/sessions/:id/stop` — Stop/complete active attendance session and compile stats
 
 ### 🏥 System Health (`/api/health`)
 - `GET /api/health` — Check backend status, connected database, security stack status, and API uptime

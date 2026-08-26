@@ -20,22 +20,18 @@ describe('Phase 20: Attendance Session Engine Tests', () => {
     await Attendance.deleteMany({});
 
     // Create teacher
-    teacherUser = await User.create({
+    const teacherRes = await request(app).post('/api/auth/register').send({
       name: 'Dr. Sarah Jenkins',
       email: 'sarah.jenkins@university.edu',
       password: 'password123',
       role: 'teacher',
       department: 'Computer Science'
     });
-
-    // Login teacher to get token
-    const teacherLogin = await request(app)
-      .post('/api/auth/login')
-      .send({ email: 'sarah.jenkins@university.edu', password: 'password123' });
-    teacherToken = teacherLogin.body.token;
+    teacherToken = teacherRes.body.data.accessToken;
+    teacherUser = teacherRes.body.data;
 
     // Create student
-    studentUser = await User.create({
+    const studentRes = await request(app).post('/api/auth/register').send({
       name: 'Alex Rivera',
       email: 'alex.rivera@student.edu',
       password: 'password123',
@@ -43,12 +39,8 @@ describe('Phase 20: Attendance Session Engine Tests', () => {
       rollNo: 'CS-2026-042',
       department: 'Computer Science'
     });
-
-    // Login student to get token
-    const studentLogin = await request(app)
-      .post('/api/auth/login')
-      .send({ email: 'alex.rivera@student.edu', password: 'password123' });
-    studentToken = studentLogin.body.token;
+    studentToken = studentRes.body.data.accessToken;
+    studentUser = studentRes.body.data;
 
     // Create scheduled class
     testClass = await Class.create({

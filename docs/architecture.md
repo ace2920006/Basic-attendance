@@ -13,12 +13,12 @@ The Attendance Management System is built on a modern MERN 3-Tier Architecture d
 [ Application & Security Layer (Express REST Server + Socket.io Engine) ]
    ├── Security Stack: Helmet HTTP Headers, Rate Limiter, XSS Sanitizer, RBAC Guards
    ├── Real-time Engine: Socket.io Event Emitter, Firebase FCM Web Push
-   └── Business Controllers: Auth, Attendance, Timetable, AI, Analytics, Security Audit, Academic Engine, Rules Engine
+   └── Business Controllers: Auth, Attendance, Timetable, AI, Analytics, Security Audit, Academic Engine, Rules Engine, Session Engine
                                 |
                                 |  Mongoose ODM Drivers / Async I/O Query Engine
                                 v
 [ Database & Storage Layer (MongoDB Atlas / Local MongoDB Instance) ]
-   ├── Core Collections: Users, Departments, Courses, Subjects, Classes, Attendance, Timetables, AttendanceRules
+   ├── Core Collections: Users, Departments, Courses, Subjects, Classes, Attendance, Timetables, AttendanceRules, AttendanceSessions
    ├── Engine Collections: AcademicYears, Semesters, Divisions, StudentEnrollments
    └── Audit & Support: AuditLogs, Leaves, Notifications
 ```
