@@ -66,6 +66,47 @@ const attendanceSchema = new mongoose.Schema(
       deviceFingerprint: { type: String, default: '' },
       ipAddress: { type: String, default: '' },
       userAgent: { type: String, default: '' }
+    },
+    riskScore: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
+    },
+    riskLevel: {
+      type: String,
+      enum: ['Normal', 'Suspicious', 'High Risk'],
+      default: 'Normal'
+    },
+    riskSignals: [
+      {
+        signal: {
+          type: String,
+          enum: ['QR Token', 'GPS', 'Time', 'Device', 'IP', 'Pattern']
+        },
+        status: {
+          type: String,
+          enum: ['PASSED', 'WARNING', 'FLAGGED']
+        },
+        scoreContribution: { type: Number, default: 0 },
+        reason: { type: String, default: '' }
+      }
+    ],
+    reviewStatus: {
+      type: String,
+      enum: ['Approved', 'Pending', 'Rejected'],
+      default: 'Approved'
+    },
+    reviewedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    reviewedAt: {
+      type: Date
+    },
+    reviewNotes: {
+      type: String,
+      default: ''
     }
   },
   {
