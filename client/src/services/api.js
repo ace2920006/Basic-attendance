@@ -39,6 +39,7 @@ export const apiRequest = async (endpoint, options = {}, isRetry = false) => {
 
   try {
     const response = await fetch(url, {
+      credentials: 'include',
       ...options,
       headers
     });

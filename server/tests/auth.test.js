@@ -35,6 +35,24 @@ describe('🔐 Authentication Module Tests', () => {
       expect(dbUser).not.toBeNull();
       const isMatch = await bcrypt.compare('password123', dbUser.password);
       expect(isMatch).toBe(true);
+
+      // Security Hardening Verification: Refresh token saved in DB is hashed with SHA-256 (not plain JWT)
+      expect(dbUser.refreshToken).not.toBe(res.body.data.refreshToken);
+      expect(dbUser.refreshToken.length).toBe(64); // SHA-256 hex string length
+    });
+
+    it('should FORCE public registration to student role even if teacher role is passed', async () => {
+      const res = await request(app)
+        .post('/api/auth/register')
+        .send({
+          name: 'Hacker Teacher',
+          email: 'hacker.teacher@example.com',
+          password: 'password123',
+          role: 'teacher' // Attempting to self-register as teacher
+        });
+
+      expect(res.status).toBe(201);
+      expect(res.body.data.role).toBe('student'); // Must be forced to student
     });
 
     it('should reject registration if email is already registered', async () => {

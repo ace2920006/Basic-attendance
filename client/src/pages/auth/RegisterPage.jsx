@@ -84,26 +84,17 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Role Selection */}
-          <div className="grid grid-cols-2 gap-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800 mb-6">
-            <button
-              type="button"
-              onClick={() => setRole('student')}
-              className={`py-2 text-xs font-semibold rounded-lg transition-all ${
-                role === 'student' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Register as Student
-            </button>
-            <button
-              type="button"
-              onClick={() => setRole('teacher')}
-              className={`py-2 text-xs font-semibold rounded-lg transition-all ${
-                role === 'teacher' ? 'bg-cyan-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              Register as Teacher
-            </button>
+          {/* Role Selection & Admin Provisioning Notice */}
+          <div className="bg-slate-900/90 p-3.5 rounded-2xl border border-indigo-500/30 mb-6 space-y-2">
+            <div className="flex items-center justify-between text-xs font-bold text-indigo-300">
+              <span className="flex items-center gap-1.5">
+                <FiUser className="w-4 h-4 text-indigo-400" /> Account Type: Student Registration
+              </span>
+              <span className="px-2 py-0.5 bg-indigo-500/20 text-indigo-300 rounded-md text-[10px] font-mono uppercase">Verified</span>
+            </div>
+            <p className="text-[11px] text-slate-400 leading-relaxed">
+              🛡️ <strong>Security Notice:</strong> Public self-registration creates Student accounts. Faculty (Teacher) and Administrator accounts are provisioned directly by authorized institutional administrators.
+            </p>
           </div>
 
           <form onSubmit={handleRegister} className="space-y-4">
