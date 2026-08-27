@@ -18,11 +18,19 @@ const getFlaggedAttendanceRecords = asyncHandler(async (req, res) => {
 
   const filter = {};
 
-  // If teacher, only show records for classes/sessions they teach or marked
+  // If teacher, show records for classes/sessions they teach or marked
   if (req.user.role === 'teacher') {
+    const Class = require('../models/Class');
     const teacherSessions = await AttendanceSession.find({ teacher: req.user._id }).select('_id');
+    const teacherClasses = await Class.find({ instructorId: req.user._id }).select('_id');
     const sessionIds = teacherSessions.map((s) => s._id);
-    filter.$or = [{ markedBy: req.user._id }, { sessionId: { $in: sessionIds } }];
+    const classIds = teacherClasses.map((c) => c._id);
+
+    filter.$or = [
+      { markedBy: req.user._id },
+      { sessionId: { $in: sessionIds } },
+      { classId: { $in: classIds } }
+    ];
   }
 
   if (riskLevel && riskLevel !== 'all') {

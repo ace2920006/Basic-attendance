@@ -22,7 +22,7 @@ const notificationSchema = new mongoose.Schema(
     },
     eventType: {
       type: String,
-      enum: ['ATTENDANCE_MARKED', 'CLASS_CANCELLED', 'LOW_ATTENDANCE', 'LEAVE_STATUS', 'ANNOUNCEMENT', 'GENERAL'],
+      enum: ['ATTENDANCE_MARKED', 'CLASS_CANCELLED', 'LOW_ATTENDANCE', 'LEAVE_STATUS', 'ANNOUNCEMENT', 'ANTI_PROXY_REVIEW', 'GENERAL'],
       default: 'GENERAL'
     },
     data: {
