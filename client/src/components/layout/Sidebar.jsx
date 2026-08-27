@@ -57,7 +57,7 @@ export default function Sidebar({ role, user: userProp }) {
       case 'teacher':
         return [
           { to: '/teacher', label: 'Dashboard', icon: FiHome, end: true },
-          { to: '/teacher/suspicious', label: 'Suspicious Logs AI', icon: FiShield },
+          { to: '/teacher/suspicious', label: 'Anti-Proxy Console 🛡️', icon: FiShield },
           { to: '/teacher/classes', label: "Today's Classes", icon: FiCalendar },
           { to: '/teacher/timetable', label: 'Timetable Manager', icon: FiGrid },
           { to: '/teacher/take-attendance', label: 'Take Attendance', icon: FiCheckSquare },
@@ -73,7 +73,7 @@ export default function Sidebar({ role, user: userProp }) {
           { to: '/admin/academic', label: 'Academic Engine', icon: HiOutlineAcademicCap },
           { to: '/admin/rules', label: 'Rules Engine', icon: FiShield },
           { to: '/admin/audit-logs', label: 'Security Audit Logs', icon: FiShield },
-          { to: '/admin/suspicious', label: 'Suspicious Logs AI', icon: FiShield },
+          { to: '/admin/suspicious', label: 'Anti-Proxy Console 🛡️', icon: FiShield },
           { to: '/admin/charts', label: 'Visual Charts Hub', icon: FiPieChart },
           { to: '/admin/departments', label: 'Departments', icon: FiGrid },
           { to: '/admin/courses', label: 'Courses Management', icon: FiBookOpen },

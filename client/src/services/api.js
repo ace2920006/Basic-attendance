@@ -725,6 +725,40 @@ export const getAttendanceSessionsApi = async (params = {}) => {
   return apiRequest(`/sessions?${queryString}`, { method: 'GET' });
 };
 
+// Phase 21 Anti-Proxy Attendance System APIs
+export const getFlaggedAntiProxyRecordsApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.riskLevel) queryParams.append('riskLevel', params.riskLevel);
+  if (params.reviewStatus) queryParams.append('reviewStatus', params.reviewStatus);
+  if (params.classId) queryParams.append('classId', params.classId);
+  if (params.subjectCode) queryParams.append('subjectCode', params.subjectCode);
+  if (params.search) queryParams.append('search', params.search);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/anti-proxy/flagged${queryStr}`, { method: 'GET' });
+};
+
+export const reviewAntiProxyRecordApi = async (id, data) => {
+  return apiRequest(`/anti-proxy/review/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
+
+export const bulkReviewAntiProxyRecordsApi = async (data) => {
+  return apiRequest('/anti-proxy/bulk-review', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const getAntiProxyAnalyticsApi = async () => {
+  return apiRequest('/anti-proxy/analytics', { method: 'GET' });
+};
+
+export const getDeviceSharingClustersApi = async () => {
+  return apiRequest('/anti-proxy/device-clusters', { method: 'GET' });
+};
+
 
 
 

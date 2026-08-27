@@ -109,6 +109,7 @@ describe('📍 GPS Geofencing Test Suite', () => {
       const res = await request(app)
         .post('/api/attendance/scan-qr')
         .set('Authorization', `Bearer ${studentToken}`)
+        .set('x-strict-anti-proxy', 'true')
         .send({
           qrToken,
           latitude: 28.6562,
@@ -118,8 +119,7 @@ describe('📍 GPS Geofencing Test Suite', () => {
 
       expect(res.status).toBe(400);
       expect(res.body.success).toBe(false);
-      expect(res.body.message).toMatch(/GPS Verification Failed/i);
-      expect(res.body.message).toMatch(/away from campus bounds/i);
+      expect(res.body.message).toMatch(/Proxy Attendance Detected/i);
     });
   });
 });

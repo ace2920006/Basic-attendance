@@ -162,6 +162,7 @@ describe('📱 QR Code & Anti-Proxy Test Suite', () => {
       const res = await request(app)
         .post('/api/attendance/scan-qr')
         .set('Authorization', `Bearer ${bobToken}`)
+        .set('x-strict-anti-proxy', 'true')
         .send({
           qrToken,
           latitude: 28.6139,
