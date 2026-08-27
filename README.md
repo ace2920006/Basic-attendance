@@ -106,6 +106,8 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ |
 | **Attendance Session Engine (Session ID, Start/End Timestamps)** | ❌ | ✅ | ✅ |
 | **Session-Linked Attendance Logs & QR/GPS Session Management** | ✅ | ✅ | ✅ |
+| **Anti-Proxy Attendance System (Multi-Signal Risk Engine)** | ✅ | ✅ | ✅ |
+| **Teacher & Admin Suspicious Attendance Review Console** | ✅ | ✅ | ✅ |
 
 ---
 
@@ -140,7 +142,7 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                      # Backend REST API (Node.js + Express + MongoDB)
-│   ├── tests/                   # Phase 17, 19 & 20 Automated Unit & Integration Test Suites
+│   ├── tests/                   # Phase 17, 19, 20 & 21 Automated Unit & Integration Test Suites
 │   │   ├── setup.js             # Global MongoDB in-memory / local test setup & cleanup
 │   │   ├── auth.test.js         # Authentication, Login, Register, JWT, RBAC tests
 │   │   ├── attendance.test.js   # Single/Bulk attendance, stats, defaulter threshold tests
@@ -150,15 +152,16 @@ Basic-attendance/
 │   │   ├── charts.test.js       # Chart analytics datasets & student ranking tests
 │   │   ├── notifications.test.js # Notification hub & FCM web push tests
 │   │   ├── rules.test.js        # Attendance rules engine & sandbox tests
-│   │   └── sessions.test.js     # Phase 20 Attendance session lifecycle tests
+│   │   ├── sessions.test.js     # Phase 20 Attendance session lifecycle tests
+│   │   └── antiProxy.test.js    # Phase 21 Multi-signal anti-proxy risk engine & review tests
 │   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
 │   ├── src/
 │   │   ├── config/              # MongoDB Mongoose database connection
-│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, aiController, analyticsController, auditController, academicController, rulesController, sessionController)
+│   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, aiController, analyticsController, auditController, academicController, rulesController, sessionController, antiProxyController)
 │   │   ├── middleware/          # Helmet, Rate Limiter, XSS Sanitizer, Input Validation, Audit Logger, JWT auth middleware, RBAC guards
 │   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession)
-│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes, analyticsRoutes, auditRoutes, academicRoutes, rulesRoutes, sessionRoutes)
-│   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js
+│   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes, analyticsRoutes, auditRoutes, academicRoutes, rulesRoutes, sessionRoutes, antiProxyRoutes)
+│   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js, antiProxyEngine.js
 │   │   ├── app.js               # Express application initialization & security stack setup
 │   │   └── server.js            # Node HTTP server launcher
 │   ├── jest.config.js           # Jest runner configuration
@@ -344,6 +347,13 @@ npx jest tests/notifications.test.js
 - `GET /api/sessions/:id` — Get detailed session metadata and enrolled attendance logs
 - `GET /api/sessions/:id/qr-token` — Get or auto-rotate 30s dynamic QR session token
 - `POST /api/sessions/:id/stop` — Stop/complete active attendance session and compile stats
+
+### 🛡️ Anti-Proxy Attendance Engine & Review Hub (`/api/anti-proxy`)
+- `GET /api/anti-proxy/flagged` — Fetch pending flagged/suspicious attendance records with risk level, review status, and search filters
+- `PUT /api/anti-proxy/review/:id` — Instructor single-record review action (`approve` to verify, `reject` to mark Absent with notes)
+- `POST /api/anti-proxy/bulk-review` — Execute bulk approval or bulk rejection on selected flagged records
+- `GET /api/anti-proxy/analytics` — Fetch multi-signal violation counts (QR, GPS, Time, Device, IP, Pattern) and risk score distribution
+- `GET /api/anti-proxy/device-clusters` — Detect physical devices shared across multiple student accounts
 
 ### 🏥 System Health (`/api/health`)
 - `GET /api/health` — Check backend status, connected database, security stack status, and API uptime

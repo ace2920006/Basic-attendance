@@ -47,7 +47,10 @@ This document details the functional specifications, feature requirements, and a
   - Class attendance report generator with CSV, Excel, and PDF exports.
 - **Leave Approvals & Security Console**:
   - Review student leave applications, view attached supporting proof documents, and execute Approve/Reject decisions with custom remarks.
-  - Suspicious Attendance Anomaly Detector inspecting proxy attempts (repeated devices, outside campus scans, duplicate QR tokens).
+- **Anti-Proxy Attendance Engine & Review Hub (Phase 21)**:
+  - **Multi-Signal Risk Engine**: Evaluates 6 signals (QR Token, GPS Geofencing, Time Window, Device Fingerprint, IP Address Burst, Attendance Pattern) and scores Risk Level (`Normal`, `Suspicious`, `High Risk`).
+  - **Non-Destructive Recording**: Suspicious scans are recorded with `riskScore` and `reviewStatus: 'Pending'` rather than discarded.
+  - **Instructor Review Console**: Teacher review dashboard with single-click Approve / Reject, review notes, bulk review actions, multi-account device cluster tracking, and signal analytics.
 
 ---
 

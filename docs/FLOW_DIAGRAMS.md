@@ -14,6 +14,7 @@ This document contains comprehensive flowcharts and system diagrams for the **At
 7. [AI Attendance Prediction & Proxy Anomaly Detection Flow](#7-ai-attendance-prediction--proxy-anomaly-detection-flow)
 8. [Advanced Attendance Rules Engine Evaluation & Sandbox Flow](#8-advanced-attendance-rules-engine-evaluation--sandbox-flow)
 9. [Attendance Session Engine & 4-Tier Hierarchy Flow](#9-attendance-session-engine--4-tier-hierarchy-flow)
+10. [Anti-Proxy Multi-Signal Risk Engine & Review Workflow](#10-anti-proxy-multi-signal-risk-engine--review-workflow)
 
 ---
 
@@ -265,5 +266,44 @@ flowchart TD
         SessionActive --> TeacherStop["Teacher Clicks 'Stop Session'"]
         TeacherStop --> CompleteSession["POST /api/sessions/:id/stop"]
         CompleteSession --> FinalStats["Set Status: Completed & Record endTime"]
+    end
+```
+
+---
+
+## 10. Anti-Proxy Multi-Signal Risk Engine & Review Workflow
+
+Phase 21 Multi-Signal evaluation pipeline and instructor review resolution workflow:
+
+```mermaid
+flowchart TD
+    ScanReq["Student Submits QR Scan <br/> (Payload: qrToken, GPS, Device, IP)"] --> Engine["Anti-Proxy Risk Engine <br/> (antiProxyEngine.js)"]
+    
+    subgraph MultiSignalEvaluation ["6 Multi-Signal Risk Factor Evaluation"]
+        Engine --> Sig1["1. QR Token Signal <br/> (Valid vs Expired 30s)"]
+        Engine --> Sig2["2. GPS Signal <br/> (Haversine Distance vs Boundary)"]
+        Engine --> Sig3["3. Session Time Signal <br/> (Active vs Post-Session Window)"]
+        Engine --> Sig4["4. Device Fingerprint <br/> (Multi-Account Device Reuse ⚠️)"]
+        Engine --> Sig5["5. IP Address Concurrency <br/> (30s Burst Scans)"]
+        Engine --> Sig6["6. Pattern Anomaly <br/> (Unfamiliar Device Switch)"]
+    end
+
+    Sig1 & Sig2 & Sig3 & Sig4 & Sig5 & Sig6 --> ScoreCalc["Compute Aggregate Risk Score (0 - 100)"]
+    
+    ScoreCalc --> RiskCheck{Risk Level?}
+    
+    RiskCheck -- "Score < 30 (Normal)" --> AutoApprove["riskLevel: Normal <br/> reviewStatus: Approved <br/> (Auto-Marked Present)"]
+    RiskCheck -- "Score 30 - 69 (Suspicious)" --> PendingSuspicious["riskLevel: Suspicious <br/> reviewStatus: Pending"]
+    RiskCheck -- "Score >= 70 (High Risk)" --> PendingHighRisk["riskLevel: High Risk <br/> reviewStatus: Pending"]
+    
+    PendingSuspicious & PendingHighRisk --> ReviewQueue["Teacher & Admin Review Console <br/> (/admin/suspicious)"]
+    
+    subgraph InstructorReviewConsole ["Instructor Review Console Actions"]
+        ReviewQueue --> InspectRecord["Inspect Signal Breakdown & Notes"]
+        InspectRecord --> ApproveAction["Click 'Approve' <br/> (PUT /api/anti-proxy/review/:id)"]
+        InspectRecord --> RejectAction["Click 'Reject' <br/> (PUT /api/anti-proxy/review/:id)"]
+        
+        ApproveAction --> VerifiedState["reviewStatus: Approved <br/> (Attendance Confirmed)"]
+        RejectAction --> RejectedState["reviewStatus: Rejected <br/> status: Absent (Proxy Flagged)"]
     end
 ```

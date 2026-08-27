@@ -183,6 +183,13 @@ Granular daily attendance session logs.
 | `markedBy` | ObjectId | REF `User` | Evaluator ID |
 | `classId` | ObjectId | REF `Class` | Scheduled Class reference |
 | `sessionId` | ObjectId | REF `AttendanceSession` | Active Attendance Session reference |
+| `riskScore` | Number | DEFAULT 0 (0 to 100) | Multi-signal Anti-Proxy risk score |
+| `riskLevel` | String | ENUM (`Normal`, `Suspicious`, `High Risk`), DEFAULT `Normal` | Anti-Proxy Risk severity classification |
+| `riskSignals` | [Object] | Array of `{ signal, status, scoreContribution, reason }` | Evaluated risk signals breakdown |
+| `reviewStatus` | String | ENUM (`Approved`, `Pending`, `Rejected`), DEFAULT `Approved` | Instructor resolution review status |
+| `reviewedBy` | ObjectId | REF `User` | Reviewing instructor user ID |
+| `reviewedAt` | Date | OPTIONAL | Date of instructor review resolution |
+| `reviewNotes` | String | DEFAULT '' | Instructor review resolution audit notes |
 
 ---
 

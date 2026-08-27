@@ -25,7 +25,8 @@ This document provides a single, unified reference for all project implementatio
 18. [Phase 18 – Academic Year & Semester Engine](#-phase-18--academic-year--semester-engine)
 19. [Phase 19 – Advanced Attendance Rules Engine](#-phase-19--advanced-attendance-rules-engine)
 20. [Phase 20 – Attendance Session Engine](#-phase-20--attendance-session-engine)
-21. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+21. [Phase 21 – Anti-Proxy Attendance System](#-phase-21--anti-proxy-attendance-system)
+22. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -718,6 +719,52 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## 🛡️ Phase 21 – Anti-Proxy Attendance System
+
+### Core Requirements & Features
+- **Multi-Signal Risk Engine Utility** (`server/src/utils/antiProxyEngine.js`):
+  - Evaluates 6 multi-signal risk factors for each attendance check-in scan:
+    1. **QR Token Signal**: Verifies 30s token rotation signature and expiration timestamp.
+    2. **GPS Geolocation Signal**: Calculates Haversine distance vs session boundary, flags out-of-bounds check-ins (+30 to +50 score), and detects velocity jumps $>150$ km/h (+60 score).
+    3. **Time Signal**: Detects scans performed post session completion or outside class window (+40 score).
+    4. **Device Fingerprint Signal**: Cross-checks physical device fingerprints/browser IDs across student accounts today; flags shared devices across 2 accounts (+45 score) or multi-account device clusters (+70 score).
+    5. **IP Address & Concurrency Signal**: Detects rapid scan bursts from the exact same IP address across multiple student accounts (+25 score).
+    6. **Attendance Pattern Anomaly Signal**: Flags sudden device fingerprint switches for a student profile (+15 score).
+- **Risk Score & Classification Pipeline**:
+  - Calculates aggregated Risk Score $S = \min(100, \sum \text{scoreContribution})$.
+  - Categorizes records into:
+    - $S < 30 \implies$ `Normal` (`reviewStatus: 'Approved'`)
+    - $S = 30-69 \implies$ `Suspicious` (`reviewStatus: 'Pending'`)
+    - $S \ge 70 \implies$ `High Risk` (`reviewStatus: 'Pending'`)
+- **Non-Destructive Attendance Recording**:
+  - Scans with suspicious signals are recorded in MongoDB with `riskScore`, `riskLevel`, `riskSignals`, and `reviewStatus: 'Pending'`, allowing instructors to review and decide rather than losing scan data.
+- **Teacher & Admin Review Console** (`/api/anti-proxy` & `SuspiciousDetection.jsx`):
+  - **Live Multi-Signal Metrics**: Total Evaluated, Pending Review ⏳, High Risk 🚨, Device Clusters ⚠️, GPS Violations ❌, Prevention Rate %.
+  - **Flagged Records Review Hub**: Card view with live Risk Score gauges and signal badges.
+  - **Bulk Review Actions**: Select checkboxes to bulk approve or bulk reject records.
+  - **Signal Breakdown Inspector Drawer**: Detailed view of evaluated signal contributions and instructor review notes input.
+  - **Device Sharing Clusters View**: Graph/table showing physical devices shared across multiple student accounts.
+  - **Multi-Signal Analytics View**: Visual distribution charts of signal violations.
+
+### File Mapping
+- Backend Model:
+  - `server/src/models/Attendance.js` (updated with `riskScore`, `riskLevel`, `riskSignals`, `reviewStatus`, `reviewedBy`, `reviewedAt`, `reviewNotes`)
+  - `server/src/models/Notification.js` (updated with `ANTI_PROXY_REVIEW` eventType)
+- Backend Engine, Controller & Routes:
+  - `server/src/utils/antiProxyEngine.js`
+  - `server/src/controllers/antiProxyController.js`
+  - `server/src/routes/antiProxyRoutes.js`
+  - `server/src/controllers/attendanceController.js` (updated)
+  - `server/src/app.js` (mounted `/api/anti-proxy`)
+- Frontend UI & API Client:
+  - `client/src/services/api.js` (`getFlaggedAntiProxyRecordsApi`, `reviewAntiProxyRecordApi`, `bulkReviewAntiProxyRecordsApi`, `getAntiProxyAnalyticsApi`, `getDeviceSharingClustersApi`)
+  - `client/src/pages/admin/SuspiciousDetection.jsx` (redesigned review console)
+  - `client/src/components/layout/Sidebar.jsx` (updated `Anti-Proxy Console 🛡️` links)
+- Tests:
+  - `server/tests/antiProxy.test.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -806,6 +853,8 @@ This document provides a single, unified reference for all project implementatio
 | **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ | Phase 19 |
 | **Attendance Session Engine (Session ID, Start/End Timestamps)** | ❌ | ✅ | ✅ | Phase 20 |
 | **Session-Linked Attendance Logs & QR/GPS Session Management** | ✅ | ✅ | ✅ | Phase 20 |
+| **Anti-Proxy Attendance System (Multi-Signal Risk Engine)** | ✅ | ✅ | ✅ | Phase 21 |
+| **Teacher & Admin Suspicious Attendance Review Console** | ✅ | ✅ | ✅ | Phase 21 |
 
 ---
 *Last Updated: August 2026*

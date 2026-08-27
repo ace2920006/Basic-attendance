@@ -106,4 +106,5 @@ Basic-attendance/
 - `/api/academic` $\rightarrow$ Academic hierarchy tree, Academic Years, Dynamic Semesters, Divisions (`IT-A`), Batch Student Promotion Engine
 - `/api/attendance-rules` $\rightarrow$ Institutional rule thresholds, 7-status matrix definitions, Sandbox check-in simulator
 - `/api/sessions` $\rightarrow$ Attendance Session Engine, Session ID generator, QR/GPS session start & stop lifecycle
+- `/api/anti-proxy` $\rightarrow$ Anti-Proxy Multi-Signal Risk Engine, Flagged Records Review Console, Bulk Review, Device Clusters, Analytics
 - `/api/health` $\rightarrow$ Infrastructure health check & security stack status
