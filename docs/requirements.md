@@ -72,10 +72,14 @@ This document details the functional specifications, feature requirements, and a
   - **Configurable Rules & Thresholds**: Configure Minimum Attendance %, Late Arrival cutoff mins, Grace Period mins, Dynamic QR Token Validity, GPS Geofence Radius meters, and Auto-Absent delay.
   - **7-Status Matrix Rules**: Customize status definitions (`Present`, `Absent`, `Late`, `Excused`, `On Leave`, `Holiday`, `Cancelled Lecture`) with custom attendance weights (`0.0` to `1.0`), `countsAsAttended`, and `countsAsConducted` toggles.
   - **Interactive Check-In Simulator**: Test check-in arrival parameters (minutes delayed, distance, QR age) in real-time before saving rules.
-- **Enterprise Security & Audit Logging (Phase 16)**:
+- **Enterprise Security & Audit Logging (Phase 16 Hardening)**:
   - **Security Headers**: Helmet HTTP headers (`CSP`, `HSTS`, `X-Frame-Options`).
   - **Rate Limiting**: Sliding-window rate limiters protecting API endpoints against brute-force attacks.
   - **XSS Payload Sanitizer**: Recursive request payload HTML tag escaping.
+  - **Public Self-Registration Role Enforcement**: Public self-registration (`/api/auth/register`) strictly forces `role = 'student'`. Faculty and Admin accounts must be created by an authorized Admin via `/api/users`.
+  - **Nodemailer Password Reset Delivery**: Password reset token links are dispatched via Nodemailer HTML email service (`sendEmail.js`).
+  - **SHA-256 Server-Side Token Hashing**: Refresh tokens are stored in MongoDB as SHA-256 hashes rather than plain text JWT strings.
+  - **HTTP-Only Cookie Transport**: Refresh tokens are transported using secure HTTP-Only cookies (`res.cookie('refreshToken', token, { httpOnly: true })`).
   - **Admin Security Audit Console**: Real-time security event table (`AdminAuditLogs.jsx`), metric statistics cards, detail inspector modal, and CSV export.
 
 ---

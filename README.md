@@ -89,6 +89,11 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **XSS Payload Injection Sanitization** | ✅ | ✅ | ✅ |
 | **Configurable CORS Domain Management** | ✅ | ✅ | ✅ |
 | **Security Audit Logging & Admin Audit Console** | ❌ | ❌ | ✅ |
+| **Public Self-Registration Student Role Enforcement** | ✅ | ❌ | ❌ |
+| **Admin-Only Provisioning for Faculty & Admin Accounts** | ❌ | ❌ | ✅ |
+| **Nodemailer Password Reset Email Provider Dispatch** | ✅ | ✅ | ✅ |
+| **SHA-256 Server-Side Hashed Refresh Token Storage** | ✅ | ✅ | ✅ |
+| **HTTP-Only Secure Cookie Refresh Token Transport** | ✅ | ✅ | ✅ |
 | **Authentication Module Automated Unit & Integration Tests** | ✅ | ✅ | ✅ |
 | **Attendance & 75% Defaulter Threshold Tests** | ✅ | ✅ | ✅ |
 | **30s Dynamic QR Token & Anti-Proxy Guard Tests** | ✅ | ✅ | ✅ |
@@ -161,7 +166,7 @@ Basic-attendance/
 │   │   ├── middleware/          # Helmet, Rate Limiter, XSS Sanitizer, Input Validation, Audit Logger, JWT auth middleware, RBAC guards
 │   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession)
 │   │   ├── routes/              # Express API Route definitions (auth, user, attendance, class, leave, timetable, chart, aiRoutes, analyticsRoutes, auditRoutes, academicRoutes, rulesRoutes, sessionRoutes, antiProxyRoutes)
-│   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js, antiProxyEngine.js
+│   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js, antiProxyEngine.js, sendEmail.js
 │   │   ├── app.js               # Express application initialization & security stack setup
 │   │   └── server.js            # Node HTTP server launcher
 │   ├── jest.config.js           # Jest runner configuration

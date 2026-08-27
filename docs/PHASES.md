@@ -835,6 +835,11 @@ This document provides a single, unified reference for all project implementatio
 | **XSS Payload Injection Protection** | ✅ | ✅ | ✅ | Phase 16 |
 | **Configurable CORS Domain Management** | ✅ | ✅ | ✅ | Phase 16 |
 | **Security Audit Logging & Admin Audit Console** | ❌ | ❌ | ✅ | Phase 16 |
+| **Public Self-Registration Student Role Enforcement** | ✅ | ❌ | ❌ | Phase 16 |
+| **Admin-Only Provisioning for Faculty & Admin Accounts** | ❌ | ❌ | ✅ | Phase 16 |
+| **Nodemailer Password Reset Email Provider Dispatch** | ✅ | ✅ | ✅ | Phase 16 |
+| **SHA-256 Server-Side Hashed Refresh Token Storage** | ✅ | ✅ | ✅ | Phase 16 |
+| **HTTP-Only Secure Cookie Refresh Token Transport** | ✅ | ✅ | ✅ | Phase 16 |
 | **Authentication Module Automated Unit & Integration Tests** | ✅ | ✅ | ✅ | Phase 17 |
 | **Attendance & Defaulter Threshold Tests** | ✅ | ✅ | ✅ | Phase 17 |
 | **30s Dynamic QR Token & Anti-Proxy Guard Tests** | ✅ | ✅ | ✅ | Phase 17 |
