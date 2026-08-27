@@ -32,6 +32,8 @@ const sessionRoutes = require('./routes/sessionRoutes');
 const antiProxyRoutes = require('./routes/antiProxyRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
+const cookieParser = require('cookie-parser');
+
 const app = express();
 
 // Configured CORS settings
@@ -52,9 +54,10 @@ app.use(helmetMiddleware);
 // 2. Cross-Origin Resource Sharing
 app.use(cors(corsOptions));
 
-// 3. Body Parsing
+// 3. Body & Cookie Parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 // 4. XSS Payload Sanitization
 app.use(xssSanitizer);
