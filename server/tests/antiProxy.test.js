@@ -5,19 +5,21 @@ const Class = require('../src/models/Class');
 const Attendance = require('../src/models/Attendance');
 const { evaluateAttendanceRisk } = require('../src/utils/antiProxyEngine');
 
+const User = require('../src/models/User');
+const { generateAccessToken } = require('../src/utils/generateToken');
+
 describe('🛡️ Phase 21: Anti-Proxy Attendance System Test Suite', () => {
   let studentToken, studentUser, teacherToken, teacherUser, mockClass;
 
   beforeEach(async () => {
-    // Register Teacher
-    const tRes = await request(app).post('/api/auth/register').send({
+    // Provision Teacher
+    teacherUser = await User.create({
       name: 'Prof. Shield Guard',
       email: 'prof.shield@example.com',
       password: 'password123',
       role: 'teacher'
     });
-    teacherToken = tRes.body.data.accessToken;
-    teacherUser = tRes.body.data;
+    teacherToken = generateAccessToken(teacherUser._id, teacherUser.role);
 
     // Register Student 1 (Alice)
     const sRes = await request(app).post('/api/auth/register').send({

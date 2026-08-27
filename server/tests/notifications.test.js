@@ -3,19 +3,20 @@ const app = require('../src/app');
 const Notification = require('../src/models/Notification');
 const User = require('../src/models/User');
 
+const { generateAccessToken } = require('../src/utils/generateToken');
+
 describe('🔔 Notifications Module Test Suite', () => {
   let studentToken, studentUser, teacherToken, teacherUser;
 
   beforeEach(async () => {
     // Teacher
-    const tRes = await request(app).post('/api/auth/register').send({
+    teacherUser = await User.create({
       name: 'Teacher Notifier',
       email: 'teacher.notifier@example.com',
       password: 'password123',
       role: 'teacher'
     });
-    teacherToken = tRes.body.data.accessToken;
-    teacherUser = tRes.body.data;
+    teacherToken = generateAccessToken(teacherUser._id, teacherUser.role);
 
     // Student
     const sRes = await request(app).post('/api/auth/register').send({

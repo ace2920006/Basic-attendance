@@ -2,18 +2,21 @@ const request = require('supertest');
 const app = require('../src/app');
 const Attendance = require('../src/models/Attendance');
 
+const User = require('../src/models/User');
+const { generateAccessToken } = require('../src/utils/generateToken');
+
 describe('📊 Reports Module Test Suite', () => {
   let adminToken, studentToken, studentUser, teacherToken;
 
   beforeEach(async () => {
     // Admin
-    const aRes = await request(app).post('/api/auth/register').send({
+    const adminUser = await User.create({
       name: 'Admin Director',
       email: 'admin.director@example.com',
       password: 'password123',
       role: 'admin'
     });
-    adminToken = aRes.body.data.accessToken;
+    adminToken = generateAccessToken(adminUser._id, adminUser.role);
 
     // Student
     const sRes = await request(app).post('/api/auth/register').send({
@@ -30,13 +33,13 @@ describe('📊 Reports Module Test Suite', () => {
     studentUser = sRes.body.data;
 
     // Teacher
-    const tRes = await request(app).post('/api/auth/register').send({
+    const teacherUser = await User.create({
       name: 'Prof. Reporter',
       email: 'prof.reporter@example.com',
       password: 'password123',
       role: 'teacher'
     });
-    teacherToken = tRes.body.data.accessToken;
+    teacherToken = generateAccessToken(teacherUser._id, teacherUser.role);
 
     // Seed mock attendance records for reporting
     await Attendance.create([

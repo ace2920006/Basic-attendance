@@ -6,6 +6,8 @@ const Class = require('../src/models/Class');
 const AttendanceSession = require('../src/models/AttendanceSession');
 const Attendance = require('../src/models/Attendance');
 
+const { generateAccessToken } = require('../src/utils/generateToken');
+
 describe('Phase 20: Attendance Session Engine Tests', () => {
   let teacherToken;
   let studentToken;
@@ -20,15 +22,14 @@ describe('Phase 20: Attendance Session Engine Tests', () => {
     await Attendance.deleteMany({});
 
     // Create teacher
-    const teacherRes = await request(app).post('/api/auth/register').send({
+    teacherUser = await User.create({
       name: 'Dr. Sarah Jenkins',
       email: 'sarah.jenkins@university.edu',
       password: 'password123',
       role: 'teacher',
       department: 'Computer Science'
     });
-    teacherToken = teacherRes.body.data.accessToken;
-    teacherUser = teacherRes.body.data;
+    teacherToken = generateAccessToken(teacherUser._id, teacherUser.role);
 
     // Create student
     const studentRes = await request(app).post('/api/auth/register').send({

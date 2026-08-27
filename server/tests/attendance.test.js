@@ -3,19 +3,20 @@ const app = require('../src/app');
 const User = require('../src/models/User');
 const Attendance = require('../src/models/Attendance');
 
+const { generateAccessToken } = require('../src/utils/generateToken');
+
 describe('📋 Attendance Module Tests', () => {
   let teacherToken, studentToken, teacherUser, studentUser;
 
   beforeEach(async () => {
     // Register teacher
-    const teacherRes = await request(app).post('/api/auth/register').send({
+    teacherUser = await User.create({
       name: 'Teacher Smith',
       email: 'teacher.smith@example.com',
       password: 'password123',
       role: 'teacher'
     });
-    teacherToken = teacherRes.body.data.accessToken;
-    teacherUser = teacherRes.body.data;
+    teacherToken = generateAccessToken(teacherUser._id, teacherUser.role);
 
     // Register student
     const studentRes = await request(app).post('/api/auth/register').send({
