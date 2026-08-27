@@ -308,9 +308,11 @@ const deleteAttendance = asyncHandler(async (req, res) => {
 
 const jwt = require('jsonwebtoken');
 const Class = require('../models/Class');
+const AttendanceSession = require('../models/AttendanceSession');
 const { getDistanceInMeters } = require('../utils/geoUtils');
+const { evaluateAttendanceRisk } = require('../utils/antiProxyEngine');
 
-// @desc    Scan QR Code & mark attendance with GPS + Device verification
+// @desc    Scan QR Code & mark attendance with Anti-Proxy Multi-Signal Verification
 // @route   POST /api/attendance/scan-qr
 // @access  Private (Student)
 const scanQRAttendance = asyncHandler(async (req, res) => {
@@ -359,44 +361,56 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
     throw new Error('You have already submitted attendance for this class today');
   }
 
-  // 4. GPS Geolocation Campus Radius Verification
+  // 4. GPS Geolocation Campus Radius Calculation
   const campus = classItem.campusLocation || { latitude: 28.6139, longitude: 77.2090, maxRadiusMeters: 500 };
   let distanceMeters = null;
   let isWithinBounds = true;
 
-  if (latitude !== undefined && longitude !== undefined) {
+  if (latitude !== undefined && latitude !== null && longitude !== undefined && longitude !== null) {
     distanceMeters = Math.round(getDistanceInMeters(latitude, longitude, campus.latitude, campus.longitude));
     if (distanceMeters > campus.maxRadiusMeters) {
       isWithinBounds = false;
-      res.status(400);
-      throw new Error(`GPS Verification Failed: You are ${distanceMeters}m away from campus bounds (max allowed: ${campus.maxRadiusMeters}m).`);
     }
   }
 
-  // 5. Device Fingerprint Anti-Proxy Protection
-  if (deviceFingerprint || browserId) {
-    const proxyCheckFilter = {
-      date: { $gte: startOfDay, $lte: endOfDay },
-      subjectCode: decoded.subjectCode,
-      student: { $ne: req.user._id },
-      $or: []
-    };
-
-    if (deviceFingerprint) proxyCheckFilter.$or.push({ 'deviceInfo.deviceFingerprint': deviceFingerprint });
-    if (browserId) proxyCheckFilter.$or.push({ 'deviceInfo.browserId': browserId });
-
-    if (proxyCheckFilter.$or.length > 0) {
-      const proxyMatch = await Attendance.findOne(proxyCheckFilter);
-      if (proxyMatch) {
-        res.status(400);
-        throw new Error('Proxy Attendance Detected: This physical device has already submitted attendance for another student in this session today.');
-      }
-    }
+  // Fetch optional linked session info
+  let sessionInfo = null;
+  if (decoded.sessionId) {
+    sessionInfo = await AttendanceSession.findById(decoded.sessionId);
   }
 
-  const AttendanceSession = require('../models/AttendanceSession');
+  // 5. Evaluate Multi-Signal Anti-Proxy Risk Engine
+  const riskEvaluation = await evaluateAttendanceRisk({
+    studentId: req.user._id,
+    subjectCode: decoded.subjectCode,
+    classId: classItem._id,
+    sessionId: decoded.sessionId || null,
+    qrTokenValid: true,
+    qrTokenExpired: false,
+    location: {
+      latitude: latitude !== undefined ? Number(latitude) : null,
+      longitude: longitude !== undefined ? Number(longitude) : null,
+      distanceMeters,
+      maxRadiusMeters: campus.maxRadiusMeters,
+      isWithinBounds
+    },
+    deviceInfo: {
+      browserId: browserId || '',
+      deviceFingerprint: deviceFingerprint || '',
+      ipAddress: req.ip || req.headers['x-forwarded-for'] || '',
+      userAgent: req.headers['user-agent'] || ''
+    },
+    sessionInfo,
+    scanTimestamp: new Date()
+  });
 
-  // 6. Record attendance
+  // Support legacy strict mode rejection if requested by client header
+  if (req.headers['x-strict-anti-proxy'] === 'true' && riskEvaluation.isSuspicious) {
+    res.status(400);
+    throw new Error(`Proxy Attendance Detected (${riskEvaluation.riskLevel}): ${riskEvaluation.riskSignals.filter(s => s.status !== 'PASSED').map(s => s.reason).join('; ')}`);
+  }
+
+  // 6. Record attendance with Anti-Proxy Metadata
   const record = await Attendance.create({
     student: req.user._id,
     subject: decoded.subject || classItem.subject,
@@ -419,6 +433,10 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
       ipAddress: req.ip || req.headers['x-forwarded-for'] || '',
       userAgent: req.headers['user-agent'] || ''
     },
+    riskScore: riskEvaluation.riskScore,
+    riskLevel: riskEvaluation.riskLevel,
+    riskSignals: riskEvaluation.riskSignals,
+    reviewStatus: riskEvaluation.reviewStatus,
     markedBy: classItem.instructorId || req.user._id
   });
 
@@ -428,7 +446,7 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
   await classItem.save();
 
   // Update active AttendanceSession stats if linked
-  if (decoded.sessionId) {
+  if (decoded.sessionId && sessionInfo) {
     await AttendanceSession.findByIdAndUpdate(decoded.sessionId, {
       $inc: { 'stats.presentCount': 1 }
     });
@@ -444,9 +462,17 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
   // Trigger real-time notification alert
   checkAndSendAttendanceAlerts(req.user._id, record.subject, 'Present');
 
+  const responseMessage = riskEvaluation.isSuspicious
+    ? `Attendance recorded but flagged as ${riskEvaluation.riskLevel} (Score: ${riskEvaluation.riskScore}/100) pending instructor review.`
+    : 'Attendance recorded successfully via QR code';
+
   res.status(201).json({
     success: true,
-    message: 'Attendance recorded successfully via QR code',
+    message: responseMessage,
+    isSuspicious: riskEvaluation.isSuspicious,
+    riskLevel: riskEvaluation.riskLevel,
+    riskScore: riskEvaluation.riskScore,
+    reviewStatus: riskEvaluation.reviewStatus,
     data: record
   });
 });

@@ -29,6 +29,7 @@ const auditRoutes = require('./routes/auditRoutes');
 const academicRoutes = require('./routes/academicRoutes');
 const rulesRoutes = require('./routes/rulesRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
+const antiProxyRoutes = require('./routes/antiProxyRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const app = express();
@@ -105,6 +106,7 @@ app.use('/api/audit-logs', auditRoutes);
 app.use('/api/academic', academicRoutes);
 app.use('/api/attendance-rules', rulesRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/anti-proxy', antiProxyRoutes);
 
 // Error Handling Middlewares
 app.use(notFound);
