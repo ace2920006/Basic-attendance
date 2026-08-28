@@ -12,9 +12,9 @@ function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos((lat2 * Math.PI) / 180) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c;
 }
@@ -79,14 +79,12 @@ async function evaluateAttendanceRisk(scanContext) {
 
   if (latitude !== null && latitude !== undefined && longitude !== null && longitude !== undefined) {
     if (isWithinBounds === false || (distanceMeters !== null && distanceMeters > maxRadiusMeters)) {
-      const extraMeters = Math.max(0, (distanceMeters || 0) - maxRadiusMeters);
-      const score = extraMeters > 500 ? 50 : 35;
-      totalScore += score;
+      totalScore += 40;
       riskSignals.push({
         signal: 'GPS',
         status: 'FLAGGED',
-        scoreContribution: score,
-        reason: `Scanned from ${Math.round(distanceMeters || 0)}m away (${Math.round(extraMeters)}m outside ${maxRadiusMeters}m boundary) (GPS ❌)`
+        scoreContribution: 40,
+        reason: `Wrong GPS: Scanned from ${Math.round(distanceMeters || 0)}m away (${Math.round(Math.max(0, (distanceMeters || 0) - maxRadiusMeters))}m outside ${maxRadiusMeters}m boundary) (GPS ❌)`
       });
     } else {
       riskSignals.push({
@@ -138,27 +136,27 @@ async function evaluateAttendanceRisk(scanContext) {
     });
   }
 
-  // 3. SIGNAL 3: SESSION TIME WINDOW
+  // 3. SIGNAL 3: SESSION TIME WINDOW & UNUSUAL TIMING
   if (sessionInfo) {
     const scanTime = new Date(scanTimestamp).getTime();
     const startTime = sessionInfo.startTime ? new Date(sessionInfo.startTime).getTime() : null;
     const endTime = sessionInfo.endTime ? new Date(sessionInfo.endTime).getTime() : null;
 
     if (sessionInfo.status === 'Completed' || sessionInfo.status === 'Expired' || (endTime && scanTime > endTime + 60000)) {
-      totalScore += 40;
+      totalScore += 30;
       riskSignals.push({
         signal: 'Time',
         status: 'FLAGGED',
-        scoreContribution: 40,
-        reason: 'Attendance submitted after session completed or expired (Time ❌)'
+        scoreContribution: 30,
+        reason: 'Unusual timing: Submitted after session completed or expired (Time ❌)'
       });
     } else if (startTime && scanTime < startTime - 300000) {
-      totalScore += 25;
+      totalScore += 10;
       riskSignals.push({
         signal: 'Time',
         status: 'WARNING',
-        scoreContribution: 25,
-        reason: 'Attendance submitted before session start time'
+        scoreContribution: 10,
+        reason: 'Unusual timing: Submitted before session start window'
       });
     } else {
       riskSignals.push({
@@ -177,7 +175,7 @@ async function evaluateAttendanceRisk(scanContext) {
     });
   }
 
-  // 4. SIGNAL 4: DEVICE FINGERPRINT & MULTI-ACCOUNT REUSE
+  // 4. SIGNAL 4: DEVICE FINGERPRINT & DUPLICATE DEVICE REUSE
   const fingerprint = deviceInfo.deviceFingerprint || deviceInfo.browserId;
   if (fingerprint && fingerprint.length > 3) {
     try {
@@ -199,20 +197,20 @@ async function evaluateAttendanceRisk(scanContext) {
       const distinctOtherStudents = new Set(otherStudentsRecords.map((r) => r.student.toString()));
 
       if (distinctOtherStudents.size >= 2) {
-        totalScore += 70;
+        totalScore += 60;
         riskSignals.push({
           signal: 'Device',
           status: 'FLAGGED',
-          scoreContribution: 70,
-          reason: `Physical device shared across ${distinctOtherStudents.size + 1} different student accounts today (High Risk Device Cluster 🚨)`
+          scoreContribution: 60,
+          reason: `Duplicate device cluster: Physical device shared across ${distinctOtherStudents.size + 1} different student accounts today 🚨`
         });
       } else if (distinctOtherStudents.size === 1) {
-        totalScore += 45;
+        totalScore += 30;
         riskSignals.push({
           signal: 'Device',
           status: 'FLAGGED',
-          scoreContribution: 45,
-          reason: `Same physical device used to submit attendance for another student account today (Device suspicious ⚠️)`
+          scoreContribution: 30,
+          reason: `Duplicate device: Same physical device used to submit attendance for another student account today (Device suspicious ⚠️)`
         });
       } else {
         riskSignals.push({
@@ -234,7 +232,7 @@ async function evaluateAttendanceRisk(scanContext) {
     });
   }
 
-  // 5. SIGNAL 5: IP ADDRESS CONCURRENCY
+  // 5. SIGNAL 5: SUSPICIOUS IP ADDRESS CONCURRENCY
   const ip = deviceInfo.ipAddress;
   if (ip && ip !== '127.0.0.1' && ip !== '::1') {
     try {
@@ -249,13 +247,13 @@ async function evaluateAttendanceRisk(scanContext) {
 
       const distinctIpStudents = new Set(burstRecords.map((r) => r.student.toString()));
 
-      if (distinctIpStudents.size >= 3) {
-        totalScore += 25;
+      if (distinctIpStudents.size >= 2) {
+        totalScore += 20;
         riskSignals.push({
           signal: 'IP',
           status: 'WARNING',
-          scoreContribution: 25,
-          reason: `IP address ${ip} used for ${distinctIpStudents.size + 1} concurrent student scans within 45 seconds`
+          scoreContribution: 20,
+          reason: `Suspicious IP: IP address ${ip} used for ${distinctIpStudents.size + 1} concurrent student scans within 45 seconds`
         });
       } else {
         riskSignals.push({
@@ -318,15 +316,18 @@ async function evaluateAttendanceRisk(scanContext) {
   // CLAMP TOTAL RISK SCORE (0 - 100)
   const riskScore = Math.min(100, Math.max(0, totalScore));
 
-  // DETERMINE RISK LEVEL & REVIEW STATUS
+  // DETERMINE RISK LEVEL & REVIEW STATUS (Phase 22 3-Tier Threshold Matrix)
+  // 0 - 30: Normal (Approved)
+  // 31 - 60: Review (Pending)
+  // 61 - 100: High Risk (Pending)
   let riskLevel = 'Normal';
   let reviewStatus = 'Approved';
 
-  if (riskScore >= 70) {
+  if (riskScore >= 61) {
     riskLevel = 'High Risk';
     reviewStatus = 'Pending';
-  } else if (riskScore >= 30) {
-    riskLevel = 'Suspicious';
+  } else if (riskScore >= 31) {
+    riskLevel = 'Review';
     reviewStatus = 'Pending';
   }
 

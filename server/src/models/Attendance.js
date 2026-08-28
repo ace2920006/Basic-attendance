@@ -75,7 +75,7 @@ const attendanceSchema = new mongoose.Schema(
     },
     riskLevel: {
       type: String,
-      enum: ['Normal', 'Suspicious', 'High Risk'],
+      enum: ['Normal', 'Review', 'Suspicious', 'High Risk'],
       default: 'Normal'
     },
     riskSignals: [

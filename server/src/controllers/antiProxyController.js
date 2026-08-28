@@ -36,10 +36,10 @@ const getFlaggedAttendanceRecords = asyncHandler(async (req, res) => {
   if (riskLevel && riskLevel !== 'all') {
     filter.riskLevel = riskLevel;
   } else if (reviewStatus === 'all' && riskLevel === 'all') {
-    // By default for flagged view, query records that are suspicious/high risk or pending review
+    // By default for flagged view, query records that are review/suspicious/high risk or pending review
     filter.$or = filter.$or
-      ? filter.$or.map((cond) => ({ ...cond, $or: [{ riskLevel: { $in: ['Suspicious', 'High Risk'] } }, { reviewStatus: 'Pending' }] }))
-      : [{ riskLevel: { $in: ['Suspicious', 'High Risk'] } }, { reviewStatus: 'Pending' }];
+      ? filter.$or.map((cond) => ({ ...cond, $or: [{ riskLevel: { $in: ['Review', 'Suspicious', 'High Risk'] } }, { reviewStatus: 'Pending' }] }))
+      : [{ riskLevel: { $in: ['Review', 'Suspicious', 'High Risk'] } }, { reviewStatus: 'Pending' }];
   }
 
   if (reviewStatus && reviewStatus !== 'all') {
@@ -69,7 +69,7 @@ const getFlaggedAttendanceRecords = asyncHandler(async (req, res) => {
   // Summary metadata
   const totalPending = records.filter((r) => r.reviewStatus === 'Pending').length;
   const highRiskCount = records.filter((r) => r.riskLevel === 'High Risk').length;
-  const suspiciousCount = records.filter((r) => r.riskLevel === 'Suspicious').length;
+  const suspiciousCount = records.filter((r) => r.riskLevel === 'Review' || r.riskLevel === 'Suspicious').length;
 
   res.json({
     success: true,
