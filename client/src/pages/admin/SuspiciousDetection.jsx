@@ -200,9 +200,8 @@ export default function SuspiciousDetection() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Toast Alert */}
       {toast && (
-        <div className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-bold flex items-center gap-2 ${
-          toast.type === 'success' ? 'bg-emerald-950/90 border-emerald-700 text-emerald-200' : 'bg-rose-950/90 border-rose-700 text-rose-200'
-        }`}>
+        <div className={`fixed top-5 right-5 z-50 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-bold flex items-center gap-2 ${toast.type === 'success' ? 'bg-emerald-950/90 border-emerald-700 text-emerald-200' : 'bg-rose-950/90 border-rose-700 text-rose-200'
+          }`}>
           {toast.type === 'success' ? <FiCheckCircle className="w-4 h-4 text-emerald-400" /> : <FiAlertTriangle className="w-4 h-4 text-rose-400" />}
           <span>{toast.msg}</span>
         </div>
@@ -251,7 +250,7 @@ export default function SuspiciousDetection() {
             <FiAlertTriangle className="w-3.5 h-3.5 text-rose-400" />
           </div>
           <span className="text-2xl font-extrabold text-rose-400 mt-1 block">{analytics?.riskLevelDistribution?.highRisk || summary.highRiskCount || 0}</span>
-          <span className="text-[10px] text-rose-300">Score $\ge$ 70</span>
+          <span className="text-[10px] text-rose-300">Score ≥ 70</span>
         </div>
 
         <div className="p-4 bg-slate-900/80 border border-purple-500/30 rounded-2xl bg-purple-500/5">
@@ -288,11 +287,10 @@ export default function SuspiciousDetection() {
         <div className="flex items-center gap-2 overflow-x-auto">
           <button
             onClick={() => setViewTab('records')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              viewTab === 'records'
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${viewTab === 'records'
                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                 : 'bg-slate-800/60 text-slate-400 hover:text-white'
-            }`}
+              }`}
           >
             <FiShield className="w-3.5 h-3.5" />
             <span>Flagged Records ({records.length})</span>
@@ -300,11 +298,10 @@ export default function SuspiciousDetection() {
 
           <button
             onClick={() => setViewTab('clusters')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              viewTab === 'clusters'
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${viewTab === 'clusters'
                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                 : 'bg-slate-800/60 text-slate-400 hover:text-white'
-            }`}
+              }`}
           >
             <FiSmartphone className="w-3.5 h-3.5 text-purple-400" />
             <span>Device Clusters ({clusters.length})</span>
@@ -312,11 +309,10 @@ export default function SuspiciousDetection() {
 
           <button
             onClick={() => setViewTab('analytics')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              viewTab === 'analytics'
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${viewTab === 'analytics'
                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
                 : 'bg-slate-800/60 text-slate-400 hover:text-white'
-            }`}
+              }`}
           >
             <FiActivity className="w-3.5 h-3.5 text-cyan-400" />
             <span>Signal Analytics</span>
@@ -332,9 +328,9 @@ export default function SuspiciousDetection() {
               className="bg-slate-950 border border-slate-800 text-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none"
             >
               <option value="all">Risk Level: All</option>
-              <option value="High Risk">High Risk (Score $\ge$ 70)</option>
+              <option value="High Risk">High Risk (Score ≥ 70)</option>
               <option value="Suspicious">Suspicious (Score 30-69)</option>
-              <option value="Normal">Normal (Score $<$ 30)</option>
+              <option value="Normal">Normal (Score &lt; 30)</option>
             </select>
 
             <select
@@ -418,9 +414,8 @@ export default function SuspiciousDetection() {
               {records.map((item) => (
                 <div
                   key={item._id}
-                  className={`p-5 bg-slate-900/90 border rounded-3xl backdrop-blur-xl transition-all space-y-4 ${
-                    selectedIds.includes(item._id) ? 'border-indigo-500 bg-indigo-950/20' : 'border-slate-800 hover:border-slate-700'
-                  }`}
+                  className={`p-5 bg-slate-900/90 border rounded-3xl backdrop-blur-xl transition-all space-y-4 ${selectedIds.includes(item._id) ? 'border-indigo-500 bg-indigo-950/20' : 'border-slate-800 hover:border-slate-700'
+                    }`}
                 >
                   {/* Top Bar: Checkbox + Student + Risk Score */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -464,13 +459,12 @@ export default function SuspiciousDetection() {
                       item.riskSignals.map((sig, idx) => (
                         <div
                           key={idx}
-                          className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 border ${
-                            sig.status === 'FLAGGED'
+                          className={`px-2.5 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 border ${sig.status === 'FLAGGED'
                               ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
                               : sig.status === 'WARNING'
-                              ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
-                              : 'bg-slate-950 border-slate-800 text-slate-400'
-                          }`}
+                                ? 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                                : 'bg-slate-950 border-slate-800 text-slate-400'
+                            }`}
                         >
                           {getSignalIcon(sig.signal)}
                           <span>{sig.signal}</span>
@@ -653,7 +647,7 @@ export default function SuspiciousDetection() {
             <div className="space-y-3 text-xs">
               <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 flex justify-between items-center">
                 <div>
-                  <span className="font-bold text-emerald-400 block text-sm">Normal Risk ($<$ 30)</span>
+                  <span className="font-bold text-emerald-400 block text-sm">Normal Risk (&lt; 30)</span>
                   <span className="text-slate-400 text-[11px]">Valid scans auto-approved</span>
                 </div>
                 <span className="text-2xl font-extrabold text-white">{analytics.riskLevelDistribution?.normal || 0}</span>
@@ -669,7 +663,7 @@ export default function SuspiciousDetection() {
 
               <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 flex justify-between items-center">
                 <div>
-                  <span className="font-bold text-rose-400 block text-sm">High Risk ($\ge$ 70)</span>
+                  <span className="font-bold text-rose-400 block text-sm">High Risk (≥ 70)</span>
                   <span className="text-slate-400 text-[11px]">Multiple severe violations</span>
                 </div>
                 <span className="text-2xl font-extrabold text-rose-400">{analytics.riskLevelDistribution?.highRisk || 0}</span>
@@ -724,9 +718,8 @@ export default function SuspiciousDetection() {
                         <span className="text-slate-300">{sig.reason}</span>
                       </div>
                     </div>
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
-                      sig.status === 'FLAGGED' ? 'bg-rose-500/20 text-rose-300' : sig.status === 'WARNING' ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-800 text-slate-400'
-                    }`}>
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${sig.status === 'FLAGGED' ? 'bg-rose-500/20 text-rose-300' : sig.status === 'WARNING' ? 'bg-amber-500/20 text-amber-300' : 'bg-slate-800 text-slate-400'
+                      }`}>
                       +{sig.scoreContribution} pts
                     </span>
                   </div>

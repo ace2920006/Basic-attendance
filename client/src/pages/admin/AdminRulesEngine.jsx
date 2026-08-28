@@ -9,11 +9,11 @@ import {
   FiPlay,
   FiClock,
   FiMapPin,
-  FiQrCode,
   FiInfo,
   FiLayers,
   FiActivity
 } from 'react-icons/fi';
+import { HiOutlineQrCode } from 'react-icons/hi2';
 import {
   getAttendanceRulesApi,
   updateAttendanceRulesApi,
@@ -349,7 +349,7 @@ export default function AdminRulesEngine() {
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 space-y-4 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div className="p-2.5 bg-purple-50 text-purple-600 rounded-xl">
-                <FiQrCode className="w-6 h-6" />
+                <HiOutlineQrCode className="w-6 h-6" />
               </div>
               <span className="text-2xl font-bold text-purple-600">
                 {rules.qrValidityMinutes} min ({Math.round(rules.qrValidityMinutes * 60)}s)
