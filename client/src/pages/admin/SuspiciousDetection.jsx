@@ -149,26 +149,26 @@ export default function SuspiciousDetection() {
   };
 
   const getRiskBadge = (level, score) => {
-    if (level === 'High Risk' || score >= 70) {
+    if (level === 'High Risk' || score >= 61) {
       return (
         <span className="px-2.5 py-1 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[10px] font-extrabold rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
           <FiAlertTriangle className="w-3 h-3 text-rose-400" />
-          High Risk ({score || 70}/100)
+          High Risk ({score || 61}/100)
         </span>
       );
     }
-    if (level === 'Suspicious' || score >= 30) {
+    if (level === 'Review' || level === 'Suspicious' || score >= 31) {
       return (
         <span className="px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[10px] font-extrabold rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
           <FiShield className="w-3 h-3 text-amber-400" />
-          Suspicious ({score || 45}/100)
+          Review ({score || 40}/100)
         </span>
       );
     }
     return (
       <span className="px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-extrabold rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
         <FiCheckCircle className="w-3 h-3 text-emerald-400" />
-        Normal ({score || 10}/100)
+        Normal ({score || 0}/100)
       </span>
     );
   };
@@ -328,9 +328,9 @@ export default function SuspiciousDetection() {
               className="bg-slate-950 border border-slate-800 text-slate-300 rounded-xl px-3 py-2 text-xs focus:outline-none"
             >
               <option value="all">Risk Level: All</option>
-              <option value="High Risk">High Risk (Score ≥ 70)</option>
-              <option value="Suspicious">Suspicious (Score 30-69)</option>
-              <option value="Normal">Normal (Score &lt; 30)</option>
+              <option value="High Risk">High Risk (Score 61-100)</option>
+              <option value="Review">Review (Score 31-60)</option>
+              <option value="Normal">Normal (Score 0-30)</option>
             </select>
 
             <select
@@ -647,7 +647,7 @@ export default function SuspiciousDetection() {
             <div className="space-y-3 text-xs">
               <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 flex justify-between items-center">
                 <div>
-                  <span className="font-bold text-emerald-400 block text-sm">Normal Risk (&lt; 30)</span>
+                  <span className="font-bold text-emerald-400 block text-sm">Normal Risk (Score 0-30)</span>
                   <span className="text-slate-400 text-[11px]">Valid scans auto-approved</span>
                 </div>
                 <span className="text-2xl font-extrabold text-white">{analytics.riskLevelDistribution?.normal || 0}</span>
@@ -655,7 +655,7 @@ export default function SuspiciousDetection() {
 
               <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 flex justify-between items-center">
                 <div>
-                  <span className="font-bold text-amber-400 block text-sm">Suspicious Risk (30-69)</span>
+                  <span className="font-bold text-amber-400 block text-sm">Review Required (Score 31-60)</span>
                   <span className="text-slate-400 text-[11px]">Single signal violation pending review</span>
                 </div>
                 <span className="text-2xl font-extrabold text-amber-400">{analytics.riskLevelDistribution?.suspicious || 0}</span>
@@ -663,7 +663,7 @@ export default function SuspiciousDetection() {
 
               <div className="p-4 bg-slate-950 rounded-2xl border border-slate-800 flex justify-between items-center">
                 <div>
-                  <span className="font-bold text-rose-400 block text-sm">High Risk (≥ 70)</span>
+                  <span className="font-bold text-rose-400 block text-sm">High Risk (Score 61-100)</span>
                   <span className="text-slate-400 text-[11px]">Multiple severe violations</span>
                 </div>
                 <span className="text-2xl font-extrabold text-rose-400">{analytics.riskLevelDistribution?.highRisk || 0}</span>
