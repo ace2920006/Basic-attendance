@@ -118,21 +118,22 @@ describe('🛡️ Phase 21: Anti-Proxy Attendance System Test Suite', () => {
       const risk30 = await evaluateAttendanceRisk({
         studentId: studentUser._id,
         qrTokenValid: true,
-        location: { isWithinBounds: true },
+        location: { latitude: 28.6139, longitude: 77.2090, distanceMeters: 50, maxRadiusMeters: 500, isWithinBounds: true },
         deviceInfo: { deviceFingerprint: 'shared_device_222' }
       });
       expect(risk30.riskScore).toBe(30);
-      expect(risk30.riskLevel).toBe('Normal');
+      expect(risk30.riskLevel).toBe('Review');
+      expect(risk30.reviewStatus).toBe('Pending');
 
-      const risk70 = await evaluateAttendanceRisk({
+      const risk80 = await evaluateAttendanceRisk({
         studentId: studentUser._id,
         qrTokenValid: false, // +50
-        location: { isWithinBounds: true },
+        location: { latitude: 28.6139, longitude: 77.2090, distanceMeters: 50, maxRadiusMeters: 500, isWithinBounds: true },
         deviceInfo: { deviceFingerprint: 'shared_device_222' } // +30
       });
-      expect(risk70.riskScore).toBe(80);
-      expect(risk70.riskLevel).toBe('High Risk');
-      expect(risk70.reviewStatus).toBe('Pending');
+      expect(risk80.riskScore).toBe(80);
+      expect(risk80.riskLevel).toBe('High Risk');
+      expect(risk80.reviewStatus).toBe('Pending');
     });
   });
 

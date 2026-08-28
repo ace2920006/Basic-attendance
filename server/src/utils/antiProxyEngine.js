@@ -326,7 +326,7 @@ async function evaluateAttendanceRisk(scanContext) {
   if (riskScore >= 61) {
     riskLevel = 'High Risk';
     reviewStatus = 'Pending';
-  } else if (riskScore >= 31) {
+  } else if (riskScore >= 30) {
     riskLevel = 'Review';
     reviewStatus = 'Pending';
   }
