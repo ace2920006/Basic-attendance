@@ -292,9 +292,9 @@ flowchart TD
     
     ScoreCalc --> RiskCheck{Risk Level?}
     
-    RiskCheck -- "Score < 30 (Normal)" --> AutoApprove["riskLevel: Normal <br/> reviewStatus: Approved <br/> (Auto-Marked Present)"]
-    RiskCheck -- "Score 30 - 69 (Suspicious)" --> PendingSuspicious["riskLevel: Suspicious <br/> reviewStatus: Pending"]
-    RiskCheck -- "Score >= 70 (High Risk)" --> PendingHighRisk["riskLevel: High Risk <br/> reviewStatus: Pending"]
+    RiskCheck -- "Score 0 - 30 (Normal)" --> AutoApprove["riskLevel: Normal <br/> reviewStatus: Approved <br/> (Auto-Marked Present)"]
+    RiskCheck -- "Score 31 - 60 (Review)" --> PendingSuspicious["riskLevel: Review <br/> reviewStatus: Pending"]
+    RiskCheck -- "Score 61 - 100 (High Risk)" --> PendingHighRisk["riskLevel: High Risk <br/> reviewStatus: Pending"]
     
     PendingSuspicious & PendingHighRisk --> ReviewQueue["Teacher & Admin Review Console <br/> (/admin/suspicious)"]
     

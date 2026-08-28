@@ -765,6 +765,45 @@ This document provides a single, unified reference for all project implementatio
 
 ---
 
+## Phase 22: Attendance Risk Scoring Engine
+
+### Implementation Objective
+Implement an exact quantitative 0–100 Attendance Risk Score matrix evaluating incoming student attendance scans across multi-signal risk factors with exact point weights, clamped to 0–100, and classified into 3 risk tiers (`Normal`, `Review`, `High Risk`).
+
+### Key Capabilities & Specifications
+- **Multi-Signal Point Scoring Matrix**:
+  - **Invalid QR Token**: `+50` points (untrusted signature or invalid payload)
+  - **Wrong GPS (Out-of-Bounds)**: `+40` points (scanned outside campus 500m geofence radius)
+  - **Duplicate Device**: `+30` points (same physical device used across multiple student accounts today)
+  - **Suspicious IP**: `+20` points (concurrency burst > 2 student scans from same IP within 45 seconds)
+  - **Unusual Timing**: `+10` points (attendance submitted before session start window or after session expired)
+- **Score Clamping & 3-Tier Classification**:
+  - Total score is calculated as $S = \min(100, \max(0, \sum \text{scoreContribution}))$.
+  - Tier Boundaries:
+    - **0 – 30**: `Normal` (`reviewStatus: 'Approved'`, Auto-Marked Present)
+    - **31 – 60**: `Review` (`reviewStatus: 'Pending'`, Flagged for Instructor Review)
+    - **61 – 100**: `High Risk` (`reviewStatus: 'Pending'`, Flagged for Urgent Review)
+- **Backend Model & Controller Engine**:
+  - `server/src/models/Attendance.js`: Updated `riskLevel` enum to `['Normal', 'Review', 'Suspicious', 'High Risk']`.
+  - `server/src/utils/antiProxyEngine.js`: Refactored `evaluateAttendanceRisk` scoring logic and threshold checks.
+  - `server/src/controllers/antiProxyController.js`: Updated filtering queries and analytics breakdown for all 3 risk tiers.
+- **Frontend Review Console & Filters**:
+  - `client/src/pages/admin/SuspiciousDetection.jsx`: Updated risk dropdown filters (`High Risk (61-100)`, `Review (31-60)`, `Normal (0-30)`), live score badges, and distribution cards.
+- **Automated Tests**:
+  - `server/tests/antiProxy.test.js`: Added unit and integration test assertions verifying exact signal weights (+50 Invalid QR, +40 Wrong GPS, +30 Duplicate Device, +20 Suspicious IP, +10 Unusual Timing) and tier boundaries.
+
+### File Mapping
+- Backend Engine & Models:
+  - `server/src/utils/antiProxyEngine.js`
+  - `server/src/models/Attendance.js`
+  - `server/src/controllers/antiProxyController.js`
+- Frontend UI:
+  - `client/src/pages/admin/SuspiciousDetection.jsx`
+- Tests:
+  - `server/tests/antiProxy.test.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |

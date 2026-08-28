@@ -70,7 +70,7 @@ Basic-attendance/
     ├── architecture.md         # System Architecture & Technical Specs
     ├── database_design.md      # Database ERD & Schema Specs
     ├── FLOW_DIAGRAMS.md        # Comprehensive System Flow Diagrams (Mermaid)
-    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-20)
+    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-22)
 ```
 
 ---
@@ -106,5 +106,5 @@ Basic-attendance/
 - `/api/academic` $\rightarrow$ Academic hierarchy tree, Academic Years, Dynamic Semesters, Divisions (`IT-A`), Batch Student Promotion Engine
 - `/api/attendance-rules` $\rightarrow$ Institutional rule thresholds, 7-status matrix definitions, Sandbox check-in simulator
 - `/api/sessions` $\rightarrow$ Attendance Session Engine, Session ID generator, QR/GPS session start & stop lifecycle
-- `/api/anti-proxy` $\rightarrow$ Anti-Proxy Multi-Signal Risk Engine, Flagged Records Review Console, Bulk Review, Device Clusters, Analytics
+- `/api/anti-proxy` $\rightarrow$ Anti-Proxy Multi-Signal Risk Engine, Phase 22 Attendance Risk Scoring (0-100), 3-Tier Classification (0-30 Normal, 31-60 Review, 61-100 High Risk), Flagged Records Review Console, Bulk Review, Device Clusters, Analytics
 - `/api/health` $\rightarrow$ Infrastructure health check & security stack status
