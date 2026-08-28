@@ -185,14 +185,14 @@ const getAntiProxyAnalytics = asyncHandler(async (req, res) => {
   const allRecords = await Attendance.find({}).populate('student', 'name rollNo department');
 
   const totalScans = allRecords.length;
-  const flaggedRecords = allRecords.filter((r) => r.riskLevel === 'Suspicious' || r.riskLevel === 'High Risk' || r.reviewStatus === 'Pending');
+  const flaggedRecords = allRecords.filter((r) => r.riskLevel === 'Review' || r.riskLevel === 'Suspicious' || r.riskLevel === 'High Risk' || r.reviewStatus === 'Pending');
 
   const pendingCount = allRecords.filter((r) => r.reviewStatus === 'Pending').length;
   const approvedCount = allRecords.filter((r) => r.reviewStatus === 'Approved').length;
   const rejectedCount = allRecords.filter((r) => r.reviewStatus === 'Rejected').length;
 
   const normalCount = allRecords.filter((r) => r.riskLevel === 'Normal').length;
-  const suspiciousCount = allRecords.filter((r) => r.riskLevel === 'Suspicious').length;
+  const suspiciousCount = allRecords.filter((r) => r.riskLevel === 'Review' || r.riskLevel === 'Suspicious').length;
   const highRiskCount = allRecords.filter((r) => r.riskLevel === 'High Risk').length;
 
   // Signal Breakdown Counters

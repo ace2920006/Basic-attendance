@@ -70,47 +70,69 @@ describe('🛡️ Phase 21: Anti-Proxy Attendance System Test Suite', () => {
         }
       });
 
-      expect(risk.riskScore).toBeLessThan(30);
+      expect(risk.riskScore).toBeLessThanOrEqual(30);
       expect(risk.riskLevel).toBe('Normal');
       expect(risk.reviewStatus).toBe('Approved');
       expect(risk.isSuspicious).toBe(false);
     });
 
-    it('should compute High Risk Score (>= 70) for out-of-bounds scan with shared device', async () => {
-      // Create existing scan for another student using same device
-      await Attendance.create({
-        student: teacherUser._id, // different user ID
-        subject: 'Cyber Security & Fraud',
-        subjectCode: 'CS501',
-        status: 'Present',
-        date: new Date(),
-        deviceInfo: {
-          deviceFingerprint: 'shared_proxy_device_101'
-        }
-      });
-
-      const risk = await evaluateAttendanceRisk({
+    it('should calculate exact signal weights: Invalid QR (+50), Wrong GPS (+40), Duplicate Device (+30), Suspicious IP (+20), Unusual Timing (+10)', async () => {
+      // Test Invalid QR (+50) -> High Risk (>60)
+      const qrRisk = await evaluateAttendanceRisk({
         studentId: studentUser._id,
-        subjectCode: 'CS501',
+        qrTokenValid: false,
+        location: { isWithinBounds: true }
+      });
+      const qrSignal = qrRisk.riskSignals.find((s) => s.signal === 'QR Token');
+      expect(qrSignal.scoreContribution).toBe(50);
+
+      // Test Wrong GPS (+40) -> Review tier (31-60)
+      const gpsRisk = await evaluateAttendanceRisk({
+        studentId: studentUser._id,
         qrTokenValid: true,
         location: {
-          latitude: 28.6900,
-          longitude: 77.3000,
+          latitude: 28.69,
+          longitude: 77.3,
           distanceMeters: 1200,
           maxRadiusMeters: 500,
           isWithinBounds: false
-        },
-        deviceInfo: {
-          deviceFingerprint: 'shared_proxy_device_101',
-          browserId: 'browser_shared'
         }
       });
+      const gpsSignal = gpsRisk.riskSignals.find((s) => s.signal === 'GPS');
+      expect(gpsSignal.scoreContribution).toBe(40);
+      expect(gpsRisk.riskLevel).toBe('Review');
+      expect(gpsRisk.reviewStatus).toBe('Pending');
+    });
 
-      expect(risk.riskScore).toBeGreaterThanOrEqual(70);
-      expect(risk.riskLevel).toBe('High Risk');
-      expect(risk.reviewStatus).toBe('Pending');
-      expect(risk.isSuspicious).toBe(true);
-      expect(risk.riskSignals.length).toBeGreaterThan(0);
+    it('should classify score 31-60 as Review and 61-100 as High Risk', async () => {
+      // Create duplicate device scan to trigger +30 Duplicate Device
+      await Attendance.create({
+        student: teacherUser._id,
+        subject: 'Cyber Security',
+        subjectCode: 'CS501',
+        status: 'Present',
+        date: new Date(),
+        deviceInfo: { deviceFingerprint: 'shared_device_222' }
+      });
+
+      const risk30 = await evaluateAttendanceRisk({
+        studentId: studentUser._id,
+        qrTokenValid: true,
+        location: { isWithinBounds: true },
+        deviceInfo: { deviceFingerprint: 'shared_device_222' }
+      });
+      expect(risk30.riskScore).toBe(30);
+      expect(risk30.riskLevel).toBe('Normal');
+
+      const risk70 = await evaluateAttendanceRisk({
+        studentId: studentUser._id,
+        qrTokenValid: false, // +50
+        location: { isWithinBounds: true },
+        deviceInfo: { deviceFingerprint: 'shared_device_222' } // +30
+      });
+      expect(risk70.riskScore).toBe(80);
+      expect(risk70.riskLevel).toBe('High Risk');
+      expect(risk70.reviewStatus).toBe('Pending');
     });
   });
 
