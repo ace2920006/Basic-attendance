@@ -258,6 +258,27 @@ Live attendance session instances.
 
 ---
 
+### 11. `AttendanceCorrections`
+Formal attendance modification request, review, and audit trail collection (Phase 23).
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `_id` | ObjectId | PRIMARY KEY | Unique Correction Request ID |
+| `attendance` | ObjectId | REF `Attendance`, REQUIRED | Target Attendance record reference |
+| `student` | ObjectId | REF `User`, REQUIRED | Target student ID |
+| `subject` | String | DEFAULT '' | Subject title or code |
+| `date` | Date | DEFAULT Date.now | Original session date |
+| `originalStatus` | String | ENUM (`Present`, `Absent`, `Late`, `Excused`, `On Leave`, `Holiday`, `Cancelled Lecture`) | Original attendance status |
+| `requestedStatus` | String | ENUM (`Present`, `Absent`, `Late`, `Excused`, `On Leave`, `Holiday`, `Cancelled Lecture`) | Requested target attendance status |
+| `reason` | String | REQUIRED | Mandatory rationale for audit compliance |
+| `requestedBy` | ObjectId | REF `User`, REQUIRED | User ID of requester (Changed By) |
+| `status` | String | ENUM (`Pending`, `Approved`, `Rejected`), DEFAULT `Pending` | Approval workflow status |
+| `reviewedBy` | ObjectId | REF `User`, OPTIONAL | Reviewer User ID |
+| `reviewedAt` | Date | OPTIONAL | Review decision timestamp |
+| `reviewComment` | String | DEFAULT '' | Reviewer notes or justification |
+
+---
+
 ## ⚡ Performance Indexes
 
 ```javascript
@@ -267,6 +288,11 @@ SemesterSchema.index({ name: 1, academicYear: 1 }, { unique: true });
 DivisionSchema.index({ name: 1, semester: 1, department: 1 }, { unique: true });
 StudentEnrollmentSchema.index({ student: 1, academicYear: 1, semester: 1 });
 
+// Phase 23 Correction Indexes
+AttendanceCorrectionSchema.index({ attendance: 1, createdAt: -1 });
+AttendanceCorrectionSchema.index({ status: 1, createdAt: -1 });
+AttendanceCorrectionSchema.index({ student: 1 });
+
 // Core Performance Indexes
 UserSchema.index({ email: 1 }, { unique: true });
 AttendanceSchema.index({ student: 1, date: 1 });
@@ -274,3 +300,4 @@ AttendanceSchema.index({ subjectCode: 1, date: 1 });
 AuditLogSchema.index({ createdAt: -1, status: 1 });
 NotificationSchema.index({ user: 1, read: 1 });
 ```
+

@@ -13,13 +13,13 @@ The Attendance Management System is built on a modern MERN 3-Tier Architecture d
 [ Application & Security Layer (Express REST Server + Socket.io Engine) ]
    ├── Security Stack: Helmet HTTP Headers, Rate Limiter, XSS Sanitizer, RBAC Guards
    ├── Real-time Engine: Socket.io Event Emitter, Firebase FCM Web Push
-   └── Business Controllers: Auth, Attendance, Timetable, AI, Analytics, Security Audit, Academic Engine, Rules Engine, Session Engine
+   └── Business Controllers: Auth, Attendance, Timetable, AI, Analytics, Security Audit, Academic Engine, Rules Engine, Session Engine, Correction Engine
                                 |
                                 |  Mongoose ODM Drivers / Async I/O Query Engine
                                 v
 [ Database & Storage Layer (MongoDB Atlas / Local MongoDB Instance) ]
    ├── Core Collections: Users, Departments, Courses, Subjects, Classes, Attendance, Timetables, AttendanceRules, AttendanceSessions
-   ├── Engine Collections: AcademicYears, Semesters, Divisions, StudentEnrollments
+   ├── Engine Collections: AcademicYears, Semesters, Divisions, StudentEnrollments, AttendanceCorrections
    └── Audit & Support: AuditLogs, Leaves, Notifications
 ```
 
@@ -41,11 +41,11 @@ Basic-attendance/
 │   │   │   └── teacher/        # Teacher QR Modal, CreateClassModal, CreateTimetableModal
 │   │   ├── context/            # React State Contexts (AuthContext, NotificationContext)
 │   │   ├── pages/              # Role-based Route Pages
-│   │   │   ├── admin/          # Admin Analytics, Academic Engine (AdminAcademicEngine.jsx), Rules Engine (AdminRulesEngine.jsx), Audit Logs, Departments, Courses, Subjects
+│   │   │   ├── admin/          # Admin Analytics, Academic Engine (AdminAcademicEngine.jsx), Rules Engine (AdminRulesEngine.jsx), Audit Logs, Departments, Courses, Subjects, AdminCorrections.jsx
 │   │   │   ├── analytics/      # Visual Charts Hub (ChartsPage.jsx)
 │   │   │   ├── auth/           # Login, Register, Password Recovery
 │   │   │   ├── student/        # Student Dashboard, Calendar, History, Timetable, Prediction, AiChatPage
-│   │   │   └── teacher/        # Teacher Dashboard, Take Attendance, History, Reports, Leave Approval
+│   │   │   └── teacher/        # Teacher Dashboard, Take Attendance, History, Reports, Leave Approval, TeacherCorrections.jsx
 │   │   ├── services/           # Centralized API Service Client (api.js, socket.js, deviceFingerprint.js)
 │   │   ├── App.jsx             # Main Router Shell & Guarded Routes
 │   │   └── main.jsx            # DOM Entry Mount
@@ -56,13 +56,14 @@ Basic-attendance/
 │   ├── uploads/                # Static Uploaded File Attachments (Medical Certificates, Avatars)
 │   ├── src/
 │   │   ├── config/             # DB Connection (db.js), WebSockets (socket.js), Firebase FCM (firebase.js)
-│   │   ├── controllers/        # Request Controllers (auth, user, attendance, class, timetable, report, chart, notification, leave, ai, analytics, audit, academicController, rulesController, sessionController)
+│   │   ├── controllers/        # Request Controllers (auth, user, attendance, class, timetable, report, chart, notification, leave, ai, analytics, audit, academicController, rulesController, sessionController, correctionController)
 │   │   ├── middleware/         # Security Stack (Helmet, Rate Limiter, XSS, Input Validation, Audit Logger, JWT Auth, RBAC Authorization)
-│   │   ├── models/             # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession)
-│   │   ├── routes/             # Express API Endpoints (auth, users, departments, courses, subjects, classes, attendance, leaves, timetable, reports, charts, notifications, ai, analytics, audit, academicRoutes, rulesRoutes, sessionRoutes)
+│   │   ├── models/             # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection)
+│   │   ├── routes/             # Express API Endpoints (auth, users, departments, courses, subjects, classes, attendance, leaves, timetable, reports, charts, notifications, ai, analytics, audit, academicRoutes, rulesRoutes, sessionRoutes, correctionRoutes)
 │   │   ├── utils/              # GeoUtils (Haversine formula), JWT Generator, Async Handler, attendanceRulesEngine.js
 │   │   ├── app.js              # Express Application Bootstrap & Security Layer
 │   │   └── server.js           # Node HTTP Server Launcher
+
 │   └── package.json
 │
 └── docs/                       # Project Documentation Suite
