@@ -30,6 +30,7 @@ const academicRoutes = require('./routes/academicRoutes');
 const rulesRoutes = require('./routes/rulesRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const antiProxyRoutes = require('./routes/antiProxyRoutes');
+const correctionRoutes = require('./routes/correctionRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const cookieParser = require('cookie-parser');
@@ -110,6 +111,8 @@ app.use('/api/academic', academicRoutes);
 app.use('/api/attendance-rules', rulesRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/anti-proxy', antiProxyRoutes);
+app.use('/api/attendance-corrections', correctionRoutes);
+
 
 // Error Handling Middlewares
 app.use(notFound);

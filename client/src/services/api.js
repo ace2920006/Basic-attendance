@@ -760,13 +760,32 @@ export const getDeviceSharingClustersApi = async () => {
   return apiRequest('/anti-proxy/device-clusters', { method: 'GET' });
 };
 
+// Phase 23 Attendance Correction Workflow APIs
+export const createCorrectionRequestApi = async (data) => {
+  return apiRequest('/attendance-corrections', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
 
+export const getCorrectionRequestsApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.status) queryParams.append('status', params.status);
+  if (params.studentId) queryParams.append('studentId', params.studentId);
+  if (params.subject) queryParams.append('subject', params.subject);
+  if (params.startDate) queryParams.append('startDate', params.startDate);
+  if (params.endDate) queryParams.append('endDate', params.endDate);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/attendance-corrections${queryStr}`, { method: 'GET' });
+};
 
+export const reviewCorrectionRequestApi = async (id, data) => {
+  return apiRequest(`/attendance-corrections/${id}/review`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
 
-
-
-
-
-
-
-
+export const getAttendanceAuditTrailApi = async (attendanceId) => {
+  return apiRequest(`/attendance-corrections/history/${attendanceId}`, { method: 'GET' });
+};
