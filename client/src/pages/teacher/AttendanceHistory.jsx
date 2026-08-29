@@ -87,9 +87,12 @@ export default function AttendanceHistory() {
     }
   };
 
+  const [correctionReason, setCorrectionReason] = useState('');
+
   const handleOpenEdit = (log) => {
     setEditingSession(log);
     setEditRoster(log.students ? [...log.students] : []);
+    setCorrectionReason('');
   };
 
   const handleStatusChange = (studentId, newStatus) => {
@@ -104,7 +107,12 @@ export default function AttendanceHistory() {
     );
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
+    if (!correctionReason.trim()) {
+      alert('Phase 23 Policy: Please state a clear Correction Reason to update attendance records.');
+      return;
+    }
+
     const pCount = editRoster.filter(s => s.status === 'Present').length;
     const aCount = editRoster.filter(s => s.status === 'Absent').length;
     const lCount = editRoster.filter(s => s.status === 'Late').length;
@@ -146,9 +154,9 @@ export default function AttendanceHistory() {
           <div>
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <FiClock className="w-5 h-5 text-cyan-400" />
-              Past Attendance Session Logs & Edit
+              Past Attendance Session Logs & Correction Request
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">Search, review, and modify recorded class attendance logs</p>
+            <p className="text-xs text-slate-400 mt-0.5">Search, review, and request audit-logged corrections for attendance records</p>
           </div>
 
           <div className="flex items-center gap-3">
@@ -201,7 +209,7 @@ export default function AttendanceHistory() {
                       onClick={() => handleOpenEdit(log)}
                       className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 ml-auto transition-colors"
                     >
-                      <FiEdit3 className="w-3.5 h-3.5" /> Edit Attendance
+                      <FiEdit3 className="w-3.5 h-3.5" /> Request Correction
                     </button>
                   </td>
                 </tr>
@@ -216,23 +224,23 @@ export default function AttendanceHistory() {
       <Modal
         isOpen={!!editingSession}
         onClose={() => setEditingSession(null)}
-        title={`Edit Attendance: ${editingSession?.subject} (${editingSession?.date})`}
+        title={`Request Correction: ${editingSession?.subject} (${editingSession?.date})`}
       >
         {editingSession && (
           <div className="space-y-4">
             {savedSuccess && (
               <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center text-xs font-semibold text-emerald-400 flex items-center justify-center gap-2">
                 <FiCheckCircle className="w-4 h-4" />
-                <span>Attendance Log Updated Successfully!</span>
+                <span>Attendance Correction Request Logged Successfully!</span>
               </div>
             )}
 
-            <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl text-xs text-slate-300 flex justify-between">
-              <span>Venue: {editingSession.room}</span>
-              <span>Section: {editingSession.section}</span>
+            <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-xs text-indigo-300 flex justify-between items-center">
+              <span>Venue: {editingSession.room} • Section: {editingSession.section}</span>
+              <span className="font-extrabold uppercase text-[10px] tracking-wider bg-indigo-500/20 px-2 py-0.5 rounded">Phase 23 Audit</span>
             </div>
 
-            <div className="divide-y divide-slate-800/80 max-h-96 overflow-y-auto pr-1">
+            <div className="divide-y divide-slate-800/80 max-h-80 overflow-y-auto pr-1">
               {editRoster.map((stu) => (
                 <div key={stu.id} className="py-3 space-y-2">
                   <div className="flex items-center justify-between">
@@ -292,6 +300,21 @@ export default function AttendanceHistory() {
               ))}
             </div>
 
+            {/* Mandatory Reason Input */}
+            <div className="pt-2">
+              <label className="block text-xs font-bold text-slate-300 mb-1">
+                Correction Reason <span className="text-rose-400">* Required for Audit Trail</span>
+              </label>
+              <textarea
+                rows={2}
+                placeholder="State reason for modification (e.g. Student submitted medical certificate, QR scanner glitch resolved)..."
+                value={correctionReason}
+                onChange={(e) => setCorrectionReason(e.target.value)}
+                className="input-field text-xs py-2 bg-slate-950 border-indigo-500/30 w-full"
+                required
+              />
+            </div>
+
             <div className="pt-4 border-t border-slate-800 flex justify-end gap-2">
               <button
                 onClick={() => setEditingSession(null)}
@@ -301,10 +324,10 @@ export default function AttendanceHistory() {
               </button>
               <button
                 onClick={handleSaveEdit}
-                className="btn btn-primary px-5 py-2 text-xs font-semibold shadow-lg shadow-indigo-600/30"
+                className="btn btn-primary px-5 py-2 text-xs font-bold shadow-lg shadow-indigo-600/30"
               >
                 <FiSave className="w-4 h-4" />
-                <span>Save Attendance Updates</span>
+                <span>Submit Correction Workflow</span>
               </button>
             </div>
           </div>
@@ -314,3 +337,4 @@ export default function AttendanceHistory() {
     </div>
   );
 }
+

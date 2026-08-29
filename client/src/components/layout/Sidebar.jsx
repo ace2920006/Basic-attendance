@@ -20,7 +20,8 @@ import {
   FiChevronLeft,
   FiTrendingUp,
   FiZap,
-  FiShield
+  FiShield,
+  FiEdit3
 } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
 import { useAuth } from '../../context/AuthContext';
@@ -57,6 +58,7 @@ export default function Sidebar({ role, user: userProp }) {
       case 'teacher':
         return [
           { to: '/teacher', label: 'Dashboard', icon: FiHome, end: true },
+          { to: '/teacher/corrections', label: 'Attendance Corrections', icon: FiEdit3 },
           { to: '/teacher/suspicious', label: 'Anti-Proxy Console 🛡️', icon: FiShield },
           { to: '/teacher/classes', label: "Today's Classes", icon: FiCalendar },
           { to: '/teacher/timetable', label: 'Timetable Manager', icon: FiGrid },
@@ -70,6 +72,7 @@ export default function Sidebar({ role, user: userProp }) {
       case 'admin':
         return [
           { to: '/admin', label: 'Analytics Console', icon: FiHome, end: true },
+          { to: '/admin/corrections', label: 'Correction Audit Trail', icon: FiEdit3 },
           { to: '/admin/academic', label: 'Academic Engine', icon: HiOutlineAcademicCap },
           { to: '/admin/rules', label: 'Rules Engine', icon: FiShield },
           { to: '/admin/audit-logs', label: 'Security Audit Logs', icon: FiShield },
@@ -83,6 +86,7 @@ export default function Sidebar({ role, user: userProp }) {
           { to: '/admin/reports', label: 'Reports & Export', icon: FiFileText },
           { to: '/admin/settings', label: 'System Settings', icon: FiSettings },
         ];
+
       default:
         return [];
     }
