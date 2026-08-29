@@ -36,6 +36,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - ⏱️ **Attendance Session Engine (Phase 20)**: Explicit 4-tier domain hierarchy (`Subject ➔ Scheduled Class ➔ Attendance Session ➔ Student Attendance`) separating static scheduled class definitions from active attendance sessions. When a teacher clicks "Start Attendance", the system creates a dedicated `AttendanceSession` instance with unique Session ID (`SESS-YYYYMMDD-XXXX`), start/end timestamps, QR secret token, GPS geofence location, teacher details, subject, and section.
 - 🛡️ **Anti-Proxy Multi-Signal Verification (Phase 21)**: Comprehensive multi-signal anti-proxy verification engine checking QR token authenticity, GPS Haversine boundary, active session window, device fingerprinting, and IP burst concurrency. Flagged scans are preserved with `reviewStatus: 'Pending'` for instructor review in `/admin/suspicious`.
 - 📊 **Attendance Risk Scoring Engine (Phase 22)**: Quantitative 0–100 Attendance Risk Scoring System evaluating exact point weights (+50 Invalid QR, +40 Wrong GPS, +30 Duplicate Device, +20 Suspicious IP, +10 Unusual Timing) clamped to 0–100 and classified across 3 tiers (`0-30 Normal`, `31-60 Review`, `61-100 High Risk`).
+- ✍️ **Attendance Correction Workflow (Phase 23)**: Formal attendance modification request, review, and audit trail system (`Original Value ➔ Correction Request ➔ Reason ➔ Review ➔ Approved/Rejected`). Replaces direct overwrites with transparent audit logs recording **Original Value**, **New Value**, **Changed By**, **Reason**, **Reviewer**, and **Timestamps** with dedicated Teacher (`/teacher/corrections`) and Admin (`/admin/corrections`) consoles.
 
 ---
 
@@ -117,6 +118,9 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Teacher & Admin Suspicious Attendance Review Console** | ✅ | ✅ | ✅ |
 | **Attendance Risk Scoring Engine (0-100 Multi-Signal Scoring)** | ✅ | ✅ | ✅ |
 | **3-Tier Risk Classification (0-30 Normal, 31-60 Review, 61-100 High Risk)** | ✅ | ✅ | ✅ |
+| **Attendance Correction Request Submission & Mandatory Reason** | ✅ | ✅ | ✅ |
+| **Teacher & Admin Attendance Correction Review Consoles** | ❌ | ✅ | ✅ |
+| **Complete Attendance Correction Audit Trail (Original, New, Changed By, Reason, Timestamps)** | ✅ | ✅ | ✅ |
 
 ---
 
