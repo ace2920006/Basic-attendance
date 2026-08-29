@@ -801,6 +801,51 @@ Implement an exact quantitative 0–100 Attendance Risk Score matrix evaluating 
 
 ---
 
+## ✍️ Phase 23 – Attendance Correction Workflow
+
+### Overview & Objective
+Teachers should not simply overwrite past attendance records. Instead, Phase 23 introduces a formal Attendance Correction Workflow:
+`Original Value ➔ Correction Request ➔ Reason ➔ Teacher/Admin Review ➔ Approved / Rejected`
+
+Every modification preserves a complete audit log recording:
+- **Original Value**: The status prior to correction (e.g. `Absent`)
+- **New Value**: The requested target status (e.g. `Present`)
+- **Changed By**: User ID & Role who initiated the request
+- **Reason**: Mandatory textual explanation for audit compliance
+- **Reviewer & Review Comments**: Authorized reviewer ID, comment, and decision status
+- **Timestamp**: Precise creation and review timestamps
+
+### Core Features & Architecture
+- **Mongoose Model (`AttendanceCorrection.js`)**:
+  - Schema with references to `attendance`, `student`, `requestedBy`, `reviewedBy`, plus `originalStatus`, `requestedStatus`, `reason`, `status` (`Pending`, `Approved`, `Rejected`), `reviewedAt`, `reviewComment`, and timestamps.
+- **Backend Controller & Express Routes (`correctionController.js`, `correctionRoutes.js`)**:
+  - `POST /api/attendance-corrections`: Submits request and logs `ATTENDANCE_CORRECTION_REQUESTED` event.
+  - `GET /api/attendance-corrections`: Retrieves requests with status/student/subject filters.
+  - `PUT /api/attendance-corrections/:id/review`: Approve/Reject requests. On approval, updates original `Attendance` record status.
+  - `GET /api/attendance-corrections/history/:attendanceId`: Returns complete audit trail for a specific attendance record.
+- **Audit Logging & Socket Alerts**:
+  - Emits real-time notifications to students and logs audit entries in `AuditLog`.
+- **Frontend Consoles**:
+  - Teacher Console (`/teacher/corrections`): Faculty view pending requests, submit corrections with reasons, and approve/reject.
+  - Admin Console (`/admin/corrections`): Master institutional governance console with audit transition badges, reason inspection, and execution controls.
+  - Roster Integration (`AttendanceHistory.jsx`): Replaced raw edit button with correction request modal requiring a reason.
+
+### File Mapping
+- Backend Models & Routes:
+  - `server/src/models/AttendanceCorrection.js`
+  - `server/src/controllers/correctionController.js`
+  - `server/src/routes/correctionRoutes.js`
+  - `server/src/app.js`
+- Frontend Components & Pages:
+  - `client/src/services/api.js`
+  - `client/src/pages/teacher/TeacherCorrections.jsx`
+  - `client/src/pages/admin/AdminCorrections.jsx`
+  - `client/src/pages/teacher/AttendanceHistory.jsx`
+  - `client/src/components/layout/Sidebar.jsx`
+  - `client/src/App.jsx`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -898,12 +943,6 @@ Implement an exact quantitative 0–100 Attendance Risk Score matrix evaluating 
 | **Teacher & Admin Suspicious Attendance Review Console** | ✅ | ✅ | ✅ | Phase 21 |
 | **Attendance Risk Scoring Engine (0-100 Multi-Signal Scoring)** | ✅ | ✅ | ✅ | Phase 22 |
 | **3-Tier Risk Classification (0-30 Normal, 31-60 Review, 61-100 High Risk)** | ✅ | ✅ | ✅ | Phase 22 |
-
----
-*Last Updated: August 2026*ch Promotion Engine** | ❌ | ❌ | ✅ | Phase 18 |
-| **Student Enrollment & Session History Tracking** | ✅ | ✅ | ✅ | Phase 18 |
-| **Configurable Attendance Rules & Thresholds Engine** | ❌ | ❌ | ✅ | Phase 19 |
-| **7-Status Matrix Rules & Attendance Weights** | ❌ | ❌ | ✅ | Phase 19 |
 | **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ | Phase 19 |
 | **Attendance Session Engine (Session ID, Start/End Timestamps)** | ❌ | ✅ | ✅ | Phase 20 |
 | **Session-Linked Attendance Logs & QR/GPS Session Management** | ✅ | ✅ | ✅ | Phase 20 |
