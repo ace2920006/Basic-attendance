@@ -35,6 +35,7 @@ import AttendanceHistory from './pages/teacher/AttendanceHistory';
 import StudentsList from './pages/teacher/StudentsList';
 import TeacherReports from './pages/teacher/TeacherReports';
 import TeacherLeave from './pages/teacher/TeacherLeave';
+import TeacherCorrections from './pages/teacher/TeacherCorrections';
 
 // Admin Portal
 import AdminLayout from './pages/admin/AdminLayout';
@@ -49,6 +50,7 @@ import AdminSettings from './pages/admin/AdminSettings';
 import AdminAuditLogs from './pages/admin/AdminAuditLogs';
 import AdminAcademicEngine from './pages/admin/AdminAcademicEngine';
 import AdminRulesEngine from './pages/admin/AdminRulesEngine';
+import AdminCorrections from './pages/admin/AdminCorrections';
 
 // Phase 11 Charts
 import ChartsPage from './pages/analytics/ChartsPage';
@@ -108,6 +110,7 @@ export default function App() {
               }
             >
               <Route index element={<TeacherDashboard />} />
+              <Route path="corrections" element={<TeacherCorrections />} />
               <Route path="suspicious" element={<SuspiciousDetection />} />
               <Route path="classes" element={<TeacherDashboard />} />
               <Route path="timetable" element={<TeacherTimetable />} />
@@ -130,6 +133,7 @@ export default function App() {
               }
             >
               <Route index element={<AdminAnalytics />} />
+              <Route path="corrections" element={<AdminCorrections />} />
               <Route path="audit-logs" element={<AdminAuditLogs />} />
               <Route path="suspicious" element={<SuspiciousDetection />} />
               <Route path="academic" element={<AdminAcademicEngine />} />
@@ -144,6 +148,7 @@ export default function App() {
               <Route path="notifications" element={<NotificationsList />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
+
 
             {/* Fallback to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
