@@ -75,10 +75,13 @@ const registerUser = asyncHandler(async (req, res) => {
     recordAuditLog({
       req,
       user,
-      action: 'USER_REGISTERED',
+      targetUser: user._id,
+      targetUserName: user.name,
+      targetUserRollNo: user.rollNo,
+      action: 'CREATE_STUDENT',
       resource: 'Auth',
       status: 'SUCCESS',
-      details: { role: user.role, email: user.email }
+      details: { role: user.role, email: user.email, rollNo: user.rollNo, department: user.department, semester: user.semester }
     });
 
     res.status(201).json({
@@ -132,10 +135,10 @@ const loginUser = asyncHandler(async (req, res) => {
     recordAuditLog({
       req,
       user,
-      action: 'USER_LOGIN',
+      action: 'LOGIN',
       resource: 'Auth',
       status: 'SUCCESS',
-      details: { role: user.role, email: user.email }
+      details: { role: user.role, email: user.email, name: user.name, department: user.department }
     });
 
     res.json({
@@ -159,7 +162,7 @@ const loginUser = asyncHandler(async (req, res) => {
   } else {
     recordAuditLog({
       req,
-      action: 'LOGIN_FAILED',
+      action: 'LOGIN',
       resource: 'Auth',
       status: 'FAILED',
       details: { email, message: 'Invalid credentials provided' }
@@ -179,6 +182,15 @@ const logoutUser = asyncHandler(async (req, res) => {
       user.refreshToken = '';
       await user.save({ validateBeforeSave: false });
     }
+
+    recordAuditLog({
+      req,
+      user: req.user,
+      action: 'LOGOUT',
+      resource: 'Auth',
+      status: 'SUCCESS',
+      details: { userId: req.user._id, email: req.user.email, role: req.user.role }
+    });
   }
 
   // Clear HTTP-Only cookie
@@ -405,6 +417,21 @@ const updateProfile = asyncHandler(async (req, res) => {
     }
 
     const updatedUser = await user.save();
+
+    recordAuditLog({
+      req,
+      user: updatedUser,
+      action: 'CHANGE_SETTINGS',
+      resource: 'User Profile & Security',
+      status: 'SUCCESS',
+      details: {
+        settingType: 'User Profile & Security',
+        userId: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        updatedFields: Object.keys(req.body).filter((k) => k !== 'password')
+      }
+    });
 
     res.json({
       success: true,
