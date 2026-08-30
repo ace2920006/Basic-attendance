@@ -13,6 +13,7 @@ const getAuditLogs = asyncHandler(async (req, res) => {
     resource,
     startDate,
     endDate,
+    studentId,
     page = 1,
     limit = 20,
     sortBy = 'createdAt',
@@ -21,14 +22,21 @@ const getAuditLogs = asyncHandler(async (req, res) => {
 
   const query = {};
 
-  // Text search
+  // Comprehensive text search matching users, target students, actions, reasons, and transitions
   if (search) {
     query.$or = [
       { userName: { $regex: search, $options: 'i' } },
       { userEmail: { $regex: search, $options: 'i' } },
+      { targetUserName: { $regex: search, $options: 'i' } },
+      { targetUserRollNo: { $regex: search, $options: 'i' } },
       { action: { $regex: search, $options: 'i' } },
       { resource: { $regex: search, $options: 'i' } },
-      { ipAddress: { $regex: search, $options: 'i' } }
+      { reason: { $regex: search, $options: 'i' } },
+      { transition: { $regex: search, $options: 'i' } },
+      { ipAddress: { $regex: search, $options: 'i' } },
+      { 'details.reason': { $regex: search, $options: 'i' } },
+      { 'details.studentName': { $regex: search, $options: 'i' } },
+      { 'details.subject': { $regex: search, $options: 'i' } }
     ];
   }
 
@@ -37,6 +45,9 @@ const getAuditLogs = asyncHandler(async (req, res) => {
   if (role) query.userRole = role;
   if (action) query.action = action;
   if (resource) query.resource = resource;
+  if (studentId) {
+    query.$or = [{ targetUser: studentId }, { 'details.studentId': studentId }];
+  }
 
   // Date range filter
   if (startDate || endDate) {
@@ -59,7 +70,8 @@ const getAuditLogs = asyncHandler(async (req, res) => {
       .sort({ [sortBy]: sortDirection })
       .skip(skip)
       .limit(limitNum)
-      .populate('user', 'name email role rollNumber designation'),
+      .populate('user', 'name email role rollNo designation')
+      .populate('targetUser', 'name email role rollNo department semester'),
     AuditLog.countDocuments(query)
   ]);
 
@@ -86,7 +98,8 @@ const getAuditLogStats = asyncHandler(async (req, res) => {
     failedEvents,
     warningEvents,
     topActions,
-    recentFailures
+    recentFailures,
+    actionBreakdown
   ] = await Promise.all([
     AuditLog.countDocuments(),
     AuditLog.countDocuments({ createdAt: { $gte: startOfToday } }),
@@ -95,13 +108,27 @@ const getAuditLogStats = asyncHandler(async (req, res) => {
     AuditLog.aggregate([
       { $group: { _id: '$action', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
-      { $limit: 5 }
+      { $limit: 10 }
     ]),
     AuditLog.find({ status: 'FAILED' })
       .sort({ createdAt: -1 })
       .limit(5)
-      .select('userName userEmail action endpoint ipAddress createdAt')
+      .select('userName userEmail action endpoint ipAddress createdAt'),
+    AuditLog.aggregate([
+      {
+        $group: {
+          _id: '$action',
+          count: { $sum: 1 }
+        }
+      }
+    ])
   ]);
+
+  // Convert array of action counts into key-value map for quick frontend access
+  const actionCounts = {};
+  actionBreakdown.forEach((item) => {
+    actionCounts[item._id] = item.count;
+  });
 
   res.json({
     success: true,
@@ -110,6 +137,7 @@ const getAuditLogStats = asyncHandler(async (req, res) => {
       todayEvents,
       failedEvents,
       warningEvents,
+      actionCounts,
       topActions: topActions.map((item) => ({
         action: item._id,
         count: item.count
@@ -125,9 +153,9 @@ const getAuditLogStats = asyncHandler(async (req, res) => {
 const exportAuditLogs = asyncHandler(async (req, res) => {
   const logs = await AuditLog.find()
     .sort({ createdAt: -1 })
-    .limit(1000);
+    .limit(2000);
 
-  let csvContent = 'Timestamp,User Name,User Email,Role,Action,Resource,Method,Endpoint,IP Address,Status\n';
+  let csvContent = 'Timestamp,Actor Name,Actor Email,Actor Role,Action,Target Student,Transition,Reason,Resource,Method,Endpoint,IP Address,Status\n';
 
   logs.forEach((log) => {
     const timestamp = new Date(log.createdAt).toISOString();
@@ -135,17 +163,20 @@ const exportAuditLogs = asyncHandler(async (req, res) => {
     const email = `"${(log.userEmail || '').replace(/"/g, '""')}"`;
     const role = log.userRole || '';
     const action = `"${(log.action || '').replace(/"/g, '""')}"`;
+    const targetStudent = `"${(log.targetUserName ? `${log.targetUserName}${log.targetUserRollNo ? ` (${log.targetUserRollNo})` : ''}` : log.details?.studentName || 'N/A').replace(/"/g, '""')}"`;
+    const transition = `"${(log.transition || log.details?.transition || 'N/A').replace(/"/g, '""')}"`;
+    const reason = `"${(log.reason || log.details?.reason || log.details?.notes || 'N/A').replace(/"/g, '""')}"`;
     const resource = `"${(log.resource || '').replace(/"/g, '""')}"`;
     const method = log.method || '';
     const endpoint = `"${(log.endpoint || '').replace(/"/g, '""')}"`;
     const ip = log.ipAddress || '';
     const status = log.status || '';
 
-    csvContent += `${timestamp},${name},${email},${role},${action},${resource},${method},${endpoint},${ip},${status}\n`;
+    csvContent += `${timestamp},${name},${email},${role},${action},${targetStudent},${transition},${reason},${resource},${method},${endpoint},${ip},${status}\n`;
   });
 
   res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename="security_audit_logs.csv"');
+  res.setHeader('Content-Disposition', 'attachment; filename="institutional_audit_logs.csv"');
   res.status(200).send(csvContent);
 });
 

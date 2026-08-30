@@ -1,5 +1,6 @@
 const asyncHandler = require('../utils/asyncHandler');
 const AttendanceRule = require('../models/AttendanceRule');
+const { recordAuditLog, AUDIT_ACTIONS } = require('../middleware/auditMiddleware');
 const {
   DEFAULT_RULES,
   getSystemRules,
@@ -59,6 +60,25 @@ const updateRules = asyncHandler(async (req, res) => {
   // Invalidate in-memory cache
   invalidateRulesCache();
 
+  recordAuditLog({
+    req,
+    user: req.user,
+    action: AUDIT_ACTIONS.CHANGE_SETTINGS,
+    resource: 'Attendance Rules',
+    reason: 'Admin updated attendance thresholds and status matrix',
+    status: 'SUCCESS',
+    details: {
+      settingType: 'Attendance Rules & Thresholds',
+      minAttendancePercentage: rulesDoc.minAttendancePercentage,
+      lateThresholdMinutes: rulesDoc.lateThresholdMinutes,
+      gracePeriodMinutes: rulesDoc.gracePeriodMinutes,
+      qrValidityMinutes: rulesDoc.qrValidityMinutes,
+      gpsRadiusMeters: rulesDoc.gpsRadiusMeters,
+      changedBy: req.user?._id,
+      changedByName: req.user?.name
+    }
+  });
+
   res.json({
     success: true,
     message: 'Attendance rules & status matrix updated successfully',
@@ -78,6 +98,20 @@ const resetRules = asyncHandler(async (req, res) => {
 
   // Invalidate in-memory cache
   invalidateRulesCache();
+
+  recordAuditLog({
+    req,
+    user: req.user,
+    action: AUDIT_ACTIONS.CHANGE_SETTINGS,
+    resource: 'Attendance Rules',
+    reason: 'Admin reset attendance rules to factory defaults',
+    status: 'SUCCESS',
+    details: {
+      settingType: 'Attendance Rules Factory Reset',
+      changedBy: req.user?._id,
+      changedByName: req.user?.name
+    }
+  });
 
   res.json({
     success: true,

@@ -291,6 +291,23 @@ const exportReport = asyncHandler(async (req, res) => {
 
   const filename = `Attendance_${type.toUpperCase()}_Report_${new Date().toISOString().split('T')[0]}`;
 
+  recordAuditLog({
+    req,
+    user: req.user,
+    action: AUDIT_ACTIONS.EXPORT_REPORT,
+    resource: 'Reports',
+    status: 'SUCCESS',
+    details: {
+      format,
+      reportType: type,
+      totalRows: rows.length,
+      startDate: start,
+      endDate: end,
+      exportedBy: req.user?._id,
+      exportedByName: req.user?.name
+    }
+  });
+
   if (format === 'excel') {
     // Generate HTML Excel file attachment
     let html = `<table border="1"><thead><tr style="background:#4F46E5;color:#fff;"><th>Roll No</th><th>Name</th><th>Department</th><th>Course</th><th>Semester</th><th>Total Sessions</th><th>Present</th><th>Absent</th><th>Late</th><th>Attendance Rate</th><th>Exam Eligibility</th></tr></thead><tbody>`;
