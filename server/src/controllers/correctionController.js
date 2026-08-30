@@ -2,6 +2,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const AttendanceCorrection = require('../models/AttendanceCorrection');
 const Attendance = require('../models/Attendance');
 const AuditLog = require('../models/AuditLog');
+const { recordAuditLog, AUDIT_ACTIONS } = require('../middleware/auditMiddleware');
 const { sendNotification } = require('../config/socket');
 
 // @desc    Submit an attendance correction request
@@ -34,23 +35,31 @@ const createCorrectionRequest = asyncHandler(async (req, res) => {
     status: 'Pending'
   });
 
+  const studentUser = attendance.student;
+
   // Log in Audit Trail
-  await AuditLog.create({
-    user: req.user._id,
-    userRole: req.user.role || 'teacher',
-    userName: req.user.name || 'User',
-    userEmail: req.user.email || 'N/A',
-    action: 'ATTENDANCE_CORRECTION_REQUESTED',
+  await recordAuditLog({
+    req,
+    user: req.user,
+    targetUser: studentUser?._id || attendance.student,
+    targetUserName: studentUser?.name || 'Student',
+    targetUserRollNo: studentUser?.rollNo || '',
+    action: AUDIT_ACTIONS.ATTENDANCE_CORRECTION_REQUESTED,
     resource: 'AttendanceCorrection',
-    method: 'POST',
-    endpoint: '/api/attendance-corrections',
+    originalValue: attendance.status,
+    newValue: requestedStatus,
+    transition: `${attendance.status} → ${requestedStatus}`,
+    reason,
     status: 'SUCCESS',
     details: {
       correctionId: correction._id,
       attendanceId: attendance._id,
-      studentId: attendance.student._id || attendance.student,
+      studentId: studentUser?._id || attendance.student,
+      studentName: studentUser?.name,
+      studentRollNo: studentUser?.rollNo,
       originalStatus: attendance.status,
       requestedStatus,
+      transition: `${attendance.status} → ${requestedStatus}`,
       reason
     }
   });
@@ -128,8 +137,8 @@ const reviewCorrectionRequest = asyncHandler(async (req, res) => {
   }
 
   const correction = await AttendanceCorrection.findById(req.params.id)
-    .populate('student', 'name email')
-    .populate('requestedBy', 'name email');
+    .populate('student', 'name email rollNo department')
+    .populate('requestedBy', 'name email role');
 
   if (!correction) {
     res.status(404);
@@ -160,26 +169,40 @@ const reviewCorrectionRequest = asyncHandler(async (req, res) => {
     }
   }
 
-  // Log in Audit Trail
-  await AuditLog.create({
-    user: req.user._id,
-    userRole: req.user.role || 'admin',
-    userName: req.user.name || 'Reviewer',
-    userEmail: req.user.email || 'N/A',
-    action: status === 'Approved' ? 'ATTENDANCE_CORRECTION_APPROVED' : 'ATTENDANCE_CORRECTION_REJECTED',
-    resource: 'AttendanceCorrection',
-    method: 'PUT',
-    endpoint: `/api/attendance-corrections/${req.params.id}/review`,
+  const studentUser = correction.student;
+  const isApproved = status === 'Approved';
+  const newStatus = isApproved ? correction.requestedStatus : correction.originalStatus;
+  const transitionStr = `${correction.originalStatus} → ${newStatus}`;
+
+  // Primary audit log: EDIT_ATTENDANCE (or ATTENDANCE_CORRECTION_APPROVED / REJECTED)
+  await recordAuditLog({
+    req,
+    user: req.user,
+    targetUser: studentUser?._id || correction.student,
+    targetUserName: studentUser?.name || 'Student',
+    targetUserRollNo: studentUser?.rollNo || '',
+    action: isApproved ? AUDIT_ACTIONS.EDIT_ATTENDANCE : AUDIT_ACTIONS.ATTENDANCE_CORRECTION_REJECTED,
+    resource: 'Attendance',
+    originalValue: correction.originalStatus,
+    newValue: newStatus,
+    transition: transitionStr,
+    reason: correction.reason || 'Medical document verified',
     status: 'SUCCESS',
     details: {
       correctionId: correction._id,
       attendanceId: correction.attendance,
+      studentId: studentUser?._id || correction.student,
+      studentName: studentUser?.name,
+      studentRollNo: studentUser?.rollNo,
       originalStatus: correction.originalStatus,
-      newStatus: status === 'Approved' ? correction.requestedStatus : correction.originalStatus,
+      newStatus,
       requestedStatus: correction.requestedStatus,
+      transition: transitionStr,
       changedBy: correction.requestedBy?._id || correction.requestedBy,
+      changedByName: correction.requestedBy?.name || 'Faculty',
       reason: correction.reason,
       reviewedBy: req.user._id,
+      reviewedByName: req.user.name,
       reviewComment: reviewComment || '',
       timestamp: new Date()
     }
@@ -224,7 +247,10 @@ const getAttendanceAuditTrail = asyncHandler(async (req, res) => {
     .sort({ createdAt: -1 });
 
   const auditLogs = await AuditLog.find({
-    'details.attendanceId': attendanceId
+    $or: [
+      { 'details.attendanceId': attendanceId },
+      { 'details.attendance': attendanceId }
+    ]
   }).sort({ createdAt: -1 });
 
   res.json({

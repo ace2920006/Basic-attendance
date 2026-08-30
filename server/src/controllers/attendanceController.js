@@ -539,6 +539,27 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
   // Trigger real-time notification alert
   checkAndSendAttendanceAlerts(req.user._id, record.subject, 'Present');
 
+  recordAuditLog({
+    req,
+    user: req.user,
+    targetUser: req.user._id,
+    targetUserName: req.user.name,
+    targetUserRollNo: req.user.rollNo,
+    action: AUDIT_ACTIONS.MARK_ATTENDANCE,
+    resource: 'Attendance',
+    status: 'SUCCESS',
+    details: {
+      attendanceId: record._id,
+      subject: record.subject,
+      status: 'Present',
+      mode: 'QR',
+      sessionId: decoded.sessionId || null,
+      riskScore: record.riskScore,
+      riskLevel: record.riskLevel,
+      reviewStatus: record.reviewStatus
+    }
+  });
+
   const responseMessage = riskEvaluation.isSuspicious
     ? `Attendance recorded but flagged as ${riskEvaluation.riskLevel} (Score: ${riskEvaluation.riskScore}/100) pending instructor review.`
     : 'Attendance recorded successfully via QR code';
