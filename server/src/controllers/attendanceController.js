@@ -131,6 +131,22 @@ const markBulkAttendance = asyncHandler(async (req, res) => {
 
   const createdRecords = await Attendance.insertMany(attendanceDocs);
 
+  recordAuditLog({
+    req,
+    user: req.user,
+    action: AUDIT_ACTIONS.MARK_ATTENDANCE,
+    resource: 'Attendance',
+    status: 'SUCCESS',
+    details: {
+      count: createdRecords.length,
+      subject: subject || (records[0] && records[0].subject) || '',
+      date: attendanceDate,
+      mode: 'Bulk_Manual',
+      markedByName: req.user?.name,
+      totalMarked: createdRecords.length
+    }
+  });
+
   // Trigger real-time notifications for each marked student
   createdRecords.forEach((rec) => {
     checkAndSendAttendanceAlerts(rec.student, rec.subject, rec.status);
@@ -290,14 +306,18 @@ const getDashboardAnalytics = asyncHandler(async (req, res) => {
 // @route   PUT /api/attendance/:id
 // @access  Private (Teacher/Admin)
 const updateAttendance = asyncHandler(async (req, res) => {
-  const { status, notes, arrivalTime, departureTime, date } = req.body;
+  const { status, notes, arrivalTime, departureTime, date, reason } = req.body;
 
-  let record = await Attendance.findById(req.params.id);
+  let record = await Attendance.findById(req.params.id).populate('student', 'name rollNo email department');
 
   if (!record) {
     res.status(404);
     throw new Error('Attendance record not found');
   }
+
+  const oldStatus = record.status;
+  const newStatus = status || oldStatus;
+  const changeReason = reason || notes || 'Medical document verified';
 
   if (status) record.status = status;
   if (notes !== undefined) record.notes = notes;
@@ -306,6 +326,37 @@ const updateAttendance = asyncHandler(async (req, res) => {
   if (date) record.date = new Date(date);
 
   const updatedRecord = await record.save();
+
+  // Audit log with rich before/after state diff and reason (e.g. "Absent → Present", "Medical document verified")
+  recordAuditLog({
+    req,
+    user: req.user,
+    targetUser: record.student?._id || record.student,
+    targetUserName: record.student?.name || 'Student',
+    targetUserRollNo: record.student?.rollNo || '',
+    action: AUDIT_ACTIONS.EDIT_ATTENDANCE,
+    resource: 'Attendance',
+    originalValue: oldStatus,
+    newValue: newStatus,
+    transition: `${oldStatus} → ${newStatus}`,
+    reason: changeReason,
+    status: 'SUCCESS',
+    details: {
+      attendanceId: record._id,
+      studentId: record.student?._id || record.student,
+      studentName: record.student?.name || 'Student',
+      studentRollNo: record.student?.rollNo || '',
+      subject: record.subject,
+      date: record.date,
+      oldStatus,
+      newStatus,
+      transition: `${oldStatus} → ${newStatus}`,
+      reason: changeReason,
+      changedBy: req.user?._id,
+      changedByName: req.user?.name,
+      changedByRole: req.user?.role
+    }
+  });
 
   res.json({
     success: true,
