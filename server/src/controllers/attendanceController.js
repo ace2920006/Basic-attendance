@@ -2,6 +2,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const { sendNotification } = require('../config/socket');
+const { recordAuditLog, AUDIT_ACTIONS } = require('../middleware/auditMiddleware');
 
 const { getSystemRules, calculateAttendanceStats } = require('../utils/attendanceRulesEngine');
 
@@ -67,6 +68,31 @@ const markAttendance = asyncHandler(async (req, res) => {
     classId: classId || null,
     sessionId: sessionId || null,
     markedBy: req.user._id
+  });
+
+  const studentDoc = await User.findById(studentId).select('name rollNo email department');
+
+  recordAuditLog({
+    req,
+    user: req.user,
+    targetUser: studentId,
+    targetUserName: studentDoc?.name || 'Student',
+    targetUserRollNo: studentDoc?.rollNo || '',
+    action: AUDIT_ACTIONS.MARK_ATTENDANCE,
+    resource: 'Attendance',
+    status: 'SUCCESS',
+    details: {
+      attendanceId: record._id,
+      studentId,
+      studentName: studentDoc?.name,
+      studentRollNo: studentDoc?.rollNo,
+      subject,
+      status,
+      date: attendanceDate,
+      mode: 'Manual',
+      markedByName: req.user?.name,
+      notes: notes || ''
+    }
   });
 
   // Trigger real-time notifications

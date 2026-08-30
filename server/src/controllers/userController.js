@@ -1,5 +1,6 @@
 const asyncHandler = require('../utils/asyncHandler');
 const User = require('../models/User');
+const { recordAuditLog, AUDIT_ACTIONS } = require('../middleware/auditMiddleware');
 
 // @desc    Get all users with optional filtering
 // @route   GET /api/users
@@ -63,16 +64,41 @@ const createUser = asyncHandler(async (req, res) => {
     throw new Error('User with this email already exists');
   }
 
+  const userRole = role || 'student';
+
   const user = await User.create({
     name,
     email,
     password: password || '123456',
-    role: role || 'student',
+    role: userRole,
     rollNo: rollNo || '',
     department: department || 'Computer Science & Engineering',
     course: course || '',
     designation: designation || '',
     semester: semester || ''
+  });
+
+  const auditAction = userRole === 'student' ? AUDIT_ACTIONS.CREATE_STUDENT : AUDIT_ACTIONS.CREATE_USER;
+
+  recordAuditLog({
+    req,
+    user: req.user,
+    targetUser: user._id,
+    targetUserName: user.name,
+    targetUserRollNo: user.rollNo,
+    action: auditAction,
+    resource: 'Users',
+    status: 'SUCCESS',
+    details: {
+      userId: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      rollNo: user.rollNo,
+      department: user.department,
+      semester: user.semester,
+      createdBy: req.user?._id
+    }
   });
 
   res.status(201).json({
@@ -103,6 +129,24 @@ const updateUser = asyncHandler(async (req, res) => {
     }
 
     const updatedUser = await user.save();
+
+    recordAuditLog({
+      req,
+      user: req.user,
+      targetUser: updatedUser._id,
+      targetUserName: updatedUser.name,
+      targetUserRollNo: updatedUser.rollNo,
+      action: AUDIT_ACTIONS.CHANGE_SETTINGS,
+      resource: 'Users',
+      status: 'SUCCESS',
+      details: {
+        settingType: 'User Account Details',
+        targetUserId: updatedUser._id,
+        targetName: updatedUser.name,
+        targetRole: updatedUser.role,
+        updatedFields: Object.keys(req.body).filter((k) => k !== 'password')
+      }
+    });
 
     res.json({
       success: true,
@@ -138,6 +182,22 @@ const assignSubjectsToUser = asyncHandler(async (req, res) => {
     .select('-password')
     .populate('assignedSubjects', 'name code department color');
 
+  recordAuditLog({
+    req,
+    user: req.user,
+    targetUser: updatedUser._id,
+    targetUserName: updatedUser.name,
+    action: AUDIT_ACTIONS.CHANGE_SETTINGS,
+    resource: 'Subject Allocations',
+    status: 'SUCCESS',
+    details: {
+      settingType: 'Subject Allocation',
+      targetUserId: updatedUser._id,
+      targetName: updatedUser.name,
+      subjectCount: subjectIds.length
+    }
+  });
+
   res.json({
     success: true,
     message: 'Subjects assigned successfully',
@@ -152,10 +212,33 @@ const deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id);
 
   if (user) {
+    const isStudent = user.role === 'student';
+    const auditAction = isStudent ? AUDIT_ACTIONS.DELETE_STUDENT : AUDIT_ACTIONS.DELETE_USER;
+
+    recordAuditLog({
+      req,
+      user: req.user,
+      targetUser: user._id,
+      targetUserName: user.name,
+      targetUserRollNo: user.rollNo,
+      action: auditAction,
+      resource: 'Users',
+      status: 'SUCCESS',
+      details: {
+        userId: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        rollNo: user.rollNo,
+        department: user.department,
+        deletedBy: req.user?._id
+      }
+    });
+
     await user.deleteOne();
     res.json({
       success: true,
-      message: 'User removed successfully'
+      message: `${isStudent ? 'Student' : 'User'} removed successfully`
     });
   } else {
     res.status(404);
