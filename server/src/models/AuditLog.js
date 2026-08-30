@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const auditLogSchema = new mongoose.Schema(
   {
+    // Actor / Performer
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
@@ -20,6 +21,23 @@ const auditLogSchema = new mongoose.Schema(
       type: String,
       default: 'N/A'
     },
+
+    // Target User (if applicable, e.g. Student whose attendance was changed)
+    targetUser: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    targetUserName: {
+      type: String,
+      default: ''
+    },
+    targetUserRollNo: {
+      type: String,
+      default: ''
+    },
+
+    // Action Classification
     action: {
       type: String,
       required: true,
@@ -27,8 +45,29 @@ const auditLogSchema = new mongoose.Schema(
     },
     resource: {
       type: String,
-      default: 'System'
+      default: 'System',
+      index: true
     },
+
+    // State Mutation & Reason Tracking
+    originalValue: {
+      type: String,
+      default: ''
+    },
+    newValue: {
+      type: String,
+      default: ''
+    },
+    transition: {
+      type: String,
+      default: ''
+    },
+    reason: {
+      type: String,
+      default: ''
+    },
+
+    // Network & HTTP Context
     method: {
       type: String,
       default: 'GET'
@@ -51,6 +90,8 @@ const auditLogSchema = new mongoose.Schema(
       default: 'SUCCESS',
       index: true
     },
+
+    // Additional structured details
     details: {
       type: mongoose.Schema.Types.Mixed,
       default: {}
@@ -61,8 +102,11 @@ const auditLogSchema = new mongoose.Schema(
   }
 );
 
-// Index for fast query filtering
+// Indexes for fast querying, filtering, and reporting
 auditLogSchema.index({ createdAt: -1 });
+auditLogSchema.index({ action: 1, createdAt: -1 });
+auditLogSchema.index({ user: 1, createdAt: -1 });
+auditLogSchema.index({ targetUser: 1, createdAt: -1 });
 auditLogSchema.index({ userRole: 1, status: 1 });
 
 module.exports = mongoose.model('AuditLog', auditLogSchema);
