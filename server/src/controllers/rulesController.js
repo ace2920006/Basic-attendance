@@ -60,7 +60,7 @@ const updateRules = asyncHandler(async (req, res) => {
   // Invalidate in-memory cache
   invalidateRulesCache();
 
-  recordAuditLog({
+  await recordAuditLog({
     req,
     user: req.user,
     action: AUDIT_ACTIONS.CHANGE_SETTINGS,
@@ -99,7 +99,7 @@ const resetRules = asyncHandler(async (req, res) => {
   // Invalidate in-memory cache
   invalidateRulesCache();
 
-  recordAuditLog({
+  await recordAuditLog({
     req,
     user: req.user,
     action: AUDIT_ACTIONS.CHANGE_SETTINGS,
