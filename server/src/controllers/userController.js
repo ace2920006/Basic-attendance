@@ -130,7 +130,7 @@ const updateUser = asyncHandler(async (req, res) => {
 
     const updatedUser = await user.save();
 
-    recordAuditLog({
+    await recordAuditLog({
       req,
       user: req.user,
       targetUser: updatedUser._id,
@@ -215,7 +215,7 @@ const deleteUser = asyncHandler(async (req, res) => {
     const isStudent = user.role === 'student';
     const auditAction = isStudent ? AUDIT_ACTIONS.DELETE_STUDENT : AUDIT_ACTIONS.DELETE_USER;
 
-    recordAuditLog({
+    await recordAuditLog({
       req,
       user: req.user,
       targetUser: user._id,

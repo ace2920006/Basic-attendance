@@ -35,7 +35,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const userExists = await User.findOne({ email });
 
   if (userExists) {
-    recordAuditLog({
+    await recordAuditLog({
       req,
       action: 'REGISTER_FAILED_EXISTS',
       resource: 'Auth',
@@ -72,7 +72,7 @@ const registerUser = asyncHandler(async (req, res) => {
     // Security Hardening Fix #5: Transport refresh token via secure HTTP-Only cookie
     sendRefreshTokenCookie(res, refreshTokenVal);
 
-    recordAuditLog({
+    await recordAuditLog({
       req,
       user,
       targetUser: user._id,
@@ -132,7 +132,7 @@ const loginUser = asyncHandler(async (req, res) => {
     // Security Hardening Fix #5: Set HTTP-Only Cookie
     sendRefreshTokenCookie(res, refreshTokenVal);
 
-    recordAuditLog({
+    await recordAuditLog({
       req,
       user,
       action: 'LOGIN',
@@ -160,7 +160,7 @@ const loginUser = asyncHandler(async (req, res) => {
       }
     });
   } else {
-    recordAuditLog({
+    await recordAuditLog({
       req,
       action: 'LOGIN',
       resource: 'Auth',
@@ -183,7 +183,7 @@ const logoutUser = asyncHandler(async (req, res) => {
       await user.save({ validateBeforeSave: false });
     }
 
-    recordAuditLog({
+    await recordAuditLog({
       req,
       user: req.user,
       action: 'LOGOUT',
@@ -418,7 +418,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 
     const updatedUser = await user.save();
 
-    recordAuditLog({
+    await recordAuditLog({
       req,
       user: updatedUser,
       action: 'CHANGE_SETTINGS',

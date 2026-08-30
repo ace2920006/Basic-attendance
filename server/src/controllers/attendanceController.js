@@ -72,7 +72,7 @@ const markAttendance = asyncHandler(async (req, res) => {
 
   const studentDoc = await User.findById(studentId).select('name rollNo email department');
 
-  recordAuditLog({
+  await recordAuditLog({
     req,
     user: req.user,
     targetUser: studentId,
@@ -131,7 +131,7 @@ const markBulkAttendance = asyncHandler(async (req, res) => {
 
   const createdRecords = await Attendance.insertMany(attendanceDocs);
 
-  recordAuditLog({
+  await recordAuditLog({
     req,
     user: req.user,
     action: AUDIT_ACTIONS.MARK_ATTENDANCE,
@@ -328,7 +328,7 @@ const updateAttendance = asyncHandler(async (req, res) => {
   const updatedRecord = await record.save();
 
   // Audit log with rich before/after state diff and reason (e.g. "Absent → Present", "Medical document verified")
-  recordAuditLog({
+  await recordAuditLog({
     req,
     user: req.user,
     targetUser: record.student?._id || record.student,
@@ -539,7 +539,7 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
   // Trigger real-time notification alert
   checkAndSendAttendanceAlerts(req.user._id, record.subject, 'Present');
 
-  recordAuditLog({
+  await recordAuditLog({
     req,
     user: req.user,
     targetUser: req.user._id,
