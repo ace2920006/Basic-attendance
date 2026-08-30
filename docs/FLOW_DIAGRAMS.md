@@ -15,6 +15,8 @@ This document contains comprehensive flowcharts and system diagrams for the **At
 8. [Advanced Attendance Rules Engine Evaluation & Sandbox Flow](#8-advanced-attendance-rules-engine-evaluation--sandbox-flow)
 9. [Attendance Session Engine & 4-Tier Hierarchy Flow](#9-attendance-session-engine--4-tier-hierarchy-flow)
 10. [Anti-Proxy Multi-Signal Risk Engine & Review Workflow](#10-anti-proxy-multi-signal-risk-engine--review-workflow)
+11. [Attendance Correction Request & Approval Workflow](#11-attendance-correction-request--approval-workflow)
+12. [Complete Institutional Audit Logging & State Mutation Pipeline](#12-complete-institutional-audit-logging--state-mutation-pipeline)
 
 ---
 
@@ -116,14 +118,16 @@ flowchart TB
         AICtrl["AI Predictor & Anomaly Detector"]
         AnalyticCtrl["Analytics Dashboard Controller"]
         NotifCtrl["Notification & FCM Controller"]
+        AuditCtrl["Audit & Correction Controllers"]
     end
 
     subgraph DB ["Database & Storage Layer (MongoDB / Mongoose)"]
         Col_Users[("Users Collection")]
         Col_Academic[("AcademicYears, Semesters, Divisions")]
         Col_Enrollment[("StudentEnrollments")]
-        Col_Att[("Attendance Collection")]
-        Col_Audit[("AuditLogs Collection")]
+        Col_Att[("Attendance & Sessions")]
+        Col_Correction[("AttendanceCorrections")]
+        Col_Audit[("AuditLogs (10 Actions + State Diffs)")]
     end
 
     ClientLayer -->|HTTP REST JSON / JWT Bearer| SecurityGateway
@@ -273,24 +277,23 @@ flowchart TD
 
 ## 10. Anti-Proxy Multi-Signal Risk Engine & Review Workflow
 
-Phase 21 Multi-Signal evaluation pipeline and instructor review resolution workflow:
+Phase 21 & 22 Multi-Signal evaluation pipeline and instructor review resolution workflow:
 
 ```mermaid
 flowchart TD
     ScanReq["Student Submits QR Scan <br/> (Payload: qrToken, GPS, Device, IP)"] --> Engine["Anti-Proxy Risk Engine <br/> (antiProxyEngine.js)"]
     
     subgraph MultiSignalEvaluation ["6 Multi-Signal Risk Factor Evaluation"]
-        Engine --> Sig1["1. QR Token Signal <br/> (Valid vs Expired 30s)"]
-        Engine --> Sig2["2. GPS Signal <br/> (Haversine Distance vs Boundary)"]
-        Engine --> Sig3["3. Session Time Signal <br/> (Active vs Post-Session Window)"]
-        Engine --> Sig4["4. Device Fingerprint <br/> (Multi-Account Device Reuse ⚠️)"]
-        Engine --> Sig5["5. IP Address Concurrency <br/> (30s Burst Scans)"]
-        Engine --> Sig6["6. Pattern Anomaly <br/> (Unfamiliar Device Switch)"]
+        Engine --> Sig1["1. QR Token Signal (+50 if invalid)"]
+        Engine --> Sig2["2. GPS Signal (+40 if out of campus)"]
+        Engine --> Sig3["3. Device Fingerprint (+30 if shared)"]
+        Engine --> Sig4["4. IP Burst Concurrency (+20)"]
+        Engine --> Sig5["5. Timing / Jump (+10)"]
     end
 
-    Sig1 & Sig2 & Sig3 & Sig4 & Sig5 & Sig6 --> ScoreCalc["Compute Aggregate Risk Score (0 - 100)"]
+    Sig1 & Sig2 & Sig3 & Sig4 & Sig5 --> ScoreCalc["Compute Aggregate Risk Score (0 - 100)"]
     
-    ScoreCalc --> RiskCheck{Risk Level?}
+    ScoreCalc --> RiskCheck{Risk Tier?}
     
     RiskCheck -- "Score 0 - 30 (Normal)" --> AutoApprove["riskLevel: Normal <br/> reviewStatus: Approved <br/> (Auto-Marked Present)"]
     RiskCheck -- "Score 31 - 60 (Review)" --> PendingSuspicious["riskLevel: Review <br/> reviewStatus: Pending"]
@@ -305,5 +308,68 @@ flowchart TD
         
         ApproveAction --> VerifiedState["reviewStatus: Approved <br/> (Attendance Confirmed)"]
         RejectAction --> RejectedState["reviewStatus: Rejected <br/> status: Absent (Proxy Flagged)"]
+    end
+```
+
+---
+
+## 11. Attendance Correction Request & Approval Workflow
+
+Phase 23 formal attendance modification workflow ensuring transparent auditability:
+
+```mermaid
+flowchart TD
+    PastLog["Teacher Inspects Past Attendance Log <br/> (/teacher/attendance-history)"] --> ClickCorrect["Teacher Clicks 'Request Correction'"]
+    
+    ClickCorrect --> OpenModal["Open Correction Modal <br/> (Input Requested Status + Mandatory Reason)"]
+    OpenModal --> SubmitRequest["POST /api/corrections <br/> (Payload: attendanceId, requestedStatus, reason)"]
+    
+    SubmitRequest --> CreateCorrection["Create AttendanceCorrection Record <br/> (Status: 'Pending')"]
+    
+    CreateCorrection --> ReviewQueue["Teacher / Admin Review Console <br/> (/teacher/corrections or /admin/corrections)"]
+    
+    ReviewQueue --> InspectDiff["Inspect Original Status vs Requested Status + Reason"]
+    
+    InspectDiff --> ReviewDecision{Review Action}
+    
+    ReviewDecision -- Approve --> ExecUpdate["1. Update Attendance Record status <br/> 2. Set Correction status: 'Approved' <br/> 3. Record EDIT_ATTENDANCE Audit Log"]
+    ReviewDecision -- Reject --> RejCorrection["1. Keep Attendance Record unchanged <br/> 2. Set Correction status: 'Rejected'"]
+    
+    ExecUpdate --> RecordAudit["Audit Log Records: <br/> • Actor: Reviewer <br/> • Target: Student <br/> • Transition: Absent ➔ Present <br/> • Reason: 'Medical document verified'"]
+    RejCorrection --> Done(["Workflow Complete"])
+    RecordAudit --> Done
+```
+
+---
+
+## 12. Complete Institutional Audit Logging & State Mutation Pipeline
+
+Phase 24 complete audit trail logging 10 institutional actions with state diffs and reasons:
+
+```mermaid
+flowchart TD
+    subgraph ActionTriggers ["10 Core Institutional Action Triggers"]
+        A1["1. LOGIN / LOGOUT"]
+        A2["2. CREATE_STUDENT / DELETE_STUDENT"]
+        A3["3. MARK_ATTENDANCE"]
+        A4["4. EDIT_ATTENDANCE (State Diff + Reason)"]
+        A5["5. APPROVE_LEAVE / REJECT_LEAVE"]
+        A6["6. EXPORT_REPORT (CSV/Excel/PDF)"]
+        A7["7. CHANGE_SETTINGS (Rules & Allocations)"]
+    end
+
+    ActionTriggers --> AuditHelper["recordAuditLog() Helper <br/> (auditMiddleware.js)"]
+    
+    AuditHelper --> EnrichData["Enrich Audit Log Entry: <br/> • Actor: userId, userName, userEmail, userRole <br/> • Target: targetUser, targetUserName, targetUserRollNo <br/> • Mutation: originalValue, newValue, transition <br/> • Rationale: reason <br/> • Context: method, endpoint, IP, User-Agent"]
+    
+    EnrichData --> CommitDB["Commit to MongoDB AuditLogs Collection <br/> (req._auditLogged deduplication flag set)"]
+    
+    CommitDB --> AdminAuditHub["Admin Audit Console (/admin/audit-logs)"]
+    
+    subgraph AdminConsoleFeatures ["Admin Audit Console Capabilities"]
+        AdminAuditHub --> PillFilter["10 Quick-Action Filter Pills (LOGIN to SETTINGS)"]
+        AdminAuditHub --> DiffCards["Visual Transition Diff Cards (Absent ➔ Present)"]
+        AdminAuditHub --> InspectorModal["Detail Inspector Modal (Actor, Target, JSON)"]
+        AdminAuditHub --> ExportCSV["Export Institutional Audit Ledger CSV"]
     end
 ```

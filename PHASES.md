@@ -1,6 +1,6 @@
 # Attendance Management System - Consolidated Phases Specification
 
-This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 5**) of the **Attendance Management System**.
+This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 24**) of the **Attendance Management System**.
 
 ---
 
@@ -26,7 +26,10 @@ This document provides a single, unified reference for all project implementatio
 19. [Phase 19 – Advanced Attendance Rules Engine](#-phase-19--advanced-attendance-rules-engine)
 20. [Phase 20 – Attendance Session Engine](#-phase-20--attendance-session-engine)
 21. [Phase 21 – Anti-Proxy Attendance System](#-phase-21--anti-proxy-attendance-system)
-22. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+22. [Phase 22 – Multi-Signal Risk Scoring Engine](#-phase-22--multi-signal-risk-scoring-engine)
+23. [Phase 23 – Attendance Correction & Audit Trail](#-phase-23--attendance-correction--audit-trail)
+24. [Phase 24 – Complete Audit Logging](#-phase-24--complete-audit-logging)
+25. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -849,6 +852,52 @@ Every modification preserves a complete audit log recording:
 
 ---
 
+## 📌 Phase 24 – Complete Audit Logging
+
+### Core Requirements & Features
+- **10 Core Institutional Tracked Actions**:
+  - `LOGIN`: Successful authentications and failed login attempt warnings with IP & client details.
+  - `LOGOUT`: Explicit user session terminations and token invalidations.
+  - `CREATE_STUDENT`: Student account creation via public registration or administrative provisioning.
+  - `DELETE_STUDENT`: Student account deletion and offboarding.
+  - `MARK_ATTENDANCE`: Attendance marked across all channels (single manual roster, bulk batch marking, and 30s QR check-ins).
+  - `EDIT_ATTENDANCE`: Inline attendance adjustments with mandatory before/after state diff and reason (e.g. *Teacher X changed Student Y: Absent → Present, Reason: Medical document verified*).
+  - `APPROVE_LEAVE`: Formal approval of student absence/medical leave applications with reviewer notes.
+  - `REJECT_LEAVE`: Rejection of student leave applications with faculty remarks.
+  - `EXPORT_REPORT`: Exporting attendance records to CSV, Excel, or PDF with filter criteria and total row counts.
+  - `CHANGE_SETTINGS`: Modifications to attendance rules, thresholds, factory defaults, subject allocations, and security settings.
+- **State Transition & Reason Engine**:
+  - `AuditLog` model enriched with first-class fields: `targetUser`, `targetUserName`, `targetUserRollNo`, `originalValue`, `newValue`, `transition` (e.g. `"Absent → Present"`), and `reason` (e.g. `"Medical document verified"`).
+  - Automated deduplication flag (`req._auditLogged`) ensuring specific domain actions take precedence over generic HTTP logging.
+- **Admin Audit Ledger & Inspector UI (`/admin/audit-logs`)**:
+  - **Quick Action Filter Bar**: 10 interactive category filter pills with live counters.
+  - **State Mutation Diff Cards**: Visual transition badges (`Absent` ➔ `Present`) with reason callout boxes.
+  - **Comprehensive Event Inspector Modal**: Actor identity, target student info, before/after values, network metadata, and technical JSON payload.
+  - **Enriched CSV Export**: Multi-column audit export stream including Actor, Student, Action, Transition, Reason, Resource, Method, IP, and Status.
+- **Automated Test Suite (`server/tests/audit.test.js`)**:
+  - 16/16 passing unit and integration tests verifying all 10 actions, transitions, search queries, filter combinations, and CSV streams.
+
+### File Mapping
+- Backend Infrastructure:
+  - Model: `server/src/models/AuditLog.js`
+  - Middleware: `server/src/middleware/auditMiddleware.js`
+  - Controllers:
+    - `server/src/controllers/auditController.js`
+    - `server/src/controllers/authController.js`
+    - `server/src/controllers/userController.js`
+    - `server/src/controllers/attendanceController.js`
+    - `server/src/controllers/leaveController.js`
+    - `server/src/controllers/reportController.js`
+    - `server/src/controllers/rulesController.js`
+    - `server/src/controllers/correctionController.js`
+  - Routes: `server/src/routes/auditRoutes.js`
+  - Tests: `server/tests/audit.test.js`
+- Frontend Infrastructure:
+  - Admin Audit Console: `client/src/pages/admin/AdminAuditLogs.jsx`
+  - API Service Client: `client/src/services/api.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -949,9 +998,14 @@ Every modification preserves a complete audit log recording:
 | **Attendance Correction Request Submission & Mandatory Reason** | ✅ | ✅ | ✅ | Phase 23 |
 | **Teacher & Admin Attendance Correction Review Consoles** | ❌ | ✅ | ✅ | Phase 23 |
 | **Complete Attendance Correction Audit Trail (Original, New, Changed By, Reason, Timestamps)** | ✅ | ✅ | ✅ | Phase 23 |
+| **Complete Institutional Action Tracking (10 Core Action Events)** | ❌ | ❌ | ✅ | Phase 24 |
+| **Attendance State Diffs & Transition Ledger (e.g. Absent → Present)** | ❌ | ❌ | ✅ | Phase 24 |
+| **Mandatory Change Reason Verification ("Medical document verified")** | ❌ | ❌ | ✅ | Phase 24 |
+| **10-Action Quick Filter Ledger, Inspector Modal & CSV Export** | ❌ | ❌ | ✅ | Phase 24 |
 
 ---
 *Last Updated: August 2026*
+
 
 
 

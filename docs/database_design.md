@@ -25,8 +25,17 @@ This document outlines the MongoDB Mongoose database schema, collection definiti
                                                    ^                                      ^
                                                    | 1:N                                  | 1:N
                                          +--------------------+                 +--------------------+
-                                         |      Classes       |                 |     AuditLogs      |
-                                         +--------------------+                 +--------------------+
+                                         |      Classes       |                 | AttendanceCorrect- |
+                                         +--------------------+                 |      ions (P23)    |
+                                                                                +--------------------+
+                                                                                          |
+                                                                                          | 1:N
+                                                                                          v
+                                                                                +--------------------+
+                                                                                |  AuditLogs (P24)   |
+                                                                                | (10 Institutional  |
+                                                                                |   Actions + Diffs) |
+                                                                                +--------------------+
 ```
 
 ---
@@ -183,7 +192,7 @@ Granular daily attendance session logs.
 | `markedBy` | ObjectId | REF `User` | Evaluator ID |
 | `classId` | ObjectId | REF `Class` | Scheduled Class reference |
 | `sessionId` | ObjectId | REF `AttendanceSession` | Active Attendance Session reference |
-| `riskScore` | Number | DEFAULT 0 (0 to 100) | Multi-signal Anti-Proxy risk score |
+| `riskScore` | Number | DEFAULT 0 (0 to 100) | Multi-signal Anti-Proxy risk score (Phase 22) |
 | `riskLevel` | String | ENUM (`Normal`, `Review`, `Suspicious`, `High Risk`), DEFAULT `Normal` | Anti-Proxy Risk severity classification |
 | `riskSignals` | [Object] | Array of `{ signal, status, scoreContribution, reason }` | Evaluated risk signals breakdown |
 | `reviewStatus` | String | ENUM (`Approved`, `Pending`, `Rejected`), DEFAULT `Approved` | Instructor resolution review status |
@@ -194,22 +203,29 @@ Granular daily attendance session logs.
 ---
 
 ### 9. `AuditLogs`
-Security and system state mutation audit ledger.
+Master institutional and security audit ledger (Phase 24 Enriched).
 
 | Field | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
-| `_id` | ObjectId | PRIMARY KEY | Audit record ID |
-| `userId` | ObjectId | REF `User` | Actor user ID |
-| `userName` | String | REQUIRED | Actor display name |
-| `userEmail` | String | REQUIRED | Actor email |
-| `userRole` | String | ENUM (`student`, `teacher`, `admin`, `guest`) | Actor RBAC role |
-| `action` | String | REQUIRED | Action type (e.g., `LOGIN_SUCCESS`, `PROMOTE_STUDENTS`) |
-| `resource` | String | REQUIRED | Target module (e.g., `AUTH`, `ACADEMIC_ENGINE`) |
-| `method` | String | UPPERCASE | HTTP Method (`GET`, `POST`, `PUT`, `DELETE`) |
-| `endpoint` | String | REQUIRED | API endpoint URL |
-| `status` | String | ENUM (`SUCCESS`, `FAILED`, `WARNING`) | Event status |
-| `ipAddress` | String | DEFAULT '' | Client IP |
-| `userAgent` | String | DEFAULT '' | Client User-Agent |
+| `_id` | ObjectId | PRIMARY KEY | Unique Audit Log ID |
+| `userId` | ObjectId | REF `User` | Actor User ID |
+| `userName` | String | REQUIRED | Actor full name |
+| `userEmail` | String | REQUIRED | Actor email address |
+| `userRole` | String | ENUM (`student`, `teacher`, `admin`, `system`, `guest`) | Actor role |
+| `action` | String | REQUIRED (Enum: 10 Institutional Actions) | `LOGIN`, `LOGOUT`, `CREATE_STUDENT`, `DELETE_STUDENT`, `MARK_ATTENDANCE`, `EDIT_ATTENDANCE`, `APPROVE_LEAVE`, `REJECT_LEAVE`, `EXPORT_REPORT`, `CHANGE_SETTINGS` |
+| `resource` | String | REQUIRED | Target resource module (e.g. `AUTH`, `ATTENDANCE`, `LEAVES`, `SETTINGS`, `REPORTS`) |
+| `targetUser` | ObjectId | REF `User`, OPTIONAL | Target Student/User affected by the action |
+| `targetUserName`| String | DEFAULT '' | Target Student/User full display name |
+| `targetUserRollNo`| String | DEFAULT '' | Target Student Roll / Reg number |
+| `originalValue`| String | DEFAULT '' | Previous status / configuration value (e.g. `"Absent"`) |
+| `newValue` | String | DEFAULT '' | Updated status / configuration value (e.g. `"Present"`) |
+| `transition` | String | DEFAULT '' | Readable state diff banner (e.g. `"Absent → Present"`) |
+| `reason` | String | DEFAULT '' | Mandatory change justification (e.g. `"Medical document verified"`) |
+| `method` | String | UPPERCASE | HTTP Method (`GET`, `POST`, `PUT`, `DELETE`, `SYSTEM`) |
+| `endpoint` | String | REQUIRED | Invoked API route endpoint |
+| `status` | String | ENUM (`SUCCESS`, `FAILED`, `WARNING`), DEFAULT `SUCCESS` | Execution outcome |
+| `ipAddress` | String | DEFAULT '' | Client IPv4 / IPv6 address |
+| `userAgent` | String | DEFAULT '' | Client browser / device user-agent string |
 | `metadata` | Schema.Types.Mixed | OPTIONAL | Arbitrary context payload |
 
 ---
@@ -233,7 +249,7 @@ Institutional thresholds engine and 7-status matrix definitions.
 ---
 
 ### 11. `AttendanceSessions`
-Live attendance session instances.
+Live attendance session instances (Phase 20).
 
 | Field | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
@@ -258,7 +274,7 @@ Live attendance session instances.
 
 ---
 
-### 11. `AttendanceCorrections`
+### 12. `AttendanceCorrections`
 Formal attendance modification request, review, and audit trail collection (Phase 23).
 
 | Field | Type | Constraints | Description |
@@ -282,22 +298,28 @@ Formal attendance modification request, review, and audit trail collection (Phas
 ## ⚡ Performance Indexes
 
 ```javascript
+// Phase 24 Complete Audit Logging Indexes
+AuditLogSchema.index({ createdAt: -1, action: 1 });
+AuditLogSchema.index({ action: 1, createdAt: -1 });
+AuditLogSchema.index({ userId: 1, createdAt: -1 });
+AuditLogSchema.index({ targetUser: 1, createdAt: -1 });
+AuditLogSchema.index({ targetUserName: 1 });
+AuditLogSchema.index({ reason: 'text', transition: 'text' });
+
+// Phase 23 Attendance Correction Indexes
+AttendanceCorrectionSchema.index({ attendance: 1, createdAt: -1 });
+AttendanceCorrectionSchema.index({ status: 1, createdAt: -1 });
+AttendanceCorrectionSchema.index({ student: 1 });
+
 // Academic Engine Indexes
 AcademicYearSchema.index({ yearName: 1 }, { unique: true });
 SemesterSchema.index({ name: 1, academicYear: 1 }, { unique: true });
 DivisionSchema.index({ name: 1, semester: 1, department: 1 }, { unique: true });
 StudentEnrollmentSchema.index({ student: 1, academicYear: 1, semester: 1 });
 
-// Phase 23 Correction Indexes
-AttendanceCorrectionSchema.index({ attendance: 1, createdAt: -1 });
-AttendanceCorrectionSchema.index({ status: 1, createdAt: -1 });
-AttendanceCorrectionSchema.index({ student: 1 });
-
 // Core Performance Indexes
 UserSchema.index({ email: 1 }, { unique: true });
 AttendanceSchema.index({ student: 1, date: 1 });
 AttendanceSchema.index({ subjectCode: 1, date: 1 });
-AuditLogSchema.index({ createdAt: -1, status: 1 });
 NotificationSchema.index({ user: 1, read: 1 });
 ```
-
