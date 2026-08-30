@@ -5,6 +5,7 @@ const Subject = require('../models/Subject');
 const Course = require('../models/Course');
 const Department = require('../models/Department');
 const { getSystemRules } = require('../utils/attendanceRulesEngine');
+const { recordAuditLog, AUDIT_ACTIONS } = require('../middleware/auditMiddleware');
 
 // Helper function to build date range filter based on report type
 const getReportDateRange = (type, date, startDate, endDate, month, year) => {

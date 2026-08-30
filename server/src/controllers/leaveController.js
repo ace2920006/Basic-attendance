@@ -1,11 +1,8 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Leave = require('../models/Leave');
-
-// @desc    Apply for student leave
-// @route   POST /api/leaves
-// @access  Private (Student)
 const Notification = require('../models/Notification');
 const { sendNotification } = require('../config/socket');
+const { recordAuditLog, AUDIT_ACTIONS } = require('../middleware/auditMiddleware');
 
 // @desc    Apply for student leave
 // @route   POST /api/leaves
@@ -91,6 +88,7 @@ const updateLeaveStatus = asyncHandler(async (req, res) => {
     throw new Error('Leave application not found');
   }
 
+  const oldStatus = leave.status;
   leave.status = status;
   if (remarks !== undefined) leave.remarks = remarks;
   leave.reviewedBy = req.user._id;
@@ -100,6 +98,40 @@ const updateLeaveStatus = asyncHandler(async (req, res) => {
   const updated = await Leave.findById(leave._id)
     .populate('student', 'name email rollNo department')
     .populate('reviewedBy', 'name email designation');
+
+  const studentDoc = updated?.student;
+  const auditAction = status === 'Approved' ? AUDIT_ACTIONS.APPROVE_LEAVE : AUDIT_ACTIONS.REJECT_LEAVE;
+  const transitionStr = `${oldStatus} → ${status}`;
+
+  recordAuditLog({
+    req,
+    user: req.user,
+    targetUser: studentDoc?._id || leave.student,
+    targetUserName: studentDoc?.name || 'Student',
+    targetUserRollNo: studentDoc?.rollNo || '',
+    action: auditAction,
+    resource: 'Leave',
+    originalValue: oldStatus,
+    newValue: status,
+    transition: transitionStr,
+    reason: remarks || leave.reason || `${status} leave application`,
+    status: 'SUCCESS',
+    details: {
+      leaveId: leave._id,
+      studentId: studentDoc?._id || leave.student,
+      studentName: studentDoc?.name,
+      studentRollNo: studentDoc?.rollNo,
+      leaveType: leave.leaveType,
+      startDate: leave.startDate,
+      endDate: leave.endDate,
+      leaveReason: leave.reason,
+      remarks: remarks || '',
+      reviewedBy: req.user._id,
+      reviewedByName: req.user.name,
+      reviewedByRole: req.user.role,
+      status
+    }
+  });
 
   // Trigger real-time notification to the student applicant
   if (updated && updated.student) {
