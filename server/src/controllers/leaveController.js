@@ -103,7 +103,7 @@ const updateLeaveStatus = asyncHandler(async (req, res) => {
   const auditAction = status === 'Approved' ? AUDIT_ACTIONS.APPROVE_LEAVE : AUDIT_ACTIONS.REJECT_LEAVE;
   const transitionStr = `${oldStatus} → ${status}`;
 
-  recordAuditLog({
+  await recordAuditLog({
     req,
     user: req.user,
     targetUser: studentDoc?._id || leave.student,

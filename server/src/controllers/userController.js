@@ -80,7 +80,7 @@ const createUser = asyncHandler(async (req, res) => {
 
   const auditAction = userRole === 'student' ? AUDIT_ACTIONS.CREATE_STUDENT : AUDIT_ACTIONS.CREATE_USER;
 
-  recordAuditLog({
+  await recordAuditLog({
     req,
     user: req.user,
     targetUser: user._id,
@@ -182,7 +182,7 @@ const assignSubjectsToUser = asyncHandler(async (req, res) => {
     .select('-password')
     .populate('assignedSubjects', 'name code department color');
 
-  recordAuditLog({
+  await recordAuditLog({
     req,
     user: req.user,
     targetUser: updatedUser._id,

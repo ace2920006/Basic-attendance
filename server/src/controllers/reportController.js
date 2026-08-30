@@ -291,7 +291,7 @@ const exportReport = asyncHandler(async (req, res) => {
 
   const filename = `Attendance_${type.toUpperCase()}_Report_${new Date().toISOString().split('T')[0]}`;
 
-  recordAuditLog({
+  await recordAuditLog({
     req,
     user: req.user,
     action: AUDIT_ACTIONS.EXPORT_REPORT,
