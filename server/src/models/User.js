@@ -101,6 +101,21 @@ const userSchema = new mongoose.Schema(
         type: String
       }
     ],
+    notificationPreferences: {
+      channels: {
+        inApp: { type: Boolean, default: true },
+        email: { type: Boolean, default: true },
+        push: { type: Boolean, default: true }
+      },
+      events: {
+        attendanceMarked: { type: Boolean, default: true },
+        lowAttendance: { type: Boolean, default: true },
+        leaveStatus: { type: Boolean, default: true },
+        announcements: { type: Boolean, default: true },
+        timetableChanged: { type: Boolean, default: true },
+        classCancelled: { type: Boolean, default: true }
+      }
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date
   },

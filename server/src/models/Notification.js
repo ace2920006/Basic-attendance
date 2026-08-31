@@ -22,8 +22,34 @@ const notificationSchema = new mongoose.Schema(
     },
     eventType: {
       type: String,
-      enum: ['ATTENDANCE_MARKED', 'CLASS_CANCELLED', 'LOW_ATTENDANCE', 'LEAVE_STATUS', 'ANNOUNCEMENT', 'ANTI_PROXY_REVIEW', 'GENERAL'],
+      enum: [
+        'ATTENDANCE_MARKED',
+        'LOW_ATTENDANCE',
+        'LEAVE_APPROVED',
+        'LEAVE_REJECTED',
+        'LEAVE_STATUS',
+        'ANNOUNCEMENT',
+        'CLASS_CANCELLED',
+        'TIMETABLE_CHANGED',
+        'ANTI_PROXY_REVIEW',
+        'GENERAL'
+      ],
       default: 'GENERAL'
+    },
+    channelsSent: [
+      {
+        type: String,
+        enum: ['in_app', 'email', 'push']
+      }
+    ],
+    smartAdvice: {
+      currentPercentage: Number,
+      targetPercentage: Number,
+      lecturesNeeded: Number,
+      safeMisses: Number,
+      attendedLectures: Number,
+      totalLectures: Number,
+      actionableText: String
     },
     data: {
       type: mongoose.Schema.Types.Mixed,
