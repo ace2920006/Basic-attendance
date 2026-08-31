@@ -217,6 +217,11 @@ export default function Header({ title, subtitle, user: userProp }) {
                         <p className="text-xs text-slate-300 mt-0.5 line-clamp-2 leading-relaxed">
                           {notif.message}
                         </p>
+                        {notif.smartAdvice && (
+                          <span className="mt-1 inline-block px-1.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded text-[9px] font-bold">
+                            +{notif.smartAdvice.lecturesNeeded} lectures needed
+                          </span>
+                        )}
                         <span className="text-[10px] text-slate-400 mt-1 block">
                           {notif.createdAt ? new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now'}
                         </span>
