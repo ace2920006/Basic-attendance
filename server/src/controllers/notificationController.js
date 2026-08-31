@@ -159,11 +159,281 @@ const registerFCMToken = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get user notification preferences
+// @route   GET /api/notifications/preferences
+// @access  Private
+const getNotificationPreferences = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id).select('notificationPreferences email');
+
+  const defaultPreferences = {
+    channels: {
+      inApp: true,
+      email: true,
+      push: true
+    },
+    events: {
+      attendanceMarked: true,
+      lowAttendance: true,
+      leaveStatus: true,
+      announcements: true,
+      timetableChanged: true,
+      classCancelled: true
+    }
+  };
+
+  const preferences = user?.notificationPreferences || defaultPreferences;
+
+  res.json({
+    success: true,
+    data: {
+      email: user?.email,
+      preferences
+    }
+  });
+});
+
+// @desc    Update user notification preferences
+// @route   PUT /api/notifications/preferences
+// @access  Private
+const updateNotificationPreferences = asyncHandler(async (req, res) => {
+  const { channels, events } = req.body;
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    res.status(404);
+    throw new Error('User not found');
+  }
+
+  if (!user.notificationPreferences) {
+    user.notificationPreferences = {};
+  }
+
+  if (channels) {
+    user.notificationPreferences.channels = {
+      ...user.notificationPreferences.channels,
+      ...channels
+    };
+  }
+
+  if (events) {
+    user.notificationPreferences.events = {
+      ...user.notificationPreferences.events,
+      ...events
+    };
+  }
+
+  await user.save();
+
+  res.json({
+    success: true,
+    message: 'Notification preferences updated successfully',
+    data: user.notificationPreferences
+  });
+});
+
+// @desc    Test Notification Dispatch (Multi-Channel Simulation)
+// @route   POST /api/notifications/test-dispatch
+// @access  Private
+const testDispatchNotification = asyncHandler(async (req, res) => {
+  const {
+    eventType = 'LOW_ATTENDANCE',
+    subject = 'Database Systems',
+    currentPercentage = 72,
+    minPercentage = 75,
+    channels = ['in_app', 'email', 'push'],
+    customTitle,
+    customMessage
+  } = req.body;
+
+  const {
+    dispatchNotification,
+    calculateSmartAttendanceAdvice,
+    notifyAttendanceMarked,
+    notifyLowAttendance,
+    notifyLeaveApproved,
+    notifyLeaveRejected,
+    notifyAnnouncement,
+    notifyClassCancelled,
+    notifyTimetableChanged
+  } = require('../services/notificationService');
+
+  let result;
+  const targetId = req.user._id;
+
+  switch (eventType) {
+    case 'ATTENDANCE_MARKED':
+      result = await notifyAttendanceMarked({
+        studentId: targetId,
+        subject,
+        subjectCode: 'CS401',
+        status: 'Present',
+        timeSlot: '09:00 AM - 10:30 AM'
+      });
+      break;
+
+    case 'LOW_ATTENDANCE':
+      result = await notifyLowAttendance({
+        studentId: targetId,
+        subject,
+        subjectCode: 'CS401',
+        currentPercentage: Number(currentPercentage) || 72,
+        minPercentage: Number(minPercentage) || 75,
+        attendedLectures: 18,
+        totalLectures: 25
+      });
+      break;
+
+    case 'LEAVE_APPROVED':
+      result = await notifyLeaveApproved({
+        studentId: targetId,
+        leaveType: 'Medical',
+        startDate: 'Tomorrow',
+        endDate: 'Friday',
+        remarks: 'Doctor certificate verified',
+        reviewerName: req.user.name || 'Faculty Advisor'
+      });
+      break;
+
+    case 'LEAVE_REJECTED':
+      result = await notifyLeaveRejected({
+        studentId: targetId,
+        leaveType: 'Personal Leave',
+        startDate: 'Tomorrow',
+        endDate: 'Tomorrow',
+        remarks: 'Exam session scheduled on this date',
+        reviewerName: req.user.name || 'Faculty Advisor'
+      });
+      break;
+
+    case 'ANNOUNCEMENT':
+      result = await notifyAnnouncement({
+        title: customTitle || 'Campus Midterm Schedule Released',
+        message: customMessage || 'Midterm examination timetable has been published on the student portal.',
+        targetRole: 'all',
+        authorName: req.user.name || 'Dean of Academics'
+      });
+      break;
+
+    case 'CLASS_CANCELLED':
+      result = await notifyClassCancelled({
+        department: req.user.department || 'Computer Science & Engineering',
+        subject,
+        subjectCode: 'CS401',
+        room: 'Lab 301',
+        timeSlot: '09:00 AM - 10:30 AM',
+        reason: 'Faculty Development Conference'
+      });
+      break;
+
+    case 'TIMETABLE_CHANGED':
+      result = await notifyTimetableChanged({
+        department: req.user.department || 'Computer Science & Engineering',
+        subject,
+        changeType: 'Rescheduled',
+        slotDetails: {
+          day: 'Wednesday',
+          timeSlot: '11:00 AM - 12:30 PM',
+          room: 'Hall B',
+          instructor: req.user.name || 'Dr. Sarah Jenkins'
+        }
+      });
+      break;
+
+    default: {
+      const advice = calculateSmartAttendanceAdvice({
+        currentPercentage: 72,
+        minPercentage: 75,
+        attendedLectures: 18,
+        totalLectures: 25,
+        subjectName: subject
+      });
+
+      result = await dispatchNotification({
+        recipientId: targetId,
+        title: customTitle || `⚡ Smart Notification Alert: ${subject}`,
+        message: customMessage || advice.actionableText,
+        type: 'warning',
+        eventType: 'LOW_ATTENDANCE',
+        channels,
+        smartAdvice: advice,
+        data: { subject, currentPercentage: 72, minRequired: 75 }
+      });
+    }
+  }
+
+  res.status(200).json({
+    success: true,
+    message: `Test notification for event "${eventType}" dispatched across requested channels`,
+    data: result
+  });
+});
+
+// @desc    Get Smart Attendance Summary for logged in student
+// @route   GET /api/notifications/smart-summary
+// @access  Private (Student)
+const getSmartAttendanceSummary = asyncHandler(async (req, res) => {
+  const Attendance = require('../models/Attendance');
+  const { getSystemRules, calculateAttendanceStats } = require('../utils/attendanceRulesEngine');
+  const { calculateSmartAttendanceAdvice } = require('../services/notificationService');
+
+  const rules = await getSystemRules();
+  const minPercentage = rules.minAttendancePercentage || 75;
+
+  const records = await Attendance.find({ student: req.user._id });
+
+  // Group records by subject
+  const subjectMap = {};
+  records.forEach((rec) => {
+    const sub = rec.subject || 'General';
+    if (!subjectMap[sub]) {
+      subjectMap[sub] = [];
+    }
+    subjectMap[sub].push(rec);
+  });
+
+  const subjectSummaries = Object.entries(subjectMap).map(([subName, recs]) => {
+    const stats = calculateAttendanceStats(recs, rules);
+    const attended = (stats.counts?.Present || 0) + (stats.counts?.Late || 0);
+    const total = stats.effectiveTotal || recs.length;
+
+    const smartAdvice = calculateSmartAttendanceAdvice({
+      currentPercentage: stats.weightedPercentage,
+      minPercentage,
+      attendedLectures: attended,
+      totalLectures: total,
+      subjectName: subName
+    });
+
+    return {
+      subject: subName,
+      subjectCode: recs[0]?.subjectCode || '',
+      currentPercentage: stats.weightedPercentage,
+      minPercentage,
+      attendedLectures: attended,
+      totalLectures: total,
+      isDefaulter: stats.weightedPercentage < minPercentage,
+      smartAdvice
+    };
+  });
+
+  res.json({
+    success: true,
+    minAttendancePercentage: minPercentage,
+    totalSubjects: subjectSummaries.length,
+    defaulterSubjectsCount: subjectSummaries.filter((s) => s.isDefaulter).length,
+    data: subjectSummaries
+  });
+});
+
 module.exports = {
   getUserNotifications,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   deleteNotification,
   sendAnnouncement,
-  registerFCMToken
+  registerFCMToken,
+  getNotificationPreferences,
+  updateNotificationPreferences,
+  testDispatchNotification,
+  getSmartAttendanceSummary
 };
