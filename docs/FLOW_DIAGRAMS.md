@@ -17,6 +17,7 @@ This document contains comprehensive flowcharts and system diagrams for the **At
 10. [Anti-Proxy Multi-Signal Risk Engine & Review Workflow](#10-anti-proxy-multi-signal-risk-engine--review-workflow)
 11. [Attendance Correction Request & Approval Workflow](#11-attendance-correction-request--approval-workflow)
 12. [Complete Institutional Audit Logging & State Mutation Pipeline](#12-complete-institutional-audit-logging--state-mutation-pipeline)
+13. [Phase 25 Advanced Notification Engine & Multi-Channel Pipeline](#13-phase-25-advanced-notification-engine--multi-channel-pipeline)
 
 ---
 
@@ -371,5 +372,56 @@ flowchart TD
         AdminAuditHub --> DiffCards["Visual Transition Diff Cards (Absent ➔ Present)"]
         AdminAuditHub --> InspectorModal["Detail Inspector Modal (Actor, Target, JSON)"]
         AdminAuditHub --> ExportCSV["Export Institutional Audit Ledger CSV"]
+    end
+```
+
+---
+
+## 13. Phase 25 Advanced Notification Engine & Multi-Channel Pipeline
+
+Centralized multi-channel notification engine, user preference filtering, smart recovery mathematics, and fan-out architecture:
+
+```mermaid
+flowchart TD
+    subgraph CampusEvents ["7 Core Campus Domain Event Triggers"]
+        E1["1. ATTENDANCE_MARKED <br/> (Roster / Batch / 30s QR)"]
+        E2["2. LOW_ATTENDANCE <br/> (Below 75% Threshold)"]
+        E3["3. LEAVE_APPROVED <br/> (Faculty Approval + Notes)"]
+        E4["4. LEAVE_REJECTED <br/> (Faculty Rejection + Reason)"]
+        E5["5. ANNOUNCEMENT <br/> (Target Role / Dept / Campus)"]
+        E6["6. CLASS_CANCELLED <br/> (Session Cancelled Notice)"]
+        E7["7. TIMETABLE_CHANGED <br/> (Slot Created / Updated)"]
+    end
+
+    CampusEvents --> Dispatcher["notificationService.dispatchNotification() <br/> (notificationService.js)"]
+
+    subgraph SmartRecoveryMath ["Smart Recovery Mathematics Engine"]
+        Dispatcher --> MathCheck{"Is Low Attendance Alert <br/> or Recovery Triggered?"}
+        MathCheck -- Yes --> RecoveryCalc["Calculate Consecutive Lectures Needed: <br/> x = max(1, ceil((0.75 * T - P) / 0.25)) <br/> Safe Misses: s = max(0, floor((P - 0.75 * T) / 0.75))"]
+        RecoveryCalc --> ActionText["Generate Actionable Advice: <br/> 'Your Database Systems attendance is 72%. <br/> You need 2 consecutive attended lectures to reach 75%.'"]
+        ActionText --> AttachAdvice["Attach smartAdvice Payload to Notification Object"]
+        MathCheck -- No --> PrefFilter
+        AttachAdvice --> PrefFilter
+    end
+
+    subgraph PreferenceEngine ["User Preferences & Channel Filtering"]
+        PrefFilter["Evaluate User Notification Preferences <br/> (user.notificationPreferences.channels & events)"]
+        PrefFilter --> Ch1Check{"In-App Enabled & <br/> Event Subscribed?"}
+        PrefFilter --> Ch2Check{"Email Enabled & <br/> User Has Email?"}
+        PrefFilter --> Ch3Check{"Push Enabled & <br/> FCM Tokens Exist?"}
+    end
+
+    subgraph MultiChannelDelivery ["Multi-Channel Delivery Channels"]
+        Ch1Check -- Yes --> Ch_InApp["1. IN-APP CHANNEL <br/> • Insert MongoDB Notification Document <br/> • Socket.io emit('notification_received')"]
+        Ch2Check -- Yes --> Ch_Email["2. EMAIL CHANNEL <br/> • Generate Branded Dark-Theme HTML Template <br/> • Nodemailer SMTP Dispatch (sendEmail.js)"]
+        Ch3Check -- Yes --> Ch_Push["3. PUSH NOTIFICATION CHANNEL <br/> • Firebase Admin SDK FCM Web Push <br/> • Service Worker (firebase-messaging-sw.js)"]
+    end
+
+    subgraph ClientRendering ["Client UI Presentation Hub"]
+        Ch_InApp --> UI1["Floating Toast Alert + Sound Chime (ToastContainer.jsx)"]
+        Ch_InApp --> UI2["Top Header Unread Badge Counter & Drawer (Header.jsx)"]
+        Ch_InApp --> UI3["Interactive Notifications Hub (/student/notifications) <br/> • Smart Recovery Callout Banner <br/> • 6 Category Tabs <br/> • Delivery Badges (In-App, Email, Push) <br/> • Preferences Modal & Live Test Simulator"]
+        Ch_Email --> UI4["Recipient University Email Inbox (HTML Email with Smart Advice Table)"]
+        Ch_Push --> UI5["System Desktop / Mobile Web Push Alert"]
     end
 ```

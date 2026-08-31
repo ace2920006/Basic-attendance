@@ -44,7 +44,7 @@ Basic-attendance/
 │   │   │   ├── admin/          # Admin Analytics, Academic Engine, Rules Engine, Corrections, Audit Logs (AdminAuditLogs.jsx), Suspicious
 │   │   │   ├── analytics/      # Visual Charts Hub (ChartsPage.jsx)
 │   │   │   ├── auth/           # Login, Register, Password Recovery
-│   │   │   ├── student/        # Student Dashboard, Calendar, History, Timetable, Prediction, AiChatPage
+│   │   │   ├── student/        # Student Dashboard, Calendar, History, Timetable, Prediction, AiChatPage, NotificationsList.jsx
 │   │   │   └── teacher/        # Teacher Dashboard, Take Attendance, History, Reports, Leave Approval, Corrections
 │   │   ├── services/           # Centralized API Service Client (api.js, socket.js, deviceFingerprint.js)
 │   │   ├── App.jsx             # Main Router Shell & Guarded Routes
@@ -52,7 +52,7 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                     # Backend REST API Server (Node.js + Express + MongoDB)
-│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (11 Test Suites, 75 Tests)
+│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (11 Test Suites, 84 Tests)
 │   ├── uploads/                # Static Uploaded File Attachments (Medical Certificates, Avatars)
 │   ├── src/
 │   │   ├── config/             # DB Connection (db.js), WebSockets (socket.js), Firebase FCM (firebase.js)
@@ -60,6 +60,7 @@ Basic-attendance/
 │   │   ├── middleware/         # Security Stack (Helmet, Rate Limiter, XSS, Input Validation, Audit Logger, JWT Auth, RBAC Authorization)
 │   │   ├── models/             # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection)
 │   │   ├── routes/             # Express API Endpoints
+│   │   ├── services/           # Business Services (notificationService.js)
 │   │   ├── utils/              # GeoUtils (Haversine formula), JWT Generator, Async Handler, attendanceRulesEngine.js, antiProxyEngine.js, sendEmail.js
 │   │   ├── app.js              # Express Application Bootstrap & Security Layer
 │   │   └── server.js           # Node HTTP Server Launcher
@@ -70,7 +71,7 @@ Basic-attendance/
     ├── architecture.md         # System Architecture & Technical Specs (This document)
     ├── database_design.md      # Database ERD & Schema Specs
     ├── FLOW_DIAGRAMS.md        # Comprehensive System Flow Diagrams (Mermaid)
-    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-24)
+    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-25)
 ```
 
 ---
@@ -87,6 +88,39 @@ Basic-attendance/
 
 ---
 
+## 🔔 Advanced Notification Engine Architecture (Phase 25)
+
+The notification system is decoupled from controllers and centralized inside `server/src/services/notificationService.js`:
+
+```
+Domain Event (e.g. Attendance Marked, Low Attendance, Leave Decision, Class Cancelled, Timetable Change)
+                                |
+                                v
+               [ Centralized Notification Service ]
+              (notificationService.dispatchNotification)
+                                |
+          +---------------------+---------------------+
+          | User Preferences & Channel Filter Check    |
+          +---------------------+---------------------+
+          |                     |                     |
+          v                     v                     v
+ [ In-App Channel ]     [ Email Channel ]      [ Push Channel ]
+  • MongoDB Document     • Nodemailer HTML      • Firebase Admin SDK
+  • Socket.io Emit       • Dark-Theme Layout    • FCM Web Push Tokens
+  • Audio Chime & Toast  • Action Callout CTA   • Browser Service Worker
+```
+
+### Smart Recovery Advice Formula
+When attendance falls below the target threshold (e.g. 75%):
+$$\text{lecturesNeeded} = \max\left(1, \left\lceil \frac{\text{targetPct}/100 \times \text{total} - \text{attended}}{1 - \text{targetPct}/100} \right\rceil\right)$$
+
+*Example Output:* **"Your Database Systems attendance has fallen to 72%. You need 2 consecutive attended lectures to reach 75%."**
+
+When attendance is $\ge 75\%$:
+$$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{targetPct}/100 \times \text{total}}{\text{targetPct}/100} \right\rfloor\right)$$
+
+---
+
 ## 🔌 API Endpoint Hierarchy
 
 - `/api/auth` $\rightarrow$ Register, Login, Logout, Password Recovery, Token Refresh (Logs `LOGIN`, `LOGOUT`)
@@ -99,7 +133,7 @@ Basic-attendance/
 - `/api/timetable` $\rightarrow$ Today's schedule, Tomorrow's schedule, Master weekly schedule matrix
 - `/api/reports` $\rightarrow$ Daily, Weekly, Monthly, Semester report generation & PDF/Excel/CSV exports (Logs `EXPORT_REPORT`)
 - `/api/charts` $\rightarrow$ Ratio charts, Dept comparison, Monthly trends, Subject breakdown, Student rankings
-- `/api/notifications` $\rightarrow$ Notification feed, Unread counters, Web Push tokens, Announcements broadcast
+- `/api/notifications` $\rightarrow$ Notification feed, Unread counters, Preferences (`GET/PUT /preferences`), Multi-channel test simulator (`POST /test-dispatch`), Smart attendance recovery breakdown (`GET /smart-summary`), Web Push tokens, Announcements broadcast
 - `/api/leaves` $\rightarrow$ Leave applications submission, Document attachment upload, Approval/Rejection workflow (Logs `APPROVE_LEAVE`, `REJECT_LEAVE`)
 - `/api/ai` $\rightarrow$ Attendance 75% prediction engine, Natural language chatbot, Proxy anomaly detection
 - `/api/analytics` $\rightarrow$ Most absent deficit calculator, Best attendance leaderboard, Dept rankings, Teacher metrics, Daily inspector

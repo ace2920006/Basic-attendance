@@ -1,6 +1,6 @@
 # Multi-Role Attendance System - Requirements & Features Specification
 
-This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 24**) for the **Attendance Management System**.
+This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 25**) for the **Attendance Management System**.
 
 ---
 
@@ -28,6 +28,11 @@ This document details the functional specifications, feature requirements, and a
 - **Leave Requests & Reports**:
   - Submit leave applications with proof document attachments (`PDF`, `PNG`, `JPG`, `DOCX`).
   - Download official printable university attendance transcripts (PDF) and raw CSV datasets.
+- **Smart Notifications & Preference Hub (Phase 25)**:
+  - **Smart Attendance Recovery Advisor**: Immediate real-time alerts calculating exact consecutive lectures needed to recover attendance back to 75% (e.g. *"Your Database Systems attendance has fallen to 72%. You need 2 consecutive attended lectures to reach 75%."*).
+  - **Safe Miss Allowance**: Advisory calculations indicating safe skip capacity without dropping below 75%.
+  - **Multi-Channel Delivery Badges**: Cards render delivery channel tags (`In-App`, `Email`, `Push`).
+  - **User Notification Preferences**: Fine-grained toggle controls for delivery channels (`In-App`, `Email`, `Push`) and specific event subscriptions.
 
 ---
 
@@ -55,6 +60,8 @@ This document details the functional specifications, feature requirements, and a
 - **Attendance Correction Workflow (Phase 23)**:
   - **Correction Review Console (`/teacher/corrections`)**: Review pending correction requests with original status, requested status, and mandatory justification note.
   - Submit correction requests on past attendance records with mandatory audit justification.
+- **Multi-Channel Notification Triggers (Phase 25)**:
+  - Automated dispatch to enrolled students upon marking roster, creating timetable slots, or cancelling lectures.
 
 ---
 
@@ -82,6 +89,9 @@ This document details the functional specifications, feature requirements, and a
   - **10 Core Institutional Actions Tracked**: `LOGIN`, `LOGOUT`, `CREATE_STUDENT`, `DELETE_STUDENT`, `MARK_ATTENDANCE`, `EDIT_ATTENDANCE`, `APPROVE_LEAVE`, `REJECT_LEAVE`, `EXPORT_REPORT`, `CHANGE_SETTINGS`.
   - **State Mutation Tracking**: Captures before and after states (`Absent → Present`) and reasons (`"Medical document verified"`).
   - **Admin Audit Ledger UI (`/admin/audit-logs`)**: 10 action filter pills, state diff cards, search, inspector modal, and multi-column CSV export.
+- **Advanced Notification Engine (Phase 25)**:
+  - Campus-wide and targeted announcement broadcasts across In-App, Email, and Push channels.
+  - Interactive multi-channel test dispatcher sandbox (`POST /api/notifications/test-dispatch`).
 - **Enterprise Security & Hardening (Phase 16)**:
   - **Security Headers**: Helmet HTTP headers (`CSP`, `HSTS`, `X-Frame-Options`).
   - **Rate Limiting**: Sliding-window rate limiters protecting API endpoints against brute-force attacks.
@@ -125,6 +135,11 @@ This document details the functional specifications, feature requirements, and a
 | **Complete 10-Action Audit Logging & Ledger Inspection** | ❌ | ❌ | ✅ | Phase 24 |
 | **State Mutation Diff Cards (`Absent → Present`) & Reason Callouts** | ❌ | ❌ | ✅ | Phase 24 |
 | **Institutional Audit CSV Export** | ❌ | ❌ | ✅ | Phase 24 |
+| **Multi-Channel Notification Dispatching (In-App, Email, Push)** | ✅ | ✅ | ✅ | Phase 25 |
+| **Smart Notification Recovery Advisor ("N lectures needed for 75%")** | ✅ | ❌ | ❌ | Phase 25 |
+| **User Notification Preferences & Channel Toggles** | ✅ | ✅ | ✅ | Phase 25 |
+| **Automated Multi-Channel Domain Events (7 Event Processors)** | ✅ | ✅ | ✅ | Phase 25 |
+| **Interactive Notification Simulator & Smart Summary Sandbox** | ✅ | ✅ | ✅ | Phase 25 |
 
 ---
 

@@ -27,15 +27,14 @@ This document outlines the MongoDB Mongoose database schema, collection definiti
                                          +--------------------+                 +--------------------+
                                          |      Classes       |                 | AttendanceCorrect- |
                                          +--------------------+                 |      ions (P23)    |
-                                                                                +--------------------+
-                                                                                          |
-                                                                                          | 1:N
-                                                                                          v
-                                                                                +--------------------+
-                                                                                |  AuditLogs (P24)   |
-                                                                                | (10 Institutional  |
-                                                                                |   Actions + Diffs) |
-                                                                                +--------------------+
+                                                   |                            +--------------------+
+                                                   |                                      |
+                                                   v                                      v
+                                         +--------------------+                 +--------------------+
+                                         | Notifications(P25) |                 |  AuditLogs (P24)   |
+                                         | (Multi-Channel +   |                 | (10 Institutional  |
+                                         |   Smart Advice)    |                 |   Actions + Diffs) |
+                                         +--------------------+                 +--------------------+
 ```
 
 ---
@@ -109,7 +108,7 @@ Tracks student academic enrollment history and promotion audit records.
 ---
 
 ### 5. `Users`
-Authentication credentials, role RBAC, and active academic profile.
+Authentication credentials, role RBAC, active academic profile, and notification preferences.
 
 | Field | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
@@ -130,6 +129,7 @@ Authentication credentials, role RBAC, and active academic profile.
 | `lastDeviceFingerprint`| String | DEFAULT '' | Client browser device fingerprint |
 | `lastBrowserId` | String | DEFAULT '' | Client browser ID |
 | `fcmTokens` | [String] | Array | Registered FCM web push tokens |
+| `notificationPreferences` | Object | Channels & Events toggles | `{ channels: { inApp, email, push }, events: { attendanceMarked, lowAttendance, leaveStatus, announcements, timetableChanged, classCancelled } }` |
 
 ---
 
@@ -295,9 +295,33 @@ Formal attendance modification request, review, and audit trail collection (Phas
 
 ---
 
+### 13. `Notifications`
+Centralized multi-channel alerts and smart attendance recovery advice collection (Phase 25 Enriched).
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `_id` | ObjectId | PRIMARY KEY | Unique Notification ID |
+| `user` | ObjectId | REF `User`, REQUIRED | Recipient user ID |
+| `title` | String | REQUIRED | Notification headline |
+| `message` | String | REQUIRED | Detailed message content |
+| `type` | String | ENUM (`info`, `success`, `warning`, `error`), DEFAULT `info` | UI theme severity level |
+| `eventType` | String | ENUM (10 Event Types) | `ATTENDANCE_MARKED`, `LOW_ATTENDANCE`, `LEAVE_APPROVED`, `LEAVE_REJECTED`, `LEAVE_STATUS`, `ANNOUNCEMENT`, `CLASS_CANCELLED`, `TIMETABLE_CHANGED`, `ANTI_PROXY_REVIEW`, `GENERAL` |
+| `read` | Boolean | DEFAULT false | Read receipt flag |
+| `unread` | Boolean | DEFAULT true | Unread state flag |
+| `channelsSent` | [String] | Array of `in_app`, `email`, `push` | Multi-channel dispatch delivery log |
+| `smartAdvice` | Object | Smart recovery advisory payload | `{ currentPercentage, targetPercentage, lecturesNeeded, safeMisses, attendedLectures, totalLectures, actionableText }` |
+| `data` | Schema.Types.Mixed | OPTIONAL | Domain metadata payload (e.g. `subjectCode`, `classId`, `leaveId`) |
+| `createdAt` | Date | DEFAULT Date.now | Dispatch timestamp |
+
+---
+
 ## ⚡ Performance Indexes
 
 ```javascript
+// Phase 25 Notification Indexes
+NotificationSchema.index({ user: 1, unread: 1, createdAt: -1 });
+NotificationSchema.index({ user: 1, eventType: 1, createdAt: -1 });
+
 // Phase 24 Complete Audit Logging Indexes
 AuditLogSchema.index({ createdAt: -1, action: 1 });
 AuditLogSchema.index({ action: 1, createdAt: -1 });

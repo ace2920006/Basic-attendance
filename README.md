@@ -39,6 +39,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 📊 **Attendance Risk Scoring Engine (Phase 22)**: Quantitative 0–100 Attendance Risk Scoring System evaluating exact point weights (+50 Invalid QR, +40 Wrong GPS, +30 Duplicate Device, +20 Suspicious IP, +10 Unusual Timing) clamped to 0–100 and classified across 3 tiers (`0-30 Normal`, `31-60 Review`, `61-100 High Risk`).
 - ✍️ **Attendance Correction Workflow (Phase 23)**: Formal attendance modification request, review, and audit trail system (`Original Value ➔ Correction Request ➔ Reason ➔ Review ➔ Approved/Rejected`). Records **Original Value**, **New Value**, **Changed By**, **Reason**, **Reviewer**, and **Timestamps** with dedicated Teacher (`/teacher/corrections`) and Admin (`/admin/corrections`) consoles.
 - 📌 **Complete Institutional Audit Logging (Phase 24)**: Institutional audit trail recording all 10 core institutional actions (`LOGIN`, `LOGOUT`, `CREATE_STUDENT`, `DELETE_STUDENT`, `MARK_ATTENDANCE`, `EDIT_ATTENDANCE`, `APPROVE_LEAVE`, `REJECT_LEAVE`, `EXPORT_REPORT`, `CHANGE_SETTINGS`). Fully captures state transitions (e.g. `Absent → Present`) and change reasons (e.g. `"Medical document verified"`) with an upgraded Admin Audit Console (`/admin/audit-logs`) featuring quick-action filter pills, state transition diff cards, and CSV export.
+- 🔔 **Advanced Notification Engine (Phase 25)**: Centralized multi-channel notification engine routing notifications across **In-App** (MongoDB + Socket.io), **Email** (Nodemailer responsive HTML templates), and **Push Notification** (FCM Web Push). Features **Smart Notification Recovery Advisor** calculating exact consecutive lectures needed to reach target thresholds (e.g., *"Your Database Systems attendance has fallen to 72%. You need 2 consecutive attended lectures to reach 75%."*), automated multi-channel domain event processors for 7 core campus events, user notification preference toggles, and an interactive Test Notification Simulator.
 
 ---
 
@@ -117,6 +118,11 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Complete 10-Action Audit Logging (`LOGIN` to `CHANGE_SETTINGS`)** | ✅ | ✅ | ✅ | Phase 24 |
 | **State Mutation Diff Tracking (`Absent → Present`) & Reason Verification** | ✅ | ✅ | ✅ | Phase 24 |
 | **Admin Audit Ledger UI with 10 Action Pills & CSV Export** | ❌ | ❌ | ✅ | Phase 24 |
+| **Multi-Channel Notification Dispatching (In-App, Email, Push)** | ✅ | ✅ | ✅ | Phase 25 |
+| **Smart Notification Recovery Advisor ("N lectures needed for 75%")** | ✅ | ❌ | ❌ | Phase 25 |
+| **User Notification Preferences & Channel Toggles** | ✅ | ✅ | ✅ | Phase 25 |
+| **Automated Multi-Channel Domain Events (7 Event Processors)** | ✅ | ✅ | ✅ | Phase 25 |
+| **Interactive Notification Simulator & Smart Summary Sandbox** | ✅ | ✅ | ✅ | Phase 25 |
 
 ---
 

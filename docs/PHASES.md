@@ -1,6 +1,6 @@
 # Attendance Management System - Consolidated Phases Specification
 
-This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 24**) of the **Attendance Management System**.
+This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 25**) of the **Attendance Management System**.
 
 ---
 
@@ -29,7 +29,8 @@ This document provides a single, unified reference for all project implementatio
 22. [Phase 22 – Multi-Signal Risk Scoring Engine](#-phase-22--multi-signal-risk-scoring-engine)
 23. [Phase 23 – Attendance Correction & Audit Trail](#-phase-23--attendance-correction--audit-trail)
 24. [Phase 24 – Complete Audit Logging](#-phase-24--complete-audit-logging)
-25. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+25. [Phase 25 – Advanced Notification Engine](#-phase-25--advanced-notification-engine)
+26. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -898,6 +899,57 @@ Every modification preserves a complete audit log recording:
 
 ---
 
+## 📌 Phase 25 – Advanced Notification Engine 🔔
+
+### Core Requirements & Features
+- **Centralized Notification Service (`notificationService.js`)**:
+  - Modularized, multi-channel notification dispatcher decoupling notification dispatching from individual controllers.
+  - Multi-channel routing:
+    - **In-App Channel**: Persistent MongoDB `Notification` collection + Real-Time WebSocket emission via Socket.io.
+    - **Email Channel**: Responsive HTML email templates via Nodemailer (with branded dark-mode styling, status color accents, and dev simulation fallback).
+    - **Push Notification Channel**: Firebase Cloud Messaging (FCM) Web Push via Firebase Admin SDK.
+- **7 Core Campus Domain Events**:
+  1. `ATTENDANCE_MARKED`: Real-time notification with subject, status (Present, Late, Absent, Excused), date, and slot info.
+  2. `LOW_ATTENDANCE` & **Smart Recovery Advice Engine**:
+     - Calculates consecutive lectures needed to recover to target attendance threshold (75%):
+       $$\text{lecturesNeeded} = \max\left(1, \left\lceil \frac{\text{minPercentage} \times \text{total} / 100 - \text{attended}}{1 - \text{minPercentage} / 100} \right\rceil\right)$$
+     - Generates dynamic actionable text (e.g., *"Your Database Systems attendance has fallen to 72%. You need 2 consecutive attended lectures to reach 75%."*).
+     - Calculates safe miss buffer for students above threshold:
+       $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{minPercentage} \times \text{total} / 100}{\text{minPercentage} / 100} \right\rfloor\right)$$
+  3. `LEAVE_APPROVED`: Triggered when faculty approves absence/medical leave with remarks and reviewer identity.
+  4. `LEAVE_REJECTED`: Triggered when faculty rejects leave request with rationale and remarks.
+  5. `ANNOUNCEMENT`: Campus broadcasts filtered by target role, department, or campus-wide with priority indicators.
+  6. `CLASS_CANCELLED`: Dispatches cancellation alerts to enrolled students with subject, room, slot, and reason.
+  7. `TIMETABLE_CHANGED`: Dispatches timetable updates when slots are scheduled, rescheduled, or cancelled.
+- **User Notification Preferences & Channel Controls**:
+  - Granular channel toggles (`inApp`, `email`, `push`) and event subscription toggles (`attendanceMarked`, `lowAttendance`, `leaveStatus`, `announcements`, `timetableChanged`, `classCancelled`).
+  - Dedicated API endpoints (`GET /api/notifications/preferences`, `PUT /api/notifications/preferences`).
+- **Interactive Simulator Sandbox & Smart Summary**:
+  - `POST /api/notifications/test-dispatch`: Multi-channel test dispatch simulator for instant verification.
+  - `GET /api/notifications/smart-summary`: Student-scoped breakdown with recovery goals across all enrolled subjects.
+- **Modern Frontend Notification Hub (`NotificationsList.jsx`)**:
+  - 6 category filter tabs (All, Attendance Marked, Smart Alerts & Low %, Leave Status, Announcements, Schedule & Timetable).
+  - Smart Attendance Recovery Recommendation Callout Banner.
+  - Multi-Channel delivery badges (`In-App`, `Email`, `Push`) on each notification card.
+  - Notification Preferences configuration modal dialog.
+  - Interactive Live Test Simulator modal.
+
+### File Mapping
+- Backend Infrastructure:
+  - Service: `server/src/services/notificationService.js`
+  - Model: `server/src/models/Notification.js`, `server/src/models/User.js`
+  - Controller: `server/src/controllers/notificationController.js`
+  - Routes: `server/src/routes/notificationRoutes.js`
+  - Controllers Updated: `attendanceController.js`, `leaveController.js`, `classController.js`, `timetableController.js`
+  - Tests: `server/tests/notifications.test.js`
+- Frontend Infrastructure:
+  - Context: `client/src/context/NotificationContext.jsx`
+  - Notifications Hub Page: `client/src/pages/student/NotificationsList.jsx`
+  - Header Notification Drawer: `client/src/components/layout/Header.jsx`
+  - API Client: `client/src/services/api.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -1002,6 +1054,11 @@ Every modification preserves a complete audit log recording:
 | **Attendance State Diffs & Transition Ledger (e.g. Absent → Present)** | ❌ | ❌ | ✅ | Phase 24 |
 | **Mandatory Change Reason Verification ("Medical document verified")** | ❌ | ❌ | ✅ | Phase 24 |
 | **10-Action Quick Filter Ledger, Inspector Modal & CSV Export** | ❌ | ❌ | ✅ | Phase 24 |
+| **Multi-Channel Notification Dispatching (In-App, Email, Push)** | ✅ | ✅ | ✅ | Phase 25 |
+| **Smart Notification Recovery Advisor ("N lectures needed for 75%")** | ✅ | ❌ | ❌ | Phase 25 |
+| **User Notification Preferences & Channel Toggles** | ✅ | ✅ | ✅ | Phase 25 |
+| **Automated Multi-Channel Domain Events (7 Event Processors)** | ✅ | ✅ | ✅ | Phase 25 |
+| **Interactive Notification Simulator & Smart Summary Sandbox** | ✅ | ✅ | ✅ | Phase 25 |
 
 ---
 *Last Updated: August 2026*
