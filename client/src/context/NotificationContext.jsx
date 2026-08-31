@@ -6,7 +6,11 @@ import {
   markNotificationReadApi,
   markAllNotificationsReadApi,
   deleteNotificationApi,
-  sendAnnouncementApi
+  sendAnnouncementApi,
+  getNotificationPreferencesApi,
+  updateNotificationPreferencesApi,
+  getSmartAttendanceSummaryApi,
+  testDispatchNotificationApi
 } from '../services/api';
 import { requestPushPermission as requestFCMPush } from '../config/firebase';
 
@@ -19,6 +23,19 @@ export function NotificationProvider({ children }) {
   const [toasts, setToasts] = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [preferences, setPreferences] = useState({
+    channels: { inApp: true, email: true, push: true },
+    events: {
+      attendanceMarked: true,
+      lowAttendance: true,
+      leaveStatus: true,
+      announcements: true,
+      timetableChanged: true,
+      classCancelled: true
+    }
+  });
+  const [preferencesLoading, setPreferencesLoading] = useState(false);
+  const [smartSummary, setSmartSummary] = useState(null);
 
   // Play subtle audio alert chime via Web Audio API
   const playChimeSound = useCallback(() => {
@@ -61,15 +78,17 @@ export function NotificationProvider({ children }) {
       message: notif.message,
       type: notif.type || 'info',
       eventType: notif.eventType || 'GENERAL',
+      smartAdvice: notif.smartAdvice || null,
+      channelsSent: notif.channelsSent || ['in_app'],
       timestamp: new Date()
     };
 
     setToasts((prev) => [newToast, ...prev.slice(0, 4)]); // max 5 toasts visible
 
-    // Auto dismiss toast after 5 seconds
+    // Auto dismiss toast after 6 seconds
     setTimeout(() => {
       removeToast(toastId);
-    }, 5000);
+    }, 6000);
   }, [removeToast]);
 
   // Fetch initial notifications list
@@ -89,11 +108,59 @@ export function NotificationProvider({ children }) {
     }
   }, [user]);
 
+  // Fetch user notification preferences
+  const fetchPreferences = useCallback(async () => {
+    if (!user) return;
+    try {
+      setPreferencesLoading(true);
+      const res = await getNotificationPreferencesApi();
+      if (res?.success && res.data?.preferences) {
+        setPreferences(res.data.preferences);
+      }
+    } catch (error) {
+      console.error('Failed to load notification preferences:', error.message);
+    } finally {
+      setPreferencesLoading(false);
+    }
+  }, [user]);
+
+  // Update user notification preferences
+  const updatePreferences = async (newPreferences) => {
+    try {
+      setPreferencesLoading(true);
+      const res = await updateNotificationPreferencesApi(newPreferences);
+      if (res?.success) {
+        setPreferences(res.data);
+        return { success: true, message: res.message || 'Preferences updated!' };
+      }
+      return { success: false, message: 'Failed to update preferences' };
+    } catch (error) {
+      return { success: false, message: error.message };
+    } finally {
+      setPreferencesLoading(false);
+    }
+  };
+
+  // Fetch smart attendance calculations summary
+  const fetchSmartSummary = useCallback(async () => {
+    if (!user || user.role !== 'student') return;
+    try {
+      const res = await getSmartAttendanceSummaryApi();
+      if (res?.success) {
+        setSmartSummary(res);
+      }
+    } catch (error) {
+      console.error('Failed to fetch smart attendance summary:', error.message);
+    }
+  }, [user]);
+
   // Initialize socket & setup real-time listeners
   useEffect(() => {
     if (!user) return;
 
     fetchNotifications();
+    fetchPreferences();
+    fetchSmartSummary();
 
     const socket = initSocketClient(user);
 
@@ -106,6 +173,8 @@ export function NotificationProvider({ children }) {
         message: incomingNotif.message,
         type: incomingNotif.type || 'info',
         eventType: incomingNotif.eventType || 'GENERAL',
+        smartAdvice: incomingNotif.smartAdvice || null,
+        channelsSent: incomingNotif.channelsSent || ['in_app'],
         unread: true,
         createdAt: incomingNotif.createdAt || new Date().toISOString()
       };
@@ -116,6 +185,14 @@ export function NotificationProvider({ children }) {
       // Trigger floating toast and sound chime
       addToast(formattedNotif);
       playChimeSound();
+
+      // Refresh smart summary on attendance events
+      if (
+        incomingNotif.eventType === 'ATTENDANCE_MARKED' ||
+        incomingNotif.eventType === 'LOW_ATTENDANCE'
+      ) {
+        fetchSmartSummary();
+      }
     };
 
     socket.on('notification_received', handleRealtimeNotification);
@@ -123,7 +200,7 @@ export function NotificationProvider({ children }) {
     return () => {
       socket.off('notification_received', handleRealtimeNotification);
     };
-  }, [user, fetchNotifications, addToast, playChimeSound]);
+  }, [user, fetchNotifications, fetchPreferences, fetchSmartSummary, addToast, playChimeSound]);
 
   // Mark single notification as read
   const markAsRead = async (id) => {
@@ -174,6 +251,13 @@ export function NotificationProvider({ children }) {
     return await requestFCMPush();
   };
 
+  // Test Notification Dispatch Sandbox
+  const testDispatchNotification = async (testPayload) => {
+    const res = await testDispatchNotificationApi(testPayload);
+    await fetchNotifications();
+    return res;
+  };
+
   return (
     <NotificationContext.Provider
       value={{
@@ -183,12 +267,19 @@ export function NotificationProvider({ children }) {
         soundEnabled,
         setSoundEnabled,
         loading,
+        preferences,
+        preferencesLoading,
+        smartSummary,
         fetchNotifications,
+        fetchPreferences,
+        updatePreferences,
+        fetchSmartSummary,
         markAsRead,
         markAllAsRead,
         deleteNotification,
         sendAnnouncement,
         enablePushNotifications,
+        testDispatchNotification,
         removeToast
       }}
     >
