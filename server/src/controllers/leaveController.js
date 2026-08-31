@@ -1,7 +1,9 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Leave = require('../models/Leave');
-const Notification = require('../models/Notification');
-const { sendNotification } = require('../config/socket');
+const {
+  notifyLeaveApproved,
+  notifyLeaveRejected
+} = require('../services/notificationService');
 const { recordAuditLog, AUDIT_ACTIONS } = require('../middleware/auditMiddleware');
 
 // @desc    Apply for student leave
