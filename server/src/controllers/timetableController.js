@@ -1,4 +1,5 @@
 const Timetable = require('../models/Timetable');
+const { notifyTimetableChanged } = require('../services/notificationService');
 
 const DEFAULT_TIMETABLE_ITEMS = [
   {
@@ -322,6 +323,17 @@ const createTimetable = async (req, res) => {
       color: color || '#6366f1'
     });
 
+    // Multi-channel notification for new timetable slot
+    notifyTimetableChanged({
+      department: newSlot.department,
+      course: newSlot.course,
+      semester: newSlot.semester,
+      section: newSlot.section,
+      subject: newSlot.subject,
+      changeType: 'Scheduled',
+      slotDetails: newSlot
+    }).catch(() => {});
+
     res.status(201).json({
       success: true,
       data: newSlot,
@@ -351,6 +363,17 @@ const updateTimetable = async (req, res) => {
       runValidators: true
     });
 
+    // Multi-channel notification for updated timetable slot
+    notifyTimetableChanged({
+      department: slot.department,
+      course: slot.course,
+      semester: slot.semester,
+      section: slot.section,
+      subject: slot.subject,
+      changeType: 'Rescheduled',
+      slotDetails: slot
+    }).catch(() => {});
+
     res.json({
       success: true,
       data: slot,
@@ -370,6 +393,17 @@ const deleteTimetable = async (req, res) => {
     if (!slot) {
       return res.status(404).json({ success: false, message: 'Timetable entry not found' });
     }
+
+    // Multi-channel notification for cancelled timetable slot
+    notifyTimetableChanged({
+      department: slot.department,
+      course: slot.course,
+      semester: slot.semester,
+      section: slot.section,
+      subject: slot.subject,
+      changeType: 'Cancelled',
+      slotDetails: slot
+    }).catch(() => {});
 
     await slot.deleteOne();
 
