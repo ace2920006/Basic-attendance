@@ -477,6 +477,28 @@ export const registerFCMTokenApi = async (token) => {
   });
 };
 
+export const getNotificationPreferencesApi = async () => {
+  return apiRequest('/notifications/preferences', { method: 'GET' });
+};
+
+export const updateNotificationPreferencesApi = async (preferencesData) => {
+  return apiRequest('/notifications/preferences', {
+    method: 'PUT',
+    body: JSON.stringify(preferencesData)
+  });
+};
+
+export const testDispatchNotificationApi = async (testData) => {
+  return apiRequest('/notifications/test-dispatch', {
+    method: 'POST',
+    body: JSON.stringify(testData)
+  });
+};
+
+export const getSmartAttendanceSummaryApi = async () => {
+  return apiRequest('/notifications/smart-summary', { method: 'GET' });
+};
+
 // AI Features APIs (Phase 14)
 export const getAttendancePredictionApi = async (params = {}) => {
   const queryParams = new URLSearchParams();
