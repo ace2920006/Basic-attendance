@@ -67,133 +67,15 @@ const getIO = () => {
 
 /**
  * Dispatch real-time notification to user, role, department, or broadcast
- * Saves notification to MongoDB and emits WS event + FCM push notification
+ * Delegates to centralized notificationService for multi-channel delivery (In-App, Email, Push)
  */
-const sendNotification = async ({
-  recipientId = null,
-  role = null,
-  department = null,
-  title,
-  message,
-  type = 'info',
-  eventType = 'GENERAL',
-  data = {}
-}) => {
+const sendNotification = async (options) => {
   try {
-    let savedNotifications = [];
-
-    // Case 1: Targeted to specific user
-    if (recipientId) {
-      const notif = await Notification.create({
-        recipient: recipientId,
-        title,
-        message,
-        type,
-        eventType,
-        data,
-        unread: true
-      });
-      savedNotifications.push(notif);
-
-      if (io) {
-        io.to(`user_${recipientId}`).emit('notification_received', notif);
-      }
-
-      // Trigger FCM Push notification asynchronously
-      sendFCMPushNotification({ recipientId, title, message, data });
-    }
-    // Case 2: Broadcast to role (e.g. 'student', 'teacher')
-    else if (role) {
-      const User = require('../models/User');
-      const targetUsers = await User.find({ role }).select('_id');
-      const docs = targetUsers.map((u) => ({
-        recipient: u._id,
-        title,
-        message,
-        type,
-        eventType,
-        data,
-        unread: true
-      }));
-
-      if (docs.length > 0) {
-        savedNotifications = await Notification.insertMany(docs);
-      }
-
-      if (io) {
-        io.to(`role_${role}`).emit('notification_received', {
-          title,
-          message,
-          type,
-          eventType,
-          data,
-          createdAt: new Date()
-        });
-      }
-    }
-    // Case 3: Department broadcast
-    else if (department) {
-      const User = require('../models/User');
-      const targetUsers = await User.find({ department }).select('_id');
-      const docs = targetUsers.map((u) => ({
-        recipient: u._id,
-        title,
-        message,
-        type,
-        eventType,
-        data,
-        unread: true
-      }));
-
-      if (docs.length > 0) {
-        savedNotifications = await Notification.insertMany(docs);
-      }
-
-      if (io) {
-        const deptRoom = `dept_${department.toLowerCase().replace(/\s+/g, '_')}`;
-        io.to(deptRoom).emit('notification_received', {
-          title,
-          message,
-          type,
-          eventType,
-          data,
-          createdAt: new Date()
-        });
-      }
-    }
-    // Case 4: System-wide broadcast to all
-    else {
-      const User = require('../models/User');
-      const allUsers = await User.find().select('_id');
-      const docs = allUsers.map((u) => ({
-        recipient: u._id,
-        title,
-        message,
-        type,
-        eventType,
-        data,
-        unread: true
-      }));
-
-      if (docs.length > 0) {
-        savedNotifications = await Notification.insertMany(docs);
-      }
-
-      if (io) {
-        io.emit('notification_received', {
-          title,
-          message,
-          type,
-          eventType,
-          data,
-          createdAt: new Date()
-        });
-      }
-    }
-
-    return savedNotifications;
+    const { dispatchNotification } = require('../services/notificationService');
+    return await dispatchNotification(options);
   } catch (error) {
     console.error('Error dispatching real-time notification:', error);
+    return [];
   }
 };
 
