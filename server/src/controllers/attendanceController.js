@@ -1,39 +1,43 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
-const { sendNotification } = require('../config/socket');
+const {
+  notifyAttendanceMarked,
+  notifyLowAttendance
+} = require('../services/notificationService');
 const { recordAuditLog, AUDIT_ACTIONS } = require('../middleware/auditMiddleware');
 
 const { getSystemRules, calculateAttendanceStats } = require('../utils/attendanceRulesEngine');
 
-// Helper to send real-time notification for Attendance Marked & Low Attendance Warning
-async function checkAndSendAttendanceAlerts(studentId, subject, status) {
+// Helper to send multi-channel notifications for Attendance Marked & Low Attendance Warning
+async function checkAndSendAttendanceAlerts(studentId, subject, status, metadata = {}) {
   try {
     const rules = await getSystemRules();
     const minPercentage = rules.minAttendancePercentage || 75;
 
-    // 1. Send Attendance Marked notification
-    await sendNotification({
-      recipientId: studentId,
-      title: 'Attendance Marked',
-      message: `You were marked ${status} for ${subject}.`,
-      type: status === 'Present' ? 'success' : status === 'Late' || status === 'Excused' ? 'warning' : 'error',
-      eventType: 'ATTENDANCE_MARKED',
-      data: { subject, status }
+    // 1. Send Attendance Marked notification across In-App, Email, and Push
+    await notifyAttendanceMarked({
+      studentId,
+      subject,
+      subjectCode: metadata.subjectCode || '',
+      status,
+      date: metadata.date || new Date(),
+      timeSlot: metadata.timeSlot || ''
     });
 
-    // 2. Check cumulative attendance percentage for Low Attendance Warning
+    // 2. Check cumulative attendance stats for Smart Low Attendance Alert
     const allRecords = await Attendance.find({ student: studentId, subject });
     if (allRecords.length >= 2) {
       const stats = calculateAttendanceStats(allRecords, rules);
       if (stats.weightedPercentage < minPercentage) {
-        await sendNotification({
-          recipientId: studentId,
-          title: 'Low Attendance Warning',
-          message: `Warning: Your attendance in ${subject} is ${stats.weightedPercentage}%, which is below the mandatory ${minPercentage}% requirement.`,
-          type: 'warning',
-          eventType: 'LOW_ATTENDANCE',
-          data: { subject, percentage: stats.weightedPercentage, minRequired: minPercentage }
+        await notifyLowAttendance({
+          studentId,
+          subject,
+          subjectCode: metadata.subjectCode || '',
+          currentPercentage: stats.weightedPercentage,
+          minPercentage,
+          attendedLectures: (stats.counts?.Present || 0) + (stats.counts?.Late || 0),
+          totalLectures: stats.effectiveTotal || allRecords.length
         });
       }
     }
