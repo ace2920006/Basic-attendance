@@ -135,44 +135,39 @@ const updateLeaveStatus = asyncHandler(async (req, res) => {
     }
   });
 
-  // Trigger real-time notification to the student applicant
+  // Trigger multi-channel notification to the student applicant
   if (updated && updated.student) {
-    const notifTitle = `Leave Application ${status}`;
-    const notifMsg = `Your ${updated.leaveType || 'absence'} leave request has been ${status.toLowerCase()}.${remarks ? ' Note: ' + remarks : ''}`;
-    const notifType = status === 'Approved' ? 'success' : status === 'Rejected' ? 'error' : 'info';
-
-    // Save notification to DB for persistent list
-    try {
-      await Notification.create({
-        recipient: updated.student._id,
-        title: notifTitle,
-        message: notifMsg,
-        type: notifType,
-        eventType: 'LEAVE_STATUS',
-        data: {
-          leaveId: updated._id,
-          leaveType: updated.leaveType,
-          status,
-          remarks: remarks || ''
-        }
-      });
-    } catch (e) {
-      console.error('Failed to create leave status notification:', e.message);
-    }
-
-    sendNotification({
-      recipientId: updated.student._id,
-      title: notifTitle,
-      message: notifMsg,
-      type: notifType,
-      eventType: 'LEAVE_STATUS',
-      data: {
-        leaveId: updated._id,
-        leaveType: updated.leaveType,
-        status,
-        remarks: remarks || ''
-      }
+    const studentId = updated.student._id || updated.student;
+    const startDateFormatted = new Date(updated.startDate).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
+    const endDateFormatted = new Date(updated.endDate).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+
+    if (status === 'Approved') {
+      await notifyLeaveApproved({
+        studentId,
+        leaveType: updated.leaveType || 'Medical',
+        startDate: startDateFormatted,
+        endDate: endDateFormatted,
+        remarks: remarks || '',
+        reviewerName: req.user.name || 'Faculty Advisor'
+      });
+    } else if (status === 'Rejected') {
+      await notifyLeaveRejected({
+        studentId,
+        leaveType: updated.leaveType || 'Medical',
+        startDate: startDateFormatted,
+        endDate: endDateFormatted,
+        remarks: remarks || '',
+        reviewerName: req.user.name || 'Faculty Advisor'
+      });
+    }
   }
 
   res.json({
