@@ -250,7 +250,7 @@ export default function AttendancePrediction() {
             {summary?.overallSafeMisses} <span className="text-sm font-medium text-slate-400">classes</span>
           </div>
           <div className="mt-1 text-[11px] text-slate-400">
-            Can safely miss while staying $\ge {targetPercent}\%$
+            Can safely miss while staying &ge; {targetPercent}%
           </div>
         </div>
 
@@ -632,8 +632,8 @@ export default function AttendancePrediction() {
                 <FiTarget className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
                 <div>
                   <strong className="text-white block">Recovery Formula Theorem:</strong>
-                  For any shortage where attendance $< r$, the minimum consecutive lectures you must attend with zero absences to recover to $r$ is:
-                  <code className="text-amber-400 font-bold ml-1">$x = \lceil \frac{rT - P}{1 - r} \rceil$</code>.
+                  For any shortage where attendance is below target (percentage &lt; {targetPercent}%), the minimum consecutive lectures you must attend with zero absences to recover to {targetPercent}% is:
+                  <code className="text-amber-400 font-bold ml-1">x = ⌈ (rT - P) / (1 - r) ⌉</code>.
                 </div>
               </div>
 

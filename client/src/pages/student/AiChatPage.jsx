@@ -267,11 +267,6 @@ export default function AiChatPage() {
 
     return null;
   };
-      );
-    }
-
-    return null;
-  };
 
   return (
     <div className="p-6 max-w-5xl mx-auto h-[calc(100vh-100px)] flex flex-col space-y-4">
