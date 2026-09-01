@@ -3,7 +3,7 @@ const app = require('../src/app');
 const User = require('../src/models/User');
 const Attendance = require('../src/models/Attendance');
 const Subject = require('../src/models/Subject');
-const generateToken = require('../src/utils/generateToken');
+const { generateAccessToken } = require('../src/utils/generateToken');
 const {
   calculateConsecutiveNeeded,
   calculateSafeMisses,
@@ -31,7 +31,7 @@ describe('Phase 26: Attendance Forecasting Engine Tests 📈', () => {
       course: 'B.Tech'
     });
 
-    studentToken = generateToken(studentUser._id, studentUser.role);
+    studentToken = generateAccessToken(studentUser);
 
     // Create enrolled subjects
     await Subject.create([
