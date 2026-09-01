@@ -10,7 +10,10 @@ import {
   FiFileText,
   FiClock,
   FiZap,
-  FiCornerDownLeft
+  FiCornerDownLeft,
+  FiShield,
+  FiTarget,
+  FiActivity
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { sendAiChatMessageApi } from '../../services/api';
@@ -21,15 +24,16 @@ export default function AiChatWidget() {
     {
       id: 1,
       sender: 'bot',
-      text: "👋 Hi! I'm **AttendPro AI**. Ask me anything about your attendance percentage, tomorrow's timetable risks, or prediction trajectory!",
+      text: "👋 Hi! I'm **AttendPro AI**. Ask me anything about your attendance percentage, forecasting future skip scenarios, or recovery requirements!",
       cardData: {
         type: 'general_help',
         suggestions: [
+          'Can I skip 2 classes?',
+          'How many classes can I miss?',
+          'How many classes must I attend?',
+          'Forecast my attendance',
           'My attendance?',
-          'Subjects below 75%',
-          'Can I skip tomorrow?',
-          'Attendance report',
-          'Remaining lectures'
+          'Can I skip tomorrow?'
         ]
       },
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -42,11 +46,12 @@ export default function AiChatWidget() {
   const navigate = useNavigate();
 
   const promptPills = [
+    { label: 'Can I skip 2 classes?', icon: FiZap, query: 'Can I skip 2 classes?' },
+    { label: 'How many can I miss?', icon: FiShield, query: 'How many classes can I miss?' },
+    { label: 'How many must I attend?', icon: FiTarget, query: 'How many classes must I attend?' },
+    { label: 'Forecast attendance', icon: FiActivity, query: 'Forecast my attendance' },
     { label: 'My attendance?', icon: FiTrendingUp, query: 'My attendance?' },
-    { label: 'Subjects below 75%', icon: FiAlertTriangle, query: 'Subjects below 75%' },
-    { label: 'Can I skip tomorrow?', icon: FiCalendar, query: 'Can I skip tomorrow?' },
-    { label: 'Attendance report', icon: FiFileText, query: 'Attendance report' },
-    { label: 'Remaining lectures', icon: FiClock, query: 'Remaining lectures' }
+    { label: 'Can I skip tomorrow?', icon: FiCalendar, query: 'Can I skip tomorrow?' }
   ];
 
   const scrollToBottom = () => {
@@ -102,21 +107,19 @@ export default function AiChatWidget() {
     }
   };
 
-  const renderCardContent = (cardData) => {
+  const renderCardData = (cardData) => {
     if (!cardData) return null;
 
     if (cardData.type === 'attendance_overview') {
       return (
         <div className="mt-3 p-3 bg-slate-950/70 border border-slate-800 rounded-xl space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">Overall Attendance</span>
-            <span className={`text-sm font-bold ${cardData.overallPercent >= 75 ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {cardData.overallPercent}%
-            </span>
+          <div className="flex justify-between items-center text-xs">
+            <span className="text-slate-400">Total Attendance:</span>
+            <span className="font-bold text-white text-sm">{cardData.overallPercent}%</span>
           </div>
           <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
             <div
-              className={`h-full transition-all duration-500 ${cardData.overallPercent >= 75 ? 'bg-gradient-to-r from-emerald-500 to-teal-400' : 'bg-gradient-to-r from-rose-500 to-amber-500'}`}
+              className={`h-full ${cardData.overallPercent >= 75 ? 'bg-emerald-500' : 'bg-rose-500'}`}
               style={{ width: `${Math.min(cardData.overallPercent, 100)}%` }}
             />
           </div>
@@ -132,6 +135,85 @@ export default function AiChatWidget() {
             <div className="p-1 bg-slate-900 rounded">
               <span className="block text-slate-400 text-[9px]">ABSENT</span>
               <span className="font-semibold text-rose-400">{cardData.totalAbsent}</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (cardData.type === 'can_skip_card') {
+      return (
+        <div className={`mt-3 p-3 rounded-xl border text-xs space-y-2 ${cardData.canSkip ? 'bg-emerald-950/30 border-emerald-500/30' : 'bg-rose-950/30 border-rose-500/30'}`}>
+          <div className="flex justify-between items-center font-bold">
+            <span className="text-white">{cardData.subject}</span>
+            <span className={cardData.canSkip ? 'text-emerald-400' : 'text-rose-400'}>
+              {cardData.canSkip ? 'SAFE TO SKIP' : 'RISKY / NOT ADVISED'}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-center text-[11px]">
+            <div className="p-1.5 bg-slate-900/80 rounded-lg">
+              <span className="text-slate-400 block text-[9px]">CURRENT</span>
+              <span className="font-bold text-white">{cardData.currentPercent}%</span>
+            </div>
+            <div className="p-1.5 bg-slate-900/80 rounded-lg">
+              <span className="text-slate-400 block text-[9px]">PROJECTED</span>
+              <span className={`font-bold ${cardData.canSkip ? 'text-emerald-400' : 'text-rose-400'}`}>{cardData.projectedPercent}%</span>
+            </div>
+          </div>
+          <div className="text-[10px] text-slate-300">
+            {cardData.canSkip ? (
+              <span>🛡️ Safe buffer remaining: <strong className="text-emerald-400">{cardData.bufferAfter} classes</strong></span>
+            ) : (
+              <span>🎯 Consecutive penalty: <strong className="text-rose-400">{cardData.penaltyAfter} classes</strong></span>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (cardData.type === 'miss_allowance_card') {
+      return (
+        <div className="mt-3 p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-xl space-y-2 text-xs">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-white">Safe Miss Buffer</span>
+            <span className="font-extrabold text-emerald-400">{cardData.safeMisses !== undefined ? `${cardData.safeMisses} classes` : `${cardData.overallSafe} classes overall`}</span>
+          </div>
+          <p className="text-[11px] text-slate-300">
+            You can miss these classes consecutively without dropping below 75%.
+          </p>
+        </div>
+      );
+    }
+
+    if (cardData.type === 'must_attend_card') {
+      return (
+        <div className="mt-3 p-3 bg-amber-950/20 border border-amber-500/30 rounded-xl space-y-2 text-xs">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-white">Recovery Requirement</span>
+            <span className="font-extrabold text-amber-400">{cardData.consecutiveNeeded !== undefined ? `${cardData.consecutiveNeeded} consecutive` : `${cardData.overallNeeded} consecutive`}</span>
+          </div>
+          <p className="text-[11px] text-slate-300">
+            Mandatory attended lectures without missing to restore attendance to 75%.
+          </p>
+        </div>
+      );
+    }
+
+    if (cardData.type === 'forecast_summary_card') {
+      return (
+        <div className="mt-3 p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-xl space-y-2 text-xs">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-white">Overall Forecast</span>
+            <span className="font-extrabold text-indigo-300">{cardData.forecast?.summary.overallPercentage}%</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-center text-[10px]">
+            <div className="p-1 bg-slate-900 rounded">
+              <span className="text-slate-400 block">SAFE BUFFER</span>
+              <span className="font-bold text-emerald-400">{cardData.forecast?.summary.overallSafeMisses} classes</span>
+            </div>
+            <div className="p-1 bg-slate-900 rounded">
+              <span className="text-slate-400 block">RECOVERY</span>
+              <span className="font-bold text-amber-400">{cardData.forecast?.summary.overallConsecutiveNeeded} classes</span>
             </div>
           </div>
         </div>
