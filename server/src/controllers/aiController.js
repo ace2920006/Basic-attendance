@@ -996,5 +996,7 @@ const detectSuspiciousAttendance = asyncHandler(async (req, res) => {
 module.exports = {
   predictAttendance,
   chatWithAi,
-  detectSuspiciousAttendance
+  detectSuspiciousAttendance,
+  calculateForecast,
+  getStudentForecast
 };
