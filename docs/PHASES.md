@@ -1,6 +1,6 @@
 # Attendance Management System - Consolidated Phases Specification
 
-This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 25**) of the **Attendance Management System**.
+This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 26**) of the **Attendance Management System**.
 
 ---
 
@@ -30,7 +30,8 @@ This document provides a single, unified reference for all project implementatio
 23. [Phase 23 – Attendance Correction & Audit Trail](#-phase-23--attendance-correction--audit-trail)
 24. [Phase 24 – Complete Audit Logging](#-phase-24--complete-audit-logging)
 25. [Phase 25 – Advanced Notification Engine](#-phase-25--advanced-notification-engine)
-26. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+26. [Phase 26 – Attendance Forecasting Engine](#-phase-26--attendance-forecasting-engine)
+27. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -950,6 +951,56 @@ Every modification preserves a complete audit log recording:
 
 ---
 
+## 📈 Phase 26 – Attendance Forecasting Engine
+
+### Core Requirements & Features
+- **Theoretical Formulation & Mathematical Proofs**:
+  - **Consecutive Recovery Requirement ("How many classes must I attend?")**:
+    $$\frac{P + x}{T + x} \ge r \implies x = \max\left(0, \left\lceil \frac{rT - P}{1 - r} \right\rceil\right) = \max\left(0, \left\lceil \frac{R \cdot T - 100 \cdot P}{100 - R} \right\rceil\right)$$
+    *Example:* $P=17, T=25$ ($68\%$), target $75\% \implies x = \lceil \frac{0.75(25) - 17}{0.25} \rceil = 7$ consecutive attended lectures.
+  - **Safe Miss Allowance ("How many classes can I miss?")**:
+    $$\frac{P}{T + m} \ge r \implies m = \max\left(0, \left\lfloor \frac{P - rT}{r} \right\rfloor\right) = \max\left(0, \left\lfloor \frac{100 \cdot P - R \cdot T}{R} \right\rfloor\right)$$
+    *Example:* $P=17, T=20$ ($85\%$), target $75\% \implies m = \lfloor \frac{17 - 15}{0.75} \rfloor = 2$ safe lecture misses.
+  - **Scenario Simulation ("Can I skip?")**:
+    $$\text{Projected } \% = \frac{P + a}{T + a + b} \times 100$$
+    Evaluates whether projected attendance remains $\ge R\%$, computing remaining safe buffer or consecutive recovery penalty.
+  - **Milestone Ladder**: Tracks milestones for $75\%, 80\%, 85\%, 90\%, 95\%$.
+  - **Semester Trajectories**: Computes projected final percentages under 100%, 75%, 50%, and 0% (Floor) future attendance.
+- **Backend Architecture & Endpoints**:
+  - Pure calculation utility: `server/src/utils/forecastingEngine.js`
+  - `POST /api/ai/forecast/calculate`: Multi-parameter sandbox forecasting endpoint.
+  - `GET /api/ai/forecast/me`: Student-scoped multi-subject live forecasting aggregator.
+  - Natural Language Intent Parsers in `aiController.js`:
+    - `CAN_I_SKIP_SCENARIO` (*"Can I skip 2 classes?"*)
+    - `HOW_MANY_CAN_I_MISS` (*"How many classes can I miss?"*)
+    - `HOW_MANY_MUST_I_ATTEND` (*"How many classes must I attend?"*)
+    - `FORECAST_SUMMARY` (*"Forecast my attendance"*)
+- **Frontend Forecasting & Predictive Hub (`AttendancePrediction.jsx`)**:
+  - 3-in-1 interactive tabbed calculators:
+    - 🧮 **1. "Can I Skip?" Simulator**: Subject selector / custom mode, skip/attend steppers, real-time delta and safety badges.
+    - 🛡️ **2. "How Many Can I Miss?" Safe Buffer**: Visual allowance cards and interactive custom sandbox.
+    - 🎯 **3. "How Many Must I Attend?" Recovery Planner**: Consecutive lectures needed per subject, milestone ladder, and interactive calculator.
+  - Semester future class scenarios ($100\%, 75\%, 50\%, 0\%$).
+- **AI Chatbot Rich Cards (`AiChatWidget.jsx` & `AiChatPage.jsx`)**:
+  - Quick query pills and dedicated cards: `can_skip_card`, `miss_allowance_card`, `must_attend_card`, `forecast_summary_card`.
+- **Automated Verification**:
+  - Dedicated test suite: `server/tests/forecasting.test.js` (14/14 tests passed).
+  - Total system suite: **12 test suites, 98/98 tests passed**.
+
+### File Mapping
+- Backend Infrastructure:
+  - Math Engine: `server/src/utils/forecastingEngine.js`
+  - AI Controller: `server/src/controllers/aiController.js`
+  - AI Routes: `server/src/routes/aiRoutes.js`
+  - Automated Tests: `server/tests/forecasting.test.js`
+- Frontend Infrastructure:
+  - Forecasting Hub: `client/src/pages/student/AttendancePrediction.jsx`
+  - Chatbot Widget: `client/src/components/ai/AiChatWidget.jsx`
+  - AI Chat Page: `client/src/pages/student/AiChatPage.jsx`
+  - API Client: `client/src/services/api.js`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -1059,9 +1110,14 @@ Every modification preserves a complete audit log recording:
 | **User Notification Preferences & Channel Toggles** | ✅ | ✅ | ✅ | Phase 25 |
 | **Automated Multi-Channel Domain Events (7 Event Processors)** | ✅ | ✅ | ✅ | Phase 25 |
 | **Interactive Notification Simulator & Smart Summary Sandbox** | ✅ | ✅ | ✅ | Phase 25 |
+| **Attendance Forecasting Mathematical Recovery Engine ($x = \lceil \frac{rT - P}{1-r} \rceil$)** | ✅ | ✅ | ✅ | Phase 26 |
+| **Safe Miss Allowance Calculator ($m = \lfloor \frac{P - rT}{r} \rfloor$)** | ✅ | ✅ | ✅ | Phase 26 |
+| **Interactive "Can I Skip?" Scenario Simulator & What-If Sandbox** | ✅ | ✅ | ✅ | Phase 26 |
+| **Multi-Benchmark Milestone Ladder (75%, 80%, 85%, 90%)** | ✅ | ✅ | ✅ | Phase 26 |
+| **AI Assistant NLP Forecasting Integration (Skip & Recovery Cards)** | ✅ | ✅ | ✅ | Phase 26 |
 
 ---
-*Last Updated: August 2026*
+*Last Updated: September 2026*
 
 
 

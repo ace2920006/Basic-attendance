@@ -425,3 +425,50 @@ flowchart TD
         Ch_Push --> UI5["System Desktop / Mobile Web Push Alert"]
     end
 ```
+
+---
+
+## 14. Phase 26 Attendance Forecasting Engine & Scenario Simulator
+
+Comprehensive architecture of the Mathematical Forecasting Engine, 3 interactive scenario calculators, milestone ladder, and Natural Language AI Assistant routing:
+
+```mermaid
+flowchart TD
+    subgraph InputSources ["User Inputs & Query Entrypoints"]
+        I1["Student Live Enrolled Subjects <br/> (MongoDB Attendance Records)"]
+        I2["Interactive Forecasting Hub <br/> (client/src/pages/student/AttendancePrediction.jsx)"]
+        I3["Natural Language AI Chatbot / Widget <br/> ('Can I skip 2 classes?', 'How many can I miss?')"]
+        I4["Custom Sandbox Parameters <br/> (P attended, T total, Target R%, Future F)"]
+    end
+
+    InputSources --> EngineGateway["Attendance Forecasting Engine Core <br/> (server/src/utils/forecastingEngine.js)"]
+
+    subgraph CoreCalculators ["3 Mathematical Forecasting Models"]
+        EngineGateway --> Calc1["1. Recovery Calculator (How Many Must I Attend?) <br/> x = max(0, ceil((R*T - 100*P) / (100 - R)))"]
+        EngineGateway --> Calc2["2. Safe Miss Allowance (How Many Can I Miss?) <br/> m = max(0, floor((100*P - R*T) / R))"]
+        EngineGateway --> Calc3["3. Scenario Simulator (Can I Skip?) <br/> Projected % = ((P + a) / (T + a + b)) * 100"]
+    end
+
+    subgraph ScenarioEvaluation ["Scenario Evaluation & Risk Classification"]
+        Calc3 --> CondCheck{"Is Projected % >= Target R%?"}
+        CondCheck -- Yes --> SafeBranch["Status: SAFE / BORDERLINE <br/> • Remaining buffer = floor((100*(P+a) - R*(T+a+b)) / R) <br/> • 'Safe to skip! Attendance remains above target.'"]
+        CondCheck -- No --> RiskBranch["Status: DEFICIT_WARNING / CRITICAL_DROP <br/> • Penalty needed = ceil((R*(T+a+b) - 100*(P+a)) / (100 - R)) <br/> • 'Skipping drops you below target! Recovery needed.'"]
+    end
+
+    subgraph ProjectionsAndMilestones ["Semester Trajectories & Milestones"]
+        EngineGateway --> Milestones["Milestone Trajectory Ladder <br/> • 75% Benchmark <br/> • 80% Benchmark <br/> • 85% Benchmark <br/> • 90% Benchmark <br/> • 95% Benchmark"]
+        EngineGateway --> Trajectories["Future Classes Simulations (F remaining) <br/> • 100% Future Attendance (Best Case Max %) <br/> • Target% Future Attendance (Projected %) <br/> • 50% Future Attendance (Moderate Shortage %) <br/> • 0% Future Attendance (Worst Case Floor %)"]
+    end
+
+    subgraph ClientUIPresentation ["Client Presentation & NLP Chatbot Responses"]
+        SafeBranch --> UI_Hub["Forecasting Hub UI: <br/> • 'Can I Skip?' Interactive Dial <br/> • Safe Miss Cards per Subject <br/> • Recovery Planner Table <br/> • Milestone Ladder Grid"]
+        RiskBranch --> UI_Hub
+        Milestones --> UI_Hub
+        Trajectories --> UI_Hub
+        
+        Calc1 --> AICards["AI Chatbot Cards: <br/> • must_attend_card <br/> • miss_allowance_card <br/> • can_skip_card <br/> • forecast_summary_card"]
+        Calc2 --> AICards
+        Calc3 --> AICards
+    end
+```
+

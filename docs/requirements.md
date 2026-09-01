@@ -92,6 +92,11 @@ This document details the functional specifications, feature requirements, and a
 - **Advanced Notification Engine (Phase 25)**:
   - Campus-wide and targeted announcement broadcasts across In-App, Email, and Push channels.
   - Interactive multi-channel test dispatcher sandbox (`POST /api/notifications/test-dispatch`).
+- **Attendance Forecasting Engine (Phase 26)**:
+  - **Mathematical Recovery Calculator**: Calculates minimum consecutive attendances $x = \lceil \frac{rT - P}{1 - r} \rceil$ needed to restore attendance to $75\%$, $80\%$, $85\%$, $90\%$.
+  - **Safe Miss Allowance Engine**: Calculates maximum consecutive lecture skips $m = \lfloor \frac{P - rT}{r} \rfloor$ allowed while remaining safely above target.
+  - **Interactive Scenario Simulator**: What-If sandbox evaluating proposed skip/attend counts with real-time percentage delta, safety badges, and recovery penalties.
+  - **AI Chatbot NLP Integration**: Direct natural language resolution of skip questions (*"Can I skip 2 classes?"*, *"How many classes can I miss?"*, *"How many must I attend?"*).
 - **Enterprise Security & Hardening (Phase 16)**:
   - **Security Headers**: Helmet HTTP headers (`CSP`, `HSTS`, `X-Frame-Options`).
   - **Rate Limiting**: Sliding-window rate limiters protecting API endpoints against brute-force attacks.
@@ -140,6 +145,11 @@ This document details the functional specifications, feature requirements, and a
 | **User Notification Preferences & Channel Toggles** | ✅ | ✅ | ✅ | Phase 25 |
 | **Automated Multi-Channel Domain Events (7 Event Processors)** | ✅ | ✅ | ✅ | Phase 25 |
 | **Interactive Notification Simulator & Smart Summary Sandbox** | ✅ | ✅ | ✅ | Phase 25 |
+| **Attendance Forecasting Mathematical Recovery Engine ($x = \lceil \frac{rT - P}{1-r} \rceil$)** | ✅ | ✅ | ✅ | Phase 26 |
+| **Safe Miss Allowance Calculator ($m = \lfloor \frac{P - rT}{r} \rfloor$)** | ✅ | ✅ | ✅ | Phase 26 |
+| **Interactive "Can I Skip?" Scenario Simulator & What-If Sandbox** | ✅ | ✅ | ✅ | Phase 26 |
+| **Multi-Benchmark Milestone Ladder (75%, 80%, 85%, 90%)** | ✅ | ✅ | ✅ | Phase 26 |
+| **AI Assistant NLP Forecasting Integration (Skip & Recovery Cards)** | ✅ | ✅ | ✅ | Phase 26 |
 
 ---
 

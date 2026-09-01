@@ -269,7 +269,7 @@ cd Basic-attendance
 
 ### 4. Running Automated Tests (`server`)
 
-Run the complete backend test suite (**11 test suites, 75 tests**):
+Run the complete backend test suite (**12 test suites, 98 tests**):
 
 ```bash
 cd server
@@ -278,6 +278,8 @@ npm test
 
 To run a specific module test suite:
 ```bash
+npx jest tests/forecasting.test.js   # Phase 26 Attendance Forecasting Engine
+npx jest tests/notifications.test.js # Phase 25 Advanced Notification Engine
 npx jest tests/audit.test.js         # Phase 24 Complete Audit Logging
 npx jest tests/antiProxy.test.js     # Phase 21 & 22 Anti-Proxy & Risk Scoring
 npx jest tests/sessions.test.js      # Phase 20 Attendance Sessions
@@ -288,7 +290,6 @@ npx jest tests/qr.test.js            # 30s Dynamic QR Token
 npx jest tests/gps.test.js           # GPS Campus Geofencing
 npx jest tests/reports.test.js       # Reports Generator
 npx jest tests/charts.test.js        # Charts & Analytics
-npx jest tests/notifications.test.js # Real-time Notifications & FCM
 ```
 
 ---
@@ -392,6 +393,13 @@ npx jest tests/notifications.test.js # Real-time Notifications & FCM
 - `PUT /api/attendance-rules` — Update system thresholds & status weights (Admin only, logs `CHANGE_SETTINGS`)
 - `POST /api/attendance-rules/reset` — Reset rules to factory defaults (Admin only, logs `CHANGE_SETTINGS`)
 - `POST /api/attendance-rules/evaluate` — Interactive check-in evaluation simulator sandbox
+
+### 📈 Attendance Forecasting & AI Engine (`/api/ai`)
+- `POST /api/ai/forecast/calculate` — Calculate arbitrary multi-parameter attendance forecasts, safe misses, and scenario projections
+- `GET /api/ai/forecast/me` — Student-scoped live multi-subject attendance forecasting report and milestone roadmap
+- `GET /api/ai/predict` — Predict student attendance trajectory and 75% target feasibility
+- `POST /api/ai/chat` — Natural language AI assistant with NLP intent resolution for "Can I skip?", "How many can I miss?", and "How many must I attend?"
+- `GET /api/ai/suspicious-detection` — Flag multi-signal proxy violations and device anomalies (Faculty / Admin only)
 
 ### 🏥 System Health (`/api/health`)
 - `GET /api/health` — Check backend status, connected database, security stack status, and API uptime

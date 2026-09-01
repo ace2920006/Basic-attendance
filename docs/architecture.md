@@ -121,6 +121,36 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 
 ---
 
+## 📈 Phase 26 Architecture: Attendance Forecasting Engine
+
+```
+       [ Student / Faculty / Admin Query ]
+                        |
+                        v
+          +-----------------------------+
+          | Attendance Forecasting Core | (server/src/utils/forecastingEngine.js)
+          +-----------------------------+
+                        |
+         +--------------+--------------+
+         |                             |
+         v                             v
+[ 3 Core Calculators ]     [ Natural Language AI Intents ]
+ • "Can I Skip?" Simulator   • CAN_I_SKIP_SCENARIO ("Can I skip 2 classes?")
+ • "How Many Can I Miss?"    • HOW_MANY_CAN_I_MISS ("Safe skip allowance")
+ • "How Many Must I Attend?" • HOW_MANY_MUST_I_ATTEND ("Consecutive needed")
+ • Multi-Target Milestones   • FORECAST_SUMMARY ("Forecast my attendance")
+```
+
+### Mathematical Proofs:
+1. **Recovery Requirement**: Minimum consecutive attendances $x$ to reach target $R\%$:
+   $$x = \max\left(0, \left\lceil \frac{R \cdot T - 100 \cdot P}{100 - R} \right\rceil\right)$$
+2. **Safe Miss Allowance**: Maximum consecutive misses $m$ while maintaining $\ge R\%$:
+   $$m = \max\left(0, \left\lfloor \frac{100 \cdot P - R \cdot T}{R} \right\rfloor\right)$$
+3. **Scenario Projection**: Given $a$ planned attendances and $b$ planned skips:
+   $$\text{Projected } \% = \frac{P + a}{T + a + b} \times 100$$
+
+---
+
 ## 🔌 API Endpoint Hierarchy
 
 - `/api/auth` $\rightarrow$ Register, Login, Logout, Password Recovery, Token Refresh (Logs `LOGIN`, `LOGOUT`)
@@ -135,7 +165,7 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 - `/api/charts` $\rightarrow$ Ratio charts, Dept comparison, Monthly trends, Subject breakdown, Student rankings
 - `/api/notifications` $\rightarrow$ Notification feed, Unread counters, Preferences (`GET/PUT /preferences`), Multi-channel test simulator (`POST /test-dispatch`), Smart attendance recovery breakdown (`GET /smart-summary`), Web Push tokens, Announcements broadcast
 - `/api/leaves` $\rightarrow$ Leave applications submission, Document attachment upload, Approval/Rejection workflow (Logs `APPROVE_LEAVE`, `REJECT_LEAVE`)
-- `/api/ai` $\rightarrow$ Attendance 75% prediction engine, Natural language chatbot, Proxy anomaly detection
+- `/api/ai` $\rightarrow$ Attendance Forecasting Engine (`POST /forecast/calculate`, `GET /forecast/me`), Attendance 75% prediction (`GET /predict`), Natural language chatbot (`POST /chat`), Proxy anomaly detection (`GET /suspicious-detection`)
 - `/api/analytics` $\rightarrow$ Most absent deficit calculator, Best attendance leaderboard, Dept rankings, Teacher metrics, Daily inspector
 - `/api/academic` $\rightarrow$ Academic hierarchy tree, Academic Years, Dynamic Semesters, Divisions (`IT-A`), Batch Student Promotion Engine
 - `/api/attendance-rules` $\rightarrow$ Institutional rule thresholds, 7-status matrix definitions, Sandbox check-in simulator (Logs `CHANGE_SETTINGS`)
@@ -144,3 +174,4 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 - `/api/corrections` $\rightarrow$ Attendance Modification Workflow, Request submission, Mandatory reasons, Teacher & Admin Review Consoles (Logs `EDIT_ATTENDANCE`)
 - `/api/audit-logs` $\rightarrow$ Institutional Audit Trail Ledger, 10-Action breakdown stats, Multi-column CSV export (Logs `EXPORT_REPORT`)
 - `/api/health` $\rightarrow$ Infrastructure health check & security stack status
+
