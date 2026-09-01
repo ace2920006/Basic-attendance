@@ -107,7 +107,7 @@ export default function AiChatWidget() {
     }
   };
 
-  const renderCardData = (cardData) => {
+  const renderCardContent = (cardData) => {
     if (!cardData) return null;
 
     if (cardData.type === 'attendance_overview') {

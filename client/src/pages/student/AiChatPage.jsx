@@ -10,7 +10,10 @@ import {
   FiClock,
   FiTrash2,
   FiInfo,
-  FiCornerDownLeft
+  FiCornerDownLeft,
+  FiShield,
+  FiTarget,
+  FiActivity
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { sendAiChatMessageApi } from '../../services/api';
@@ -20,15 +23,16 @@ export default function AiChatPage() {
     {
       id: 1,
       sender: 'bot',
-      text: "👋 Welcome to **AttendPro AI Workspace**! I am your real-time attendance intelligence bot. Ask me questions about your percentage, skip safety for tomorrow, or low attendance alerts.",
+      text: "👋 Welcome to **AttendPro AI Workspace**! I am your real-time attendance forecasting intelligence bot. Ask me questions about your percentage, skip safety scenarios, recovery targets, or tomorrow's timetable risks.",
       cardData: {
         type: 'general_help',
         suggestions: [
+          'Can I skip 2 classes?',
+          'How many classes can I miss?',
+          'How many classes must I attend?',
+          'Forecast my attendance',
           'My attendance?',
-          'Subjects below 75%',
-          'Can I skip tomorrow?',
-          'Attendance report',
-          'Remaining lectures'
+          'Can I skip tomorrow?'
         ]
       },
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -41,11 +45,12 @@ export default function AiChatPage() {
   const navigate = useNavigate();
 
   const promptPills = [
+    { label: 'Can I skip 2 classes?', icon: FiZap, query: 'Can I skip 2 classes?' },
+    { label: 'How many can I miss?', icon: FiShield, query: 'How many classes can I miss?' },
+    { label: 'How many must I attend?', icon: FiTarget, query: 'How many classes must I attend?' },
+    { label: 'Forecast attendance', icon: FiActivity, query: 'Forecast my attendance' },
     { label: 'My attendance?', icon: FiTrendingUp, query: 'My attendance?' },
-    { label: 'Subjects below 75%', icon: FiAlertTriangle, query: 'Subjects below 75%' },
-    { label: 'Can I skip tomorrow?', icon: FiCalendar, query: 'Can I skip tomorrow?' },
-    { label: 'Attendance report', icon: FiFileText, query: 'Attendance report' },
-    { label: 'Remaining lectures', icon: FiClock, query: 'Remaining lectures' }
+    { label: 'Can I skip tomorrow?', icon: FiCalendar, query: 'Can I skip tomorrow?' }
   ];
 
   const scrollToBottom = () => {
@@ -104,7 +109,7 @@ export default function AiChatPage() {
       {
         id: Date.now(),
         sender: 'bot',
-        text: "Conversation cleared. How can I assist you with your attendance today?",
+        text: "Conversation cleared. How can I assist you with your attendance forecasting today?",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
     ]);
@@ -146,6 +151,85 @@ export default function AiChatPage() {
       );
     }
 
+    if (cardData.type === 'can_skip_card') {
+      return (
+        <div className={`mt-3 p-4 rounded-2xl border text-xs space-y-3 ${cardData.canSkip ? 'bg-emerald-950/30 border-emerald-500/30' : 'bg-rose-950/30 border-rose-500/30'}`}>
+          <div className="flex justify-between items-center font-bold">
+            <span className="text-white text-sm">{cardData.subject}</span>
+            <span className={cardData.canSkip ? 'text-emerald-400 font-extrabold' : 'text-rose-400 font-extrabold'}>
+              {cardData.canSkip ? '✅ SAFE TO SKIP' : '⛔ RISK / NOT ADVISED'}
+            </span>
+          </div>
+          <div className="grid grid-cols-2 gap-3 text-center">
+            <div className="p-2 bg-slate-900/80 rounded-xl">
+              <span className="text-slate-400 block text-[10px]">CURRENT</span>
+              <span className="font-bold text-white text-sm">{cardData.currentPercent}%</span>
+            </div>
+            <div className="p-2 bg-slate-900/80 rounded-xl">
+              <span className="text-slate-400 block text-[10px]">PROJECTED</span>
+              <span className={`font-bold text-sm ${cardData.canSkip ? 'text-emerald-400' : 'text-rose-400'}`}>{cardData.projectedPercent}%</span>
+            </div>
+          </div>
+          <div className="text-xs text-slate-300">
+            {cardData.canSkip ? (
+              <span>🛡️ Safe buffer remaining: <strong className="text-emerald-400">{cardData.bufferAfter} class(es)</strong></span>
+            ) : (
+              <span>🎯 Consecutive penalty: <strong className="text-rose-400">{cardData.penaltyAfter} consecutive class(es)</strong></span>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    if (cardData.type === 'miss_allowance_card') {
+      return (
+        <div className="mt-3 p-4 bg-emerald-950/20 border border-emerald-500/30 rounded-2xl space-y-2 text-xs">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-white text-sm">Safe Miss Allowance</span>
+            <span className="font-extrabold text-emerald-400 text-sm">{cardData.safeMisses !== undefined ? `${cardData.safeMisses} classes` : `${cardData.overallSafe} classes overall`}</span>
+          </div>
+          <p className="text-xs text-slate-300">
+            You can miss these classes without dropping below the 75% threshold.
+          </p>
+        </div>
+      );
+    }
+
+    if (cardData.type === 'must_attend_card') {
+      return (
+        <div className="mt-3 p-4 bg-amber-950/20 border border-amber-500/30 rounded-2xl space-y-2 text-xs">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-white text-sm">Recovery Requirement</span>
+            <span className="font-extrabold text-amber-400 text-sm">{cardData.consecutiveNeeded !== undefined ? `${cardData.consecutiveNeeded} consecutive` : `${cardData.overallNeeded} consecutive`}</span>
+          </div>
+          <p className="text-xs text-slate-300">
+            Mandatory attended lectures without missing any to restore attendance to 75%.
+          </p>
+        </div>
+      );
+    }
+
+    if (cardData.type === 'forecast_summary_card') {
+      return (
+        <div className="mt-3 p-4 bg-indigo-950/30 border border-indigo-500/30 rounded-2xl space-y-3 text-xs">
+          <div className="flex justify-between items-center">
+            <span className="font-bold text-white text-sm">Overall Forecast Report</span>
+            <span className="font-extrabold text-indigo-300 text-sm">{cardData.forecast?.summary.overallPercentage}%</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-center text-xs">
+            <div className="p-2 bg-slate-900 rounded-xl">
+              <span className="text-slate-400 block text-[10px]">SAFE BUFFER</span>
+              <span className="font-bold text-emerald-400">{cardData.forecast?.summary.overallSafeMisses} classes</span>
+            </div>
+            <div className="p-2 bg-slate-900 rounded-xl">
+              <span className="text-slate-400 block text-[10px]">RECOVERY</span>
+              <span className="font-bold text-amber-400">{cardData.forecast?.summary.overallConsecutiveNeeded} classes</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     if (cardData.type === 'skip_tomorrow_analysis' && cardData.classes) {
       return (
         <div className="mt-3 space-y-2">
@@ -178,6 +262,11 @@ export default function AiChatPage() {
             <span>{cardData.actionLabel || 'Go to Official Report Page'}</span>
           </button>
         </div>
+      );
+    }
+
+    return null;
+  };
       );
     }
 
