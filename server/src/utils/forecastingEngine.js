@@ -32,18 +32,18 @@ function calculateConsecutiveNeeded({ attended = 0, total = 0, targetPercentage 
   const P = Math.max(0, Number(attended) || 0);
   const T = Math.max(0, Number(total) || 0);
   const target = Math.min(100, Math.max(1, Number(targetPercentage) || 75));
-  const r = target / 100;
 
   if (T === 0) return 0;
-  if (P / T >= r) return 0; // Already at or above target
+  if (P * 100 >= target * T) return 0; // Already at or above target
 
   // When target is 100%, if student has missed any class, 100% is impossible
-  if (r >= 1) {
+  if (target >= 100) {
     return P === T ? 0 : Infinity;
   }
 
-  const numerator = r * T - P;
-  const denominator = 1 - r;
+  // Exact integer math: (target * T - 100 * P) / (100 - target)
+  const numerator = target * T - 100 * P;
+  const denominator = 100 - target;
   const needed = Math.ceil(numerator / denominator);
   return Math.max(1, needed);
 }
@@ -67,12 +67,13 @@ function calculateSafeMisses({ attended = 0, total = 0, targetPercentage = 75 })
   const P = Math.max(0, Number(attended) || 0);
   const T = Math.max(0, Number(total) || 0);
   const target = Math.min(100, Math.max(1, Number(targetPercentage) || 75));
-  const r = target / 100;
 
   if (T === 0) return 0;
-  if (P / T < r) return 0; // Below target, 0 safe misses
+  if (P * 100 < target * T) return 0; // Below target, 0 safe misses
 
-  const maxMisses = Math.floor(P / r - T);
+  // Exact integer math: (100 * P - target * T) / target
+  const numerator = 100 * P - target * T;
+  const maxMisses = Math.floor(numerator / target);
   return Math.max(0, maxMisses);
 }
 

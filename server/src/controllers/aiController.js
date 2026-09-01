@@ -256,11 +256,12 @@ const chatWithAi = asyncHandler(async (req, res) => {
 
   // 1. INTENT: MY ATTENDANCE
   if (
-    query.includes('my attendance') ||
-    query.includes('attendance percentage') ||
-    query.includes('overall status') ||
-    query.includes('how is my attendance') ||
-    query === 'my attendance?'
+    !query.includes('forecast') &&
+    (query.includes('my attendance') ||
+      query.includes('attendance percentage') ||
+      query.includes('overall status') ||
+      query.includes('how is my attendance') ||
+      query === 'my attendance?')
   ) {
     intent = 'MY_ATTENDANCE';
     replyText = `### 📊 Your Attendance Summary\n\nYour current overall attendance is **${overallPercent}%** (${totalPresent} present out of ${totalConducted} total classes conducted).\n\n` +
