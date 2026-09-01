@@ -499,7 +499,7 @@ export const getSmartAttendanceSummaryApi = async () => {
   return apiRequest('/notifications/smart-summary', { method: 'GET' });
 };
 
-// AI Features APIs (Phase 14)
+// AI Features APIs (Phase 14 & Phase 26)
 export const getAttendancePredictionApi = async (params = {}) => {
   const queryParams = new URLSearchParams();
   if (params.studentId) queryParams.append('studentId', params.studentId);
@@ -507,6 +507,22 @@ export const getAttendancePredictionApi = async (params = {}) => {
   if (params.remaining) queryParams.append('remaining', params.remaining);
   const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
   return apiRequest(`/ai/predict${queryStr}`, { method: 'GET' });
+};
+
+export const calculateForecastApi = async (calcData) => {
+  return apiRequest('/ai/forecast/calculate', {
+    method: 'POST',
+    body: JSON.stringify(calcData)
+  });
+};
+
+export const getStudentForecastApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.studentId) queryParams.append('studentId', params.studentId);
+  if (params.target) queryParams.append('target', params.target);
+  if (params.future) queryParams.append('future', params.future);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/ai/forecast/me${queryStr}`, { method: 'GET' });
 };
 
 export const sendAiChatMessageApi = async (message) => {
