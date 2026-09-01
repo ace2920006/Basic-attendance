@@ -3,6 +3,14 @@ const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const Subject = require('../models/Subject');
 const Timetable = require('../models/Timetable');
+const {
+  calculateConsecutiveNeeded,
+  calculateSafeMisses,
+  calculateCanSkip,
+  calculateMilestones,
+  calculateAttendanceForecast,
+  getStudentSubjectForecasts
+} = require('../utils/forecastingEngine');
 
 // Helper to compute geographic distance (Haversine formula in km)
 function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
@@ -413,18 +421,267 @@ const chatWithAi = asyncHandler(async (req, res) => {
     };
   }
 
-  // 6. DEFAULT / GENERAL QUERY HANDLER
+  // 6. PHASE 26 INTENT: "HOW MANY CLASSES MUST I ATTEND?" (Recovery Calculator)
+  else if (
+    query.includes('must i attend') ||
+    query.includes('need to attend') ||
+    query.includes('classes to reach 75') ||
+    query.includes('lectures to reach 75') ||
+    query.includes('how many classes to attend') ||
+    query.includes('how many lectures do i need') ||
+    query.includes('consecutive lectures')
+  ) {
+    intent = 'HOW_MANY_MUST_I_ATTEND';
+
+    // Check if a specific subject was mentioned
+    const matchedSubject = subjectDetails.find((s) =>
+      query.includes(s.subject.toLowerCase())
+    );
+
+    if (matchedSubject) {
+      const needed = calculateConsecutiveNeeded({
+        attended: matchedSubject.present,
+        total: matchedSubject.conducted,
+        targetPercentage: 75
+      });
+
+      if (needed === 0) {
+        const safe = calculateSafeMisses({
+          attended: matchedSubject.present,
+          total: matchedSubject.conducted,
+          targetPercentage: 75
+        });
+        replyText = `🎉 **${matchedSubject.subject} is Already Safe!**\n\nYour current attendance is **${matchedSubject.percentage}%** (${matchedSubject.present}/${matchedSubject.conducted} attended), which is already above 75%!\n\nYou don't need any recovery classes. In fact, you can safely miss up to **${safe} lecture(s)** and stay $\\ge 75\%$.`;
+      } else {
+        replyText = `🎯 **Recovery Requirement for ${matchedSubject.subject}**\n\n- **Current Attendance**: **${matchedSubject.percentage}%** (${matchedSubject.present}/${matchedSubject.conducted} attended)\n- **Recovery Needed**: You need to attend the next **${needed} consecutive lecture(s)** to bring your attendance back to **75%**.\n\n*Formula Applied:* $\\lceil (0.75 \\times ${matchedSubject.conducted} - ${matchedSubject.present}) / 0.25 \\rceil = ${needed}$ lectures.`;
+      }
+
+      cardData = {
+        type: 'must_attend_card',
+        subject: matchedSubject.subject,
+        currentPercent: matchedSubject.percentage,
+        attended: matchedSubject.present,
+        total: matchedSubject.conducted,
+        consecutiveNeeded: needed,
+        targetPercentage: 75
+      };
+    } else {
+      // Overall & subject breakdown
+      const overallNeeded = calculateConsecutiveNeeded({
+        attended: totalPresent,
+        total: totalConducted,
+        targetPercentage: 75
+      });
+
+      const recoveryList = subjectDetails.map((s) => {
+        const needed = calculateConsecutiveNeeded({
+          attended: s.present,
+          total: s.conducted,
+          targetPercentage: 75
+        });
+        return { ...s, needed };
+      });
+
+      const lagging = recoveryList.filter((s) => s.needed > 0);
+
+      if (lagging.length === 0) {
+        replyText = `🎉 **Excellent Performance!**\n\nYour overall attendance is **${overallPercent}%** (${totalPresent}/${totalConducted} attended) and all your subjects are $\\ge 75\%$.\n\nYou do not need any recovery lectures at this time!`;
+      } else {
+        replyText = `🎯 **Consecutive Classes Required to Reach 75%**\n\n` +
+          lagging
+            .map(
+              (s) =>
+                `- **${s.subject}** (${s.percentage}%): Must attend next **${s.needed} consecutive lecture(s)** without absence.`
+            )
+            .join('\n') +
+          `\n\nOverall, you need **${overallNeeded} consecutive lecture(s)** to reach the 75% campus minimum.`;
+      }
+
+      cardData = {
+        type: 'must_attend_card',
+        overallPercent,
+        overallNeeded,
+        subjects: recoveryList
+      };
+    }
+  }
+
+  // 7. PHASE 26 INTENT: "HOW MANY CLASSES CAN I MISS?" (Safe Miss Allowance)
+  else if (
+    query.includes('can i miss') ||
+    query.includes('can i skip') && !query.includes('tomorrow') && (query.includes('how many') || query.includes('allowance') || query.includes('safe')) ||
+    query.includes('how many classes can i skip') ||
+    query.includes('how many can i bunk') ||
+    query.includes('safe skips') ||
+    query.includes('skip buffer')
+  ) {
+    intent = 'HOW_MANY_CAN_I_MISS';
+
+    const matchedSubject = subjectDetails.find((s) =>
+      query.includes(s.subject.toLowerCase())
+    );
+
+    if (matchedSubject) {
+      const safe = calculateSafeMisses({
+        attended: matchedSubject.present,
+        total: matchedSubject.conducted,
+        targetPercentage: 75
+      });
+
+      if (safe === 0) {
+        const needed = calculateConsecutiveNeeded({
+          attended: matchedSubject.present,
+          total: matchedSubject.conducted,
+          targetPercentage: 75
+        });
+        replyText = `⚠️ **Zero Safe Skips in ${matchedSubject.subject}**\n\nYour current attendance is **${matchedSubject.percentage}%** (${matchedSubject.present}/${matchedSubject.conducted} attended), which is below 75%.\n\nYou cannot miss any classes without further worsening your shortage! You need **${needed} consecutive attended lectures** to recover.`;
+      } else {
+        replyText = `🛡️ **Safe Skip Allowance for ${matchedSubject.subject}**\n\n- **Current Attendance**: **${matchedSubject.percentage}%** (${matchedSubject.present}/${matchedSubject.conducted} attended)\n- **Safe Misses**: You can miss up to **${safe} lecture(s)** and remain at or above **75%**.\n\n*Formula Applied:* $\\lfloor (${matchedSubject.present} - 0.75 \\times ${matchedSubject.conducted}) / 0.75 \\rfloor = ${safe}$ lectures.`;
+      }
+
+      cardData = {
+        type: 'miss_allowance_card',
+        subject: matchedSubject.subject,
+        currentPercent: matchedSubject.percentage,
+        attended: matchedSubject.present,
+        total: matchedSubject.conducted,
+        safeMisses: safe,
+        targetPercentage: 75
+      };
+    } else {
+      const overallSafe = calculateSafeMisses({
+        attended: totalPresent,
+        total: totalConducted,
+        targetPercentage: 75
+      });
+
+      const allowanceList = subjectDetails.map((s) => {
+        const safe = calculateSafeMisses({
+          attended: s.present,
+          total: s.conducted,
+          targetPercentage: 75
+        });
+        return { ...s, safe };
+      });
+
+      replyText = `🛡️ **Safe Lecture Miss Allowance (75% Threshold)**\n\n` +
+        allowanceList
+          .map(
+            (s) =>
+              `- **${s.subject}** (${s.percentage}%): ${
+                s.safe > 0
+                  ? `Can safely miss **${s.safe} lecture(s)** ✅`
+                  : `**0 safe skips** (Below target or tight buffer) ⚠️`
+              }`
+          )
+          .join('\n') +
+        `\n\nOverall, you have a safe buffer of **${overallSafe} lecture(s)** across your cumulative record.`;
+
+      cardData = {
+        type: 'miss_allowance_card',
+        overallPercent,
+        overallSafe,
+        subjects: allowanceList
+      };
+    }
+  }
+
+  // 8. PHASE 26 INTENT: "CAN I SKIP K CLASSES?" (Scenario Simulator)
+  else if (
+    (query.includes('can i skip') || query.includes('can i miss') || query.includes('if i skip') || query.includes('if i miss')) &&
+    !query.includes('tomorrow')
+  ) {
+    intent = 'CAN_I_SKIP_SCENARIO';
+
+    // Extract proposed number of skips
+    const numMatch = query.match(/(\d+)/);
+    const skipCount = numMatch ? parseInt(numMatch[1], 10) : 1;
+
+    const matchedSubject = subjectDetails.find((s) =>
+      query.includes(s.subject.toLowerCase())
+    );
+
+    const P = matchedSubject ? matchedSubject.present : totalPresent;
+    const T = matchedSubject ? matchedSubject.conducted : totalConducted;
+    const subjName = matchedSubject ? matchedSubject.subject : 'Overall Attendance';
+
+    const sim = calculateCanSkip({
+      attended: P,
+      total: T,
+      skipCount,
+      attendCount: 0,
+      targetPercentage: 75
+    });
+
+    const isSafe = sim.projected.canSkip;
+    const curPct = sim.current.percentage;
+    const projPct = sim.projected.percentage;
+
+    if (isSafe) {
+      replyText = `✅ **Yes, You Can Skip ${skipCount} Class(es) in ${subjName}!**\n\n- **Current**: **${curPct}%** (${P}/${T} attended)\n- **Projected**: **${projPct}%** (${P}/${T + skipCount} attended)\n- **Safety Buffer Remaining**: **${sim.projected.bufferAfter}** more safe class(es) after this.\n\nYour attendance will comfortably stay $\\ge 75\%$.`;
+    } else {
+      replyText = `⛔ **No, Skipping ${skipCount} Class(es) in ${subjName} is NOT Recommended!**\n\n- **Current**: **${curPct}%** (${P}/${T} attended)\n- **Projected**: **${projPct}%** (${P}/${T + skipCount} attended) 🚨 **(Below 75%)**\n- **Recovery Penalty**: You would need **${sim.projected.penaltyAfter} consecutive attended lectures** after this to recover back to 75%.\n\nWe advise attending the class to protect your exam eligibility.`;
+    }
+
+    cardData = {
+      type: 'can_skip_card',
+      subject: subjName,
+      skipCount,
+      currentPercent: curPct,
+      projectedPercent: projPct,
+      canSkip: isSafe,
+      bufferAfter: sim.projected.bufferAfter,
+      penaltyAfter: sim.projected.penaltyAfter,
+      actionableAdvice: sim.projected.actionableAdvice
+    };
+  }
+
+  // 9. PHASE 26 INTENT: "FORECAST MY ATTENDANCE"
+  else if (
+    query.includes('forecast') ||
+    query.includes('attendance forecast') ||
+    query.includes('predict attendance') ||
+    query.includes('prediction trajectory')
+  ) {
+    intent = 'FORECAST_SUMMARY';
+    const forecast = await getStudentSubjectForecasts({
+      studentId: userId,
+      targetPercentage: 75,
+      defaultFutureClasses: 15
+    });
+
+    replyText = `📈 **Attendance Forecasting Engine Summary**\n\n- **Overall Current**: **${forecast.summary.overallPercentage}%**\n- **Safe Subjects ($\\ge 75\\%$)**: ${forecast.summary.safeSubjectsCount} / ${forecast.summary.totalSubjects}\n- **Lagging Subjects (< 75%)**: ${forecast.summary.belowTargetCount}\n- **Cumulative Safe Miss Buffer**: **${forecast.summary.overallSafeMisses} classes**\n- **Overall Recovery Needed**: **${forecast.summary.overallConsecutiveNeeded} consecutive classes**\n\n` +
+      forecast.subjects
+        .map(
+          (s) =>
+            `- **${s.subject}** (${s.current.percentage}%): ${
+              s.current.percentage >= 75
+                ? `Can miss ${s.metrics.safeMisses} lecture(s) ✅`
+                : `Needs ${s.metrics.consecutiveNeeded} consecutive attended lecture(s) ⚠️`
+            }`
+        )
+        .join('\n') +
+      `\n\nYou can use the **Attendance Forecasting Hub** to simulate custom what-if scenarios!`;
+
+    cardData = {
+      type: 'forecast_summary_card',
+      forecast
+    };
+  }
+
+  // 10. DEFAULT / GENERAL QUERY HANDLER
   else {
-    replyText = `🤖 **AI Attendance Assistant**\n\nI can help you analyze your attendance statistics, predict target requirements, check tomorrow's classes, and review proxy security logs!\n\nHere are quick queries you can ask me:\n- 💬 *"My attendance?"*\n- 💬 *"Subjects below 75%"*\n- 💬 *"Can I skip tomorrow?"*\n- 💬 *"Attendance report"*\n- 💬 *"Remaining lectures"*`;
+    replyText = `🤖 **AI Attendance Assistant**\n\nI can help you analyze your attendance statistics, forecast future scenarios, check skip safety, and review recovery milestones!\n\nHere are quick queries you can ask me:\n- 💬 *"Can I skip 2 classes?"*\n- 💬 *"How many classes can I miss?"*\n- 💬 *"How many classes must I attend?"*\n- 💬 *"Forecast my attendance"*\n- 💬 *"My attendance?"*\n- 💬 *"Can I skip tomorrow?"*`;
 
     cardData = {
       type: 'general_help',
       suggestions: [
+        'Can I skip 2 classes?',
+        'How many classes can I miss?',
+        'How many classes must I attend?',
+        'Forecast my attendance',
         'My attendance?',
-        'Subjects below 75%',
-        'Can I skip tomorrow?',
-        'Attendance report',
-        'Remaining lectures'
+        'Can I skip tomorrow?'
       ]
     };
   }
@@ -435,6 +692,75 @@ const chatWithAi = asyncHandler(async (req, res) => {
     intent,
     reply: replyText,
     cardData
+  });
+});
+
+// @desc    Calculate Attendance Forecast & Can I Skip Scenario (Phase 26)
+// @route   POST /api/ai/forecast/calculate
+// @access  Private (Student/Teacher/Admin)
+const calculateForecast = asyncHandler(async (req, res) => {
+  const {
+    attended = 0,
+    total = 0,
+    targetPercentage = 75,
+    futureClasses = 15,
+    skipCount = 0,
+    attendCount = 0,
+    subject = ''
+  } = req.body;
+
+  const P = Math.max(0, Number(attended) || 0);
+  const T = Math.max(0, Number(total) || 0);
+  const target = Math.min(100, Math.max(1, Number(targetPercentage) || 75));
+  const future = Math.max(0, Number(futureClasses) || 15);
+
+  const forecast = calculateAttendanceForecast({
+    attended: P,
+    total: T,
+    targetPercentage: target,
+    futureClasses: future,
+    subject
+  });
+
+  const canSkipAnalysis = calculateCanSkip({
+    attended: P,
+    total: T,
+    skipCount: Number(skipCount) || 0,
+    attendCount: Number(attendCount) || 0,
+    targetPercentage: target
+  });
+
+  res.json({
+    success: true,
+    data: {
+      ...forecast,
+      canSkipAnalysis
+    }
+  });
+});
+
+// @desc    Get Student-Scoped Live Attendance Forecast across Enrolled Subjects (Phase 26)
+// @route   GET /api/ai/forecast/me
+// @access  Private (Student/Teacher/Admin)
+const getStudentForecast = asyncHandler(async (req, res) => {
+  let studentId = req.user._id;
+
+  if ((req.user.role === 'teacher' || req.user.role === 'admin') && req.query.studentId) {
+    studentId = req.query.studentId;
+  }
+
+  const targetPercentage = Number(req.query.target || 75);
+  const defaultFutureClasses = Number(req.query.future || 15);
+
+  const data = await getStudentSubjectForecasts({
+    studentId,
+    targetPercentage,
+    defaultFutureClasses
+  });
+
+  res.json({
+    success: true,
+    data
   });
 });
 
