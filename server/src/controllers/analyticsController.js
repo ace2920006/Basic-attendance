@@ -4,6 +4,9 @@ const User = require('../models/User');
 const Department = require('../models/Department');
 const Subject = require('../models/Subject');
 const Class = require('../models/Class');
+const Leave = require('../models/Leave');
+const { computeStudentAnalytics } = require('../utils/studentAnalyticsEngine');
+const { getSystemRules } = require('../utils/attendanceRulesEngine');
 
 // Helper to provide realistic rich fallback data if MongoDB lacks full records
 const getFallbackMostAbsent = () => [
@@ -613,11 +616,49 @@ const getDailyAttendance = asyncHandler(async (req, res) => {
   res.json({ success: true, data });
 });
 
+// @desc    Get Student Personal Analytics Dashboard Data (Phase 27)
+// @route   GET /api/analytics/student/me or GET /api/analytics/student/:studentId
+// @access  Private (Student self, Teacher, Admin)
+const getStudentPersonalAnalytics = asyncHandler(async (req, res) => {
+  let targetStudentId = req.user._id;
+
+  if (req.params.studentId && (req.user.role === 'admin' || req.user.role === 'teacher')) {
+    targetStudentId = req.params.studentId;
+  } else if (req.query.studentId && (req.user.role === 'admin' || req.user.role === 'teacher')) {
+    targetStudentId = req.query.studentId;
+  }
+
+  const student = await User.findById(targetStudentId).lean();
+  if (!student && req.user.role !== 'student') {
+    return res.status(404).json({ success: false, message: 'Student not found' });
+  }
+
+  const attendanceRecords = await Attendance.find({ student: targetStudentId }).sort({ date: 1 }).lean();
+  const leaveRecords = await Leave.find({ student: targetStudentId }).sort({ startDate: -1 }).lean();
+  const allSubjects = await Subject.find().lean();
+  const rules = await getSystemRules();
+
+  const analytics = computeStudentAnalytics({
+    student: student || req.user,
+    attendanceRecords,
+    leaveRecords,
+    allSubjects,
+    rules
+  });
+
+  res.json({
+    success: true,
+    data: analytics
+  });
+});
+
 module.exports = {
   getDashboardAnalytics,
   getMostAbsentStudents,
   getBestAttendance,
   getDepartmentRankings,
   getTeacherPerformance,
-  getDailyAttendance
+  getDailyAttendance,
+  getStudentPersonalAnalytics
 };
+
