@@ -44,6 +44,7 @@ export default function Sidebar({ role, user: userProp }) {
       case 'student':
         return [
           { to: '/student', label: 'Dashboard Overview', icon: FiHome, end: true },
+          { to: '/student/analytics', label: 'Personal Analytics', icon: FiActivity },
           { to: '/student/predict', label: 'AI Predictor (75%)', icon: FiTrendingUp },
           { to: '/student/ai-chat', label: 'AI Assistant Chat', icon: FiZap },
           { to: '/student/classes', label: "Today's & Timetable", icon: FiCalendar },

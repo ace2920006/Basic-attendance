@@ -70,6 +70,10 @@ export default function StudentDashboard() {
             <QrCode className="w-4 h-4" />
             <span>Scan QR Attendance</span>
           </button>
+          <Link to="/student/analytics" className="btn btn-secondary py-2 px-3.5 text-xs flex items-center gap-2">
+            <FiActivity className="w-4 h-4 text-cyan-400" />
+            <span>Personal Analytics</span>
+          </Link>
           <Link to="/student/calendar" className="btn btn-secondary py-2 px-3.5 text-xs flex items-center gap-2">
             <FiCalendar className="w-4 h-4 text-cyan-400" />
             <span>Calendar</span>
