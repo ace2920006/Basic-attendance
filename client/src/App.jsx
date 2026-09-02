@@ -25,6 +25,7 @@ import StudentHistory from './pages/student/StudentHistory';
 import StudentReport from './pages/student/StudentReport';
 import StudentLeave from './pages/student/StudentLeave';
 import StudentProfile from './pages/student/StudentProfile';
+import StudentAnalytics from './pages/student/StudentAnalytics';
 
 // Teacher Portal
 import TeacherLayout from './pages/teacher/TeacherLayout';
@@ -86,6 +87,7 @@ export default function App() {
               }
             >
               <Route index element={<StudentDashboard />} />
+              <Route path="analytics" element={<StudentAnalytics />} />
               <Route path="predict" element={<AttendancePrediction />} />
               <Route path="ai-chat" element={<AiChatPage />} />
               <Route path="classes" element={<StudentTimetable />} />

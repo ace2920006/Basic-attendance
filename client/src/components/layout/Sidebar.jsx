@@ -21,7 +21,8 @@ import {
   FiTrendingUp,
   FiZap,
   FiShield,
-  FiEdit3
+  FiEdit3,
+  FiActivity
 } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
 import { useAuth } from '../../context/AuthContext';
