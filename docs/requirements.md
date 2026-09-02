@@ -1,6 +1,6 @@
 # Multi-Role Attendance System - Requirements & Features Specification
 
-This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 25**) for the **Attendance Management System**.
+This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 27**) for the **Attendance Management System**.
 
 ---
 
@@ -33,6 +33,13 @@ This document details the functional specifications, feature requirements, and a
   - **Safe Miss Allowance**: Advisory calculations indicating safe skip capacity without dropping below 75%.
   - **Multi-Channel Delivery Badges**: Cards render delivery channel tags (`In-App`, `Email`, `Push`).
   - **User Notification Preferences**: Fine-grained toggle controls for delivery channels (`In-App`, `Email`, `Push`) and specific event subscriptions.
+- **Attendance Forecasting Engine (Phase 26)**:
+  - Mathematical recovery engine calculating consecutive lectures needed $x = \lceil \frac{rT - P}{1-r} \rceil$ and safe miss allowance $m = \lfloor \frac{P - rT}{r} \rfloor$.
+  - Interactive 3-in-1 scenario simulator hub (`AttendancePrediction.jsx`) with multi-target milestone ladder (75%, 80%, 85%, 90%).
+  - AI Assistant NLP skip query resolution with rich responsive forecast cards.
+- **Advanced Student Analytics Dashboard (Phase 27)**:
+  - Dedicated personal analytics dashboard (`/student/analytics`) aggregating **9 core metrics**: Overall Attendance (weighted %, raw %, delta), Subject Attendance (per-course %, safe miss allowance, recovery requirement), Weekly Trend (rolling 6-8 weeks velocity deltas), Monthly Trend (trailing 6 months), Best Subject (dynamic detection), Worst Subject (deficit alert), Late Count (punctuality score & 0.8x weight factor), Absent Count (unexcused rate), and Leave Count (approved/pending categories).
+  - **Visual Attendance Curve & 75% Minimum Benchmark**: Monotone spline curve with glowing gradient and prominent horizontal dashed rose **75% Minimum Requirement** reference benchmark line rendered in dual-engine Recharts and Chart.js, accompanied by a retro-modern visual threshold matrix card.
 
 ---
 
@@ -150,6 +157,10 @@ This document details the functional specifications, feature requirements, and a
 | **Interactive "Can I Skip?" Scenario Simulator & What-If Sandbox** | ✅ | ✅ | ✅ | Phase 26 |
 | **Multi-Benchmark Milestone Ladder (75%, 80%, 85%, 90%)** | ✅ | ✅ | ✅ | Phase 26 |
 | **AI Assistant NLP Forecasting Integration (Skip & Recovery Cards)** | ✅ | ✅ | ✅ | Phase 26 |
+| **Personal Student Analytics Dashboard (9 Core Metrics & Status Breakdown)** | ✅ | ✅ | ✅ | Phase 27 |
+| **Visual Attendance Curve with 75% Minimum Benchmark Line** | ✅ | ✅ | ✅ | Phase 27 |
+| **Subject Attendance Safe Buffer & Consecutive Recovery Calculator** | ✅ | ✅ | ✅ | Phase 27 |
+| **Weekly & Monthly Attendance Velocity Progression** | ✅ | ✅ | ✅ | Phase 27 |
 
 ---
 

@@ -1,6 +1,6 @@
 # Attendance Management System - Consolidated Phases Specification
 
-This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 26**) of the **Attendance Management System**.
+This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 27**) of the **Attendance Management System**.
 
 ---
 
@@ -31,7 +31,8 @@ This document provides a single, unified reference for all project implementatio
 24. [Phase 24 – Complete Audit Logging](#-phase-24--complete-audit-logging)
 25. [Phase 25 – Advanced Notification Engine](#-phase-25--advanced-notification-engine)
 26. [Phase 26 – Attendance Forecasting Engine](#-phase-26--attendance-forecasting-engine)
-27. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+27. [Phase 27 – Advanced Student Analytics](#-phase-27--advanced-student-analytics)
+28. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -1001,6 +1002,84 @@ Every modification preserves a complete audit log recording:
 
 ---
 
+## 🎓 Phase 27 – Advanced Student Analytics
+
+### Core Requirements & Features
+- **Personalized Student Analytics Dashboard**:
+  - Comprehensive analytical command center empowering students with real-time personal metrics, historical trajectory tracking, recovery planning, and threshold monitoring.
+- **Nine Core Attendance Metrics**:
+  - 📊 **Overall Attendance**:
+    - Weighted percentage score ($\%$) factoring institutional rules & weights (0.8x Late factor, excused leaves).
+    - Raw attendance score and exam qualification status (`Eligible` $\ge 75\%$, `Warning` $< 75\%$).
+    - Total sessions conducted, attended, and difference relative to the 75% baseline ($+10.5\%$ above or $-4.2\%$ below).
+  - 📚 **Subject Attendance Breakdown**:
+    - Granular course-by-course metrics (DSA, DBMS, OS, Networks, Software Engineering).
+    - Per-subject progress bars with 75% threshold pins, color-coded health indicators (`Safe Zone`, `At Risk`, `Deficit`).
+    - Integrated safe miss allowance ($m = \lfloor \frac{P - rT}{r} \rfloor$) and consecutive recovery requirement ($x = \lceil \frac{rT - P}{1 - r} \rceil$).
+    - Dynamic filter tabs (All, Safe $\ge 75\%$, At Risk $< 75\%$) and multi-attribute sorting (Highest %, Lowest %, Name).
+  - 📈 **Weekly Trend Progression**:
+    - Rolling 6-8 week attendance velocity (W1 through W6).
+    - Week-over-week performance delta badges ($\pm\%$) and conducted vs attended session counts.
+    - Weekly bar/line visual comparison with the 75% institutional requirement line.
+  - 🗓️ **Monthly Trend Progression**:
+    - Multi-month timeline progression tracking trailing semester months (including Jun, Jul, Aug).
+    - Month-by-month attendance rate, present count, absent count, and late count.
+  - ⭐ **Best Subject Dynamic Detection**:
+    - Dynamically identifies the student's highest performing subject.
+    - Displays subject name, code, percentage, attended/total classes, and positive safety buffer margin.
+  - ⚠️ **Worst Subject & Deficit Alert**:
+    - Dynamically detects the lowest performing course.
+    - Computes deficit gap below 75% and consecutive classes required to reach compliance.
+  - ⏱️ **Late Count Analysis**:
+    - Aggregates total late arrivals across all courses.
+    - Punctuality rating (`Excellent`, `Good`, `Needs Improvement`), late percentage, and rule weight impact.
+  - ❌ **Absent Count Analysis**:
+    - Total unexcused and excused missed classes.
+    - Course-by-course absence distribution and absence rate.
+  - 📝 **Leave Count Tracking**:
+    - Tracks approved, pending, and rejected leave requests from the `Leave` model plus attendance records marked `On Leave`.
+    - Category breakdown: Medical, Personal Emergency, Official Event, and Duty Leave.
+- **Visual Attendance Curve & 75% Minimum Benchmark**:
+  - Visual spline curve specification matching:
+    ```
+    Attendance
+    100% ┤
+     90% ┤       ╭──╮
+     80% ┤   ╭───╯  ╰──╮
+     75% ┼───┼──────────┼── Minimum
+     70% ┤
+         └───────────────
+           Jun Jul Aug
+    ```
+  - Dual-engine rendering support: **Recharts** (AreaChart with monotone curve and glowing linear gradient) and **Chart.js** (Line with custom canvas tension and fill).
+  - Prominent horizontal dashed **75% Minimum Requirement** line with clear labeling and threshold intersection callouts.
+  - Retro-modern ASCII visual card displaying the exact threshold curve specification with recent quarter performance nodes.
+- **Backend Architecture & Endpoints**:
+  - Analytical engine: `server/src/utils/studentAnalyticsEngine.js`
+  - Controller: `server/src/controllers/analyticsController.js` (`getStudentPersonalAnalytics`)
+  - Endpoints:
+    - `GET /api/analytics/student/me`: Authenticated student personal analytics.
+    - `GET /api/analytics/student/:studentId`: Scoped analytics accessible by student (own ID), faculty, and administrator.
+  - High-fidelity realistic fallback dataset for fresh student accounts with zero recorded sessions.
+- **Automated Verification**:
+  - Dedicated test suite: `server/tests/studentAnalytics.test.js` (5/5 tests passed).
+  - Complete system suite: **13 test suites, 103/103 tests passed**.
+
+### File Mapping
+- Backend Infrastructure:
+  - Analytics Engine: `server/src/utils/studentAnalyticsEngine.js`
+  - Analytics Controller: `server/src/controllers/analyticsController.js`
+  - Analytics Routes: `server/src/routes/analyticsRoutes.js`
+  - Automated Tests: `server/tests/studentAnalytics.test.js`
+- Frontend Infrastructure:
+  - Dashboard Page: `client/src/pages/student/StudentAnalytics.jsx`
+  - API Client: `client/src/services/api.js`
+  - Routing: `client/src/App.jsx`
+  - Navigation: `client/src/components/layout/Sidebar.jsx`
+  - Quick Linkage: `client/src/pages/student/StudentDashboard.jsx`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -1115,6 +1194,10 @@ Every modification preserves a complete audit log recording:
 | **Interactive "Can I Skip?" Scenario Simulator & What-If Sandbox** | ✅ | ✅ | ✅ | Phase 26 |
 | **Multi-Benchmark Milestone Ladder (75%, 80%, 85%, 90%)** | ✅ | ✅ | ✅ | Phase 26 |
 | **AI Assistant NLP Forecasting Integration (Skip & Recovery Cards)** | ✅ | ✅ | ✅ | Phase 26 |
+| **Personal Student Analytics Dashboard (9 Core Metrics & Status Breakdown)** | ✅ | ✅ | ✅ | Phase 27 |
+| **Visual Attendance Curve with 75% Minimum Benchmark Line** | ✅ | ✅ | ✅ | Phase 27 |
+| **Subject Attendance Safe Buffer & Consecutive Recovery Calculator** | ✅ | ✅ | ✅ | Phase 27 |
+| **Weekly & Monthly Attendance Velocity Progression** | ✅ | ✅ | ✅ | Phase 27 |
 
 ---
 *Last Updated: September 2026*

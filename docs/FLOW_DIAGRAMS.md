@@ -18,6 +18,8 @@ This document contains comprehensive flowcharts and system diagrams for the **At
 11. [Attendance Correction Request & Approval Workflow](#11-attendance-correction-request--approval-workflow)
 12. [Complete Institutional Audit Logging & State Mutation Pipeline](#12-complete-institutional-audit-logging--state-mutation-pipeline)
 13. [Phase 25 Advanced Notification Engine & Multi-Channel Pipeline](#13-phase-25-advanced-notification-engine--multi-channel-pipeline)
+14. [Phase 26 Attendance Forecasting Engine & Scenario Simulator](#14-phase-26-attendance-forecasting-engine--scenario-simulator)
+15. [Phase 27 Personal Student Analytics & Visual Threshold Engine](#15-phase-27-personal-student-analytics--visual-threshold-engine)
 
 ---
 
@@ -471,4 +473,54 @@ flowchart TD
         Calc3 --> AICards
     end
 ```
+
+---
+
+## 15. Phase 27 Personal Student Analytics & Visual Threshold Engine
+
+End-to-end data aggregation pipeline from database entities, calculating the 9 core analytical metrics and rendering the visual attendance curve with the 75% minimum benchmark line:
+
+```mermaid
+flowchart TD
+    subgraph DataSources ["Database Record Sources"]
+        AR["Attendance Collection <br/> (Status, Date, Subject, Student)"]
+        LR["Leave Collection <br/> (Type, Status, Start/End Date)"]
+        SR["Subject Collection <br/> (Codes, Names, Teachers, Colors)"]
+        RR["AttendanceRule System Rules <br/> (Weights, 7-Status Matrix, 75% Min)"]
+    end
+
+    DataSources --> EngineCore["Student Analytics Engine <br/> (server/src/utils/studentAnalyticsEngine.js)"]
+
+    subgraph MetricsComputation ["9 Core Metrics Calculation"]
+        EngineCore --> M1["1. Overall Attendance <br/> • Weighted % Score <br/> • Raw % Score <br/> • Exam Eligibility (>75%) <br/> • Delta to 75% Minimum"]
+        EngineCore --> M2["2. Subject Breakdown <br/> • Per-Subject Attendance % <br/> • Safe Miss Allowance (m) <br/> • Consecutive Recovery Needed (x) <br/> • Color & Health Status"]
+        EngineCore --> M3["3. Weekly Velocity (W1-W6) <br/> • Conducted vs Attended <br/> • Week-over-week Delta % <br/> • 75% Minimum Reference Line"]
+        EngineCore --> M4["4. Monthly Progression <br/> • Multi-Month Timeline <br/> • Present, Absent, Late Counts <br/> • 75% Minimum Comparison"]
+        EngineCore --> M5["5. Best Subject Detection <br/> • Highest Attendance Rate <br/> • Safety Cushion Above Minimum"]
+        EngineCore --> M6["6. Worst Subject Alert <br/> • Lowest Attendance Rate <br/> • Deficit Gap & Recovery Count"]
+        EngineCore --> M7["7. Late Count Deep Dive <br/> • Punctuality Score <br/> • 0.8x Rule Weight Impact"]
+        EngineCore --> M8["8. Absent Count & Rate <br/> • Total Unexcused Absences <br/> • Course Absence Distribution"]
+        EngineCore --> M9["9. Leave Tracking <br/> • Approved & Pending Requests <br/> • Medical, Duty, Emergency Types"]
+    end
+
+    subgraph VisualCurveEngine ["Visual Attendance Curve & 75% Minimum Benchmark Engine"]
+        M4 --> CurvePoints["Monthly Attendance Curve Points <br/> (Jun: 83.3%, Jul: 92.5%, Aug: 88.0%)"]
+        RR --> MinLine["75% Minimum Benchmark Horizontal Line"]
+        CurvePoints --> VisualRenderer["Dual-Engine Chart Renderer <br/> • Recharts Spline AreaChart <br/> • Chart.js Tension Area Curve <br/> • Retro-Modern Visual Matrix Card"]
+        MinLine --> VisualRenderer
+    end
+
+    subgraph ClientDashboard ["Student Personal Analytics UI (/student/analytics)"]
+        M1 --> KPI["Top KPI Highlight Cards Grid"]
+        M5 --> KPI
+        M6 --> KPI
+        M7 --> StatusGrid["Status Trio Cards Grid"]
+        M8 --> StatusGrid
+        M9 --> StatusGrid
+        M2 --> SubjectExplorer["Subject Attendance Matrix & Filter Tabs"]
+        M3 --> WeeklyRibbon["Weekly Velocity Progression Ribbon"]
+        VisualRenderer --> VisualSection["Visual Attendance Curve & 75% Minimum Section"]
+    end
+```
+
 

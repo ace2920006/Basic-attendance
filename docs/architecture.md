@@ -44,7 +44,7 @@ Basic-attendance/
 │   │   │   ├── admin/          # Admin Analytics, Academic Engine, Rules Engine, Corrections, Audit Logs (AdminAuditLogs.jsx), Suspicious
 │   │   │   ├── analytics/      # Visual Charts Hub (ChartsPage.jsx)
 │   │   │   ├── auth/           # Login, Register, Password Recovery
-│   │   │   ├── student/        # Student Dashboard, Calendar, History, Timetable, Prediction, AiChatPage, NotificationsList.jsx
+│   │   │   ├── student/        # Student Dashboard, Calendar, History, Timetable, Prediction, AiChatPage, NotificationsList.jsx, StudentAnalytics.jsx
 │   │   │   └── teacher/        # Teacher Dashboard, Take Attendance, History, Reports, Leave Approval, Corrections
 │   │   ├── services/           # Centralized API Service Client (api.js, socket.js, deviceFingerprint.js)
 │   │   ├── App.jsx             # Main Router Shell & Guarded Routes
@@ -52,7 +52,7 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                     # Backend REST API Server (Node.js + Express + MongoDB)
-│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (11 Test Suites, 84 Tests)
+│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (13 Test Suites, 103 Tests)
 │   ├── uploads/                # Static Uploaded File Attachments (Medical Certificates, Avatars)
 │   ├── src/
 │   │   ├── config/             # DB Connection (db.js), WebSockets (socket.js), Firebase FCM (firebase.js)
@@ -61,17 +61,17 @@ Basic-attendance/
 │   │   ├── models/             # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection)
 │   │   ├── routes/             # Express API Endpoints
 │   │   ├── services/           # Business Services (notificationService.js)
-│   │   ├── utils/              # GeoUtils (Haversine formula), JWT Generator, Async Handler, attendanceRulesEngine.js, antiProxyEngine.js, sendEmail.js
+│   │   ├── utils/              # GeoUtils (Haversine formula), JWT Generator, Async Handler, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, sendEmail.js
 │   │   ├── app.js              # Express Application Bootstrap & Security Layer
 │   │   └── server.js           # Node HTTP Server Launcher
 │   └── package.json
 │
 └── docs/                       # Project Documentation Suite
-    ├── requirements.md         # Requirements Specifications & Matrix
+    ├── requirements.md         # Requirements Specifications & Matrix (Phases 1-27)
     ├── architecture.md         # System Architecture & Technical Specs (This document)
     ├── database_design.md      # Database ERD & Schema Specs
     ├── FLOW_DIAGRAMS.md        # Comprehensive System Flow Diagrams (Mermaid)
-    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-25)
+    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-27)
 ```
 
 ---
@@ -151,6 +151,37 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 
 ---
 
+## 🎓 Phase 27 Architecture: Advanced Student Analytics Engine
+
+```
+       [ Student / Faculty / Admin Query ]
+                        |
+                        v
+        +-------------------------------+
+        | Student Analytics Engine Core | (server/src/utils/studentAnalyticsEngine.js)
+        +-------------------------------+
+                        |
+    +-------------------+-------------------+
+    |                                       |
+    v                                       v
+[ 9 Core Metrics Aggregator ]       [ Visual Threshold Engine ]
+ • Overall Attendance (%)            • 75% Minimum Benchmark Line
+ • Subject Attendance Breakdown      • Monotone Spline Curve (Jun-Aug)
+ • Weekly Velocity Trend (W1-W6)     • Dual-Engine: Recharts & Chart.js
+ • Monthly Progression Timeline      • Retro-Modern Visual Matrix Box
+ • Best Subject Dynamic Detection
+ • Worst Subject & Deficit Alert
+ • Late Count & Punctuality
+ • Absent Count & Rate
+ • Leave Count & Categories
+```
+
+### Endpoints:
+- `GET /api/analytics/student/me`: Personal analytics for logged-in student.
+- `GET /api/analytics/student/:studentId`: Scoped student personal analytics for faculty and admin review.
+
+---
+
 ## 🔌 API Endpoint Hierarchy
 
 - `/api/auth` $\rightarrow$ Register, Login, Logout, Password Recovery, Token Refresh (Logs `LOGIN`, `LOGOUT`)
@@ -166,7 +197,7 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 - `/api/notifications` $\rightarrow$ Notification feed, Unread counters, Preferences (`GET/PUT /preferences`), Multi-channel test simulator (`POST /test-dispatch`), Smart attendance recovery breakdown (`GET /smart-summary`), Web Push tokens, Announcements broadcast
 - `/api/leaves` $\rightarrow$ Leave applications submission, Document attachment upload, Approval/Rejection workflow (Logs `APPROVE_LEAVE`, `REJECT_LEAVE`)
 - `/api/ai` $\rightarrow$ Attendance Forecasting Engine (`POST /forecast/calculate`, `GET /forecast/me`), Attendance 75% prediction (`GET /predict`), Natural language chatbot (`POST /chat`), Proxy anomaly detection (`GET /suspicious-detection`)
-- `/api/analytics` $\rightarrow$ Most absent deficit calculator, Best attendance leaderboard, Dept rankings, Teacher metrics, Daily inspector
+- `/api/analytics` $\rightarrow$ Student personal analytics dashboard (`/student/me`, `/student/:studentId`), Most absent deficit calculator, Best attendance leaderboard, Dept rankings, Teacher metrics, Daily inspector
 - `/api/academic` $\rightarrow$ Academic hierarchy tree, Academic Years, Dynamic Semesters, Divisions (`IT-A`), Batch Student Promotion Engine
 - `/api/attendance-rules` $\rightarrow$ Institutional rule thresholds, 7-status matrix definitions, Sandbox check-in simulator (Logs `CHANGE_SETTINGS`)
 - `/api/sessions` $\rightarrow$ Attendance Session Engine, Session ID generator, QR/GPS session start & stop lifecycle
@@ -174,4 +205,5 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 - `/api/corrections` $\rightarrow$ Attendance Modification Workflow, Request submission, Mandatory reasons, Teacher & Admin Review Consoles (Logs `EDIT_ATTENDANCE`)
 - `/api/audit-logs` $\rightarrow$ Institutional Audit Trail Ledger, 10-Action breakdown stats, Multi-column CSV export (Logs `EXPORT_REPORT`)
 - `/api/health` $\rightarrow$ Infrastructure health check & security stack status
+
 
