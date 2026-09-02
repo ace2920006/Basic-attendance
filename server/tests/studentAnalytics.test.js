@@ -1,18 +1,20 @@
 const request = require('supertest');
 const app = require('../src/app');
+const User = require('../src/models/User');
 const Attendance = require('../src/models/Attendance');
 const Leave = require('../src/models/Leave');
 const Subject = require('../src/models/Subject');
+const { generateAccessToken } = require('../src/utils/generateToken');
 
 describe('🎓 Phase 27: Advanced Student Analytics Test Suite', () => {
   let studentToken, studentUser;
   let freshStudentToken, freshStudentUser;
-  let teacherToken;
-  let adminToken;
+  let teacherToken, teacherUser;
+  let adminToken, adminUser;
 
   beforeEach(async () => {
     // 1. Register main Student
-    const sRes = await request(app).post('/api/auth/register').send({
+    studentUser = await User.create({
       name: 'Maya Lin',
       email: 'maya.lin@student.edu',
       password: 'password123',
@@ -21,11 +23,10 @@ describe('🎓 Phase 27: Advanced Student Analytics Test Suite', () => {
       department: 'Computer Science',
       semester: 'Semester 4'
     });
-    studentToken = sRes.body.data.accessToken;
-    studentUser = sRes.body.data;
+    studentToken = generateAccessToken(studentUser._id, 'student');
 
     // 2. Register fresh Student (0 records)
-    const fsRes = await request(app).post('/api/auth/register').send({
+    freshStudentUser = await User.create({
       name: 'Fresh Student',
       email: 'fresh.student@student.edu',
       password: 'password123',
@@ -34,26 +35,27 @@ describe('🎓 Phase 27: Advanced Student Analytics Test Suite', () => {
       department: 'Computer Science',
       semester: 'Semester 4'
     });
-    freshStudentToken = fsRes.body.data.accessToken;
-    freshStudentUser = fsRes.body.data;
+    freshStudentToken = generateAccessToken(freshStudentUser._id, 'student');
 
-    // 3. Register Teacher
-    const tRes = await request(app).post('/api/auth/register').send({
+    // 3. Create Teacher
+    teacherUser = await User.create({
       name: 'Prof. Davis',
       email: 'prof.davis@faculty.edu',
       password: 'password123',
-      role: 'teacher'
+      role: 'teacher',
+      department: 'Computer Science'
     });
-    teacherToken = tRes.body.data.accessToken;
+    teacherToken = generateAccessToken(teacherUser._id, 'teacher');
 
-    // 4. Register Admin
-    const aRes = await request(app).post('/api/auth/register').send({
+    // 4. Create Admin
+    adminUser = await User.create({
       name: 'Admin Dean',
       email: 'dean@university.edu',
       password: 'password123',
-      role: 'admin'
+      role: 'admin',
+      department: 'Administration'
     });
-    adminToken = aRes.body.data.accessToken;
+    adminToken = generateAccessToken(adminUser._id, 'admin');
 
     // 5. Seed subjects
     await Subject.create([

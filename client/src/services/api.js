@@ -442,6 +442,13 @@ export const getChartAnalyticsApi = async (params = {}) => {
   return apiRequest(`/charts/analytics${queryStr}`, { method: 'GET' });
 };
 
+// Phase 27: Student Personal Analytics API
+export const getStudentPersonalAnalyticsApi = async (studentId = null) => {
+  const endpoint = studentId ? `/analytics/student/${studentId}` : '/analytics/student/me';
+  return apiRequest(endpoint, { method: 'GET' });
+};
+
+
 // Notification APIs
 export const getNotificationsApi = async (params = {}) => {
   const queryParams = new URLSearchParams();
