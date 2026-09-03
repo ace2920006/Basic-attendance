@@ -341,6 +341,10 @@ SemesterSchema.index({ name: 1, academicYear: 1 }, { unique: true });
 DivisionSchema.index({ name: 1, semester: 1, department: 1 }, { unique: true });
 StudentEnrollmentSchema.index({ student: 1, academicYear: 1, semester: 1 });
 
+// Phase 28 Teacher Analytics Index
+AttendanceSchema.index({ markedBy: 1, date: -1 });
+AttendanceSchema.index({ subjectCode: 1, markedBy: 1, date: -1 });
+
 // Core Performance Indexes
 UserSchema.index({ email: 1 }, { unique: true });
 AttendanceSchema.index({ student: 1, date: 1 });

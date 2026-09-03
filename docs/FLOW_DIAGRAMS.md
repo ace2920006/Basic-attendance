@@ -523,4 +523,55 @@ flowchart TD
     end
 ```
 
+---
+
+## 28. Phase 28 – Teacher Analytics & Classroom Insights Engine
+
+```mermaid
+flowchart TB
+    subgraph DataSources ["Database & Query Layer"]
+        TeacherUser["Teacher Identity & Assigned Subjects <br/> User Model"]
+        AttendanceLogs["Class Attendance Records <br/> (Status: Present, Absent, Late)"]
+        ClassSessions["Class Schedules & Divisions <br/> Class & Division Models"]
+        SysRules["Attendance Rules Engine <br/> (0.8x Late Weight, 75% Min)"]
+    end
+
+    subgraph AnalyticsEngine ["Teacher Analytics Engine (teacherAnalyticsEngine.js)"]
+        TeacherUser --> FilterPipeline["Query & Scope Filter <br/> • Subject Code <br/> • Division/Section <br/> • Timeframe (30d / Semester)"]
+        AttendanceLogs --> FilterPipeline
+        ClassSessions --> FilterPipeline
+        SysRules --> FilterPipeline
+
+        FilterPipeline --> Dim1["1. Average Class Attendance <br/> • Weighted Percentage Rate <br/> • Benchmark Comparison (+Delta)"]
+        FilterPipeline --> Dim2["2. Most Absent Students <br/> • Ranked Defaulters Directory <br/> • Shortage Deficit Math: x = ceil((rT - P)/(1 - r))"]
+        FilterPipeline --> Dim3["3. Most Late Students <br/> • Chronic Late Arrival Tracking <br/> • Punctuality Tier Classification"]
+        FilterPipeline --> Dim4["4. Attendance by Lecture Slot <br/> • Morning Peak (10:15 AM: 89%) <br/> • Post-Lunch Drop (1:30 PM: 73%)"]
+        FilterPipeline --> Dim5["5. Weekday Attendance Patterns <br/> • Mon 82%, Tue 91%, Wed 76%, Thu 88% <br/> • Friday Slump Detection (69%)"]
+        FilterPipeline --> Dim6["6. Subject-Wise Attendance <br/> • CS401, CS405, CS502 Breakdown <br/> • Health Status: Healthy / At Risk"]
+        FilterPipeline --> Dim7["7. Division Comparison <br/> • Sec A vs Sec B vs Sec C <br/> • Cross-Section Variance from Leader"]
+    end
+
+    subgraph BehavioralDetector ["Behavioral Pattern Engine & Advisory"]
+        Dim5 --> DropDetector{"Friday Drop <br/> <= -5% from Avg?"}
+        DropDetector -- Yes --> FridayAlert["⚠️ Poor Friday Attendance Pattern Alert <br/> (-12.2% below weekly average)"]
+        DropDetector -- No --> NormalPattern["Stable Weekly Pattern"]
+        FridayAlert --> ActionableAdvice["Pedagogical Intervention: <br/> Schedule interactive problem-solving labs or graded quizzes on Fridays"]
+    end
+
+    subgraph UIOutputs ["Faculty Presentation Interfaces"]
+        Dim1 --> DashWidget["Teacher Dashboard Preview (/teacher) <br/> • Monday to Friday Pattern Strip <br/> • Friday Slump Alert Pill <br/> • Quick Metric Cards"]
+        FridayAlert --> DashWidget
+        
+        Dim1 --> FullHub["Teacher Analytics Hub (/teacher/analytics) <br/> • Subject, Division, Timeframe Selectors <br/> • Weekday Bar Chart with 75% Reference Line <br/> • Lecture Slot Hourly Breakdown <br/> • Defaulter Recovery Math & Tables <br/> • Division Comparison Progress Gauges <br/> • Multi-Column CSV Summary Export"]
+        Dim2 --> FullHub
+        Dim3 --> FullHub
+        Dim4 --> FullHub
+        Dim5 --> FullHub
+        Dim6 --> FullHub
+        Dim7 --> FullHub
+        ActionableAdvice --> FullHub
+    end
+```
+
+
 

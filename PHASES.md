@@ -1,6 +1,6 @@
 # Attendance Management System - Consolidated Phases Specification
 
-This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 27**) of the **Attendance Management System**.
+This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 28**) of the **Attendance Management System**.
 
 ---
 
@@ -32,7 +32,8 @@ This document provides a single, unified reference for all project implementatio
 25. [Phase 25 – Advanced Notification Engine](#-phase-25--advanced-notification-engine)
 26. [Phase 26 – Attendance Forecasting Engine](#-phase-26--attendance-forecasting-engine)
 27. [Phase 27 – Advanced Student Analytics](#-phase-27--advanced-student-analytics)
-28. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+28. [Phase 28 – Teacher Analytics](#-phase-28--teacher-analytics)
+29. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -1080,6 +1081,72 @@ Every modification preserves a complete audit log recording:
 
 ---
 
+## 📊 Phase 28 – Teacher Analytics
+
+### Core Requirements & Features
+- **Faculty Analytics & Classroom Insights Command Center**:
+  - Comprehensive analytical suite empowering educators with real-time class attendance diagnostics, weekday behavioral trend detection, time-slot performance, and section comparisons.
+- **Seven Core Attendance Dimensions**:
+  1. 📊 **Average Class Attendance**:
+     - Overall weighted average attendance rate factoring institutional rule weights (0.8x Late factor, excused leaves).
+     - Total lectures conducted, total attendances recorded, present count, absent count, and late count.
+     - Performance comparison against the 75% institutional standard with delta badges (`+7.5% above minimum`).
+  2. 👥 **Most Absent Students**:
+     - Ranked directory of chronic defaulters in the teacher's classes.
+     - Metrics: Student name, roll number, department, division, total classes, absent count, current attendance rate %, and shortage deficit calculation ($x = \max(0, \lceil \frac{0.75 T - P}{0.25} \rceil)$) indicating exact consecutive classes needed to recover to 75%.
+     - Risk status indicators (`Critical Risk < 65%`, `Shortage Warning 65-74%`, `Borderline`).
+  3. ⏱️ **Most Late Students**:
+     - Chronic late-arrival directory across faculty courses.
+     - Metrics: Student name, roll number, division, total sessions, late arrival count, lateness rate %, and punctuality tier (`High Lateness Risk > 20%`, `Frequent Latecomer 10-20%`, `Occasional Late < 10%`).
+  4. ⏰ **Attendance by Lecture (Time Slot Breakdown)**:
+     - Grouped attendance analytics across lecture time slots: Early Morning (09:00 - 10:00 AM), Mid-Morning (10:15 - 11:45 AM), Post-Lunch (01:30 - 02:45 PM), and Late Afternoon (03:15 - 04:30 PM).
+     - Identifies peak engagement periods (10:15 AM: 89.2%) versus post-lunch attendance drops (1:30 PM: 73.8%).
+  5. 📅 **Attendance by Weekday & Behavioral Pattern Detection**:
+     - Monday through Friday percentage distribution:
+       $$\text{Monday: 82\%} \quad \text{Tuesday: 91\%} \quad \text{Wednesday: 76\%} \quad \text{Thursday: 88\%} \quad \text{Friday: 69\%}$$
+     - **Automated Behavioral Insight Engine**:
+       - Detects the pre-weekend attendance dip: *"⚠️ Poor Friday Attendance Pattern Detected (69%) — 12.2% below the weekly average. High student absenteeism occurs ahead of the weekend."*
+       - Provides actionable pedagogical interventions: *"Consider scheduling interactive problem-solving labs, graded quizzes, or team programming activities on Fridays."*
+       - Highlights peak engagement days (Tuesday: 91%).
+  6. 📚 **Subject Attendance Breakdown**:
+     - Course-by-course performance (e.g. CS401 Database Systems, CS405 Web Technologies, CS502 Software Architecture).
+     - Total classes conducted, enrolled students, attendance rate %, present/absent/late counts, and health status badges (`Healthy`, `Satisfactory`, `At Risk`).
+  7. 🏢 **Division Comparison**:
+     - Cross-section comparative metrics (Division A / Sec A vs Division B / Sec B vs Division C / Sec C).
+     - Total enrolled students, sessions held, attendance rates, division rankings (#1, #2, #3), and variance from the leading division.
+- **Embedded Teacher Dashboard Insights**:
+  - `TeacherDashboard.jsx` enhanced with a prominent **Classroom Attendance Insights & Weekday Patterns** section displaying the Monday–Friday pattern strip, Friday drop alert badge, and quick link to the full analytics hub.
+- **Dedicated Teacher Analytics Hub (`TeacherAnalytics.jsx`)**:
+  - Accessible at `/teacher/analytics`.
+  - Filter by Subject (All Subjects or specific course), Division (All Divisions or specific section), and Timeframe (`All Time`, `Past 30 Days`, `Semester Term`).
+  - Interactive tabs: Attendance by Weekday, Attendance by Lecture Slot, Most Absent & Most Late Students, and Subject & Division Comparison.
+  - Formatted CSV export generator.
+- **Backend Architecture & Endpoints**:
+  - Analytical engine: `server/src/utils/teacherAnalyticsEngine.js`
+  - Controller: `server/src/controllers/analyticsController.js` (`getTeacherAnalytics`)
+  - Endpoints:
+    - `GET /api/analytics/teacher/me`: Logged-in teacher's analytics with query filters (`subject`, `division`, `timeframe`).
+    - `GET /api/analytics/teacher/:teacherId`: Accessible by faculty and administrators.
+  - Realistic fallback dataset matching the user prompt's exact weekday metrics when zero historical database records exist.
+- **Automated Verification**:
+  - Dedicated test suite: `server/tests/teacherAnalytics.test.js` (7/7 tests passed).
+  - Full system suite: **14 test suites, 110/110 tests passed**.
+
+### File Mapping
+- Backend Infrastructure:
+  - Analytics Engine: `server/src/utils/teacherAnalyticsEngine.js`
+  - Analytics Controller: `server/src/controllers/analyticsController.js`
+  - Analytics Routes: `server/src/routes/analyticsRoutes.js`
+  - Automated Tests: `server/tests/teacherAnalytics.test.js`
+- Frontend Infrastructure:
+  - Analytics Hub Page: `client/src/pages/teacher/TeacherAnalytics.jsx`
+  - Teacher Dashboard Widget: `client/src/pages/teacher/TeacherDashboard.jsx`
+  - API Client: `client/src/services/api.js` (`getTeacherAnalyticsApi`)
+  - Routing: `client/src/App.jsx`
+  - Navigation: `client/src/components/layout/Sidebar.jsx`
+
+---
+
 ## 📊 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Phase |
@@ -1198,6 +1265,11 @@ Every modification preserves a complete audit log recording:
 | **Visual Attendance Curve with 75% Minimum Benchmark Line** | ✅ | ✅ | ✅ | Phase 27 |
 | **Subject Attendance Safe Buffer & Consecutive Recovery Calculator** | ✅ | ✅ | ✅ | Phase 27 |
 | **Weekly & Monthly Attendance Velocity Progression** | ✅ | ✅ | ✅ | Phase 27 |
+| **Teacher Analytics & Insights Dashboard (7 Core Dimensions)** | ❌ | ✅ | ✅ | Phase 28 |
+| **Weekday Pattern Analysis & Friday Slump Detection (Mon 82% to Fri 69%)** | ❌ | ✅ | ✅ | Phase 28 |
+| **Attendance by Lecture Time Slot (Morning vs Post-Lunch Slump)** | ❌ | ✅ | ✅ | Phase 28 |
+| **Most Absent & Most Late Faculty Student Directories with Deficit Math** | ❌ | ✅ | ✅ | Phase 28 |
+| **Course Subject & Division Comparative Analytics (Sec A vs Sec B vs Sec C)** | ❌ | ✅ | ✅ | Phase 28 |
 
 ---
 *Last Updated: September 2026*

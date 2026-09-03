@@ -182,6 +182,35 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 
 ---
 
+## 📊 Phase 28 Architecture: Teacher Analytics & Classroom Insights Engine
+
+```
+       [ Faculty Instructor / Admin Query ]
+                        |
+                        v
+        +-------------------------------+
+        |  Teacher Analytics Engine     | (server/src/utils/teacherAnalyticsEngine.js)
+        +-------------------------------+
+                        |
+    +-------------------+-------------------+
+    |                                       |
+    v                                       v
+[ 7 Core Dimensions Aggregator ]    [ Behavioral Pattern Engine ]
+ • Average Class Attendance (%)      • Mon-Fri Percentage Analysis
+ • Most Absent Defaulter Directory   • Automated Friday Drop Alert (69%)
+ • Shortage Deficit Math (x classes) • Pedagogical Interventions
+ • Most Late Chronic Students        • Peak Midweek Engagement (Tue 91%)
+ • Lecture Slot Timing Breakdown     • Post-Lunch Slump Diagnostics
+ • Course Subject-Wise Breakdown
+ • Class Division Comparison
+```
+
+### Endpoints:
+- `GET /api/analytics/teacher/me`: Personal classroom analytics for logged-in teacher (with `subject`, `division`, `timeframe` filters).
+- `GET /api/analytics/teacher/:teacherId`: Scoped teacher analytics for faculty and admin review.
+
+---
+
 ## 🔌 API Endpoint Hierarchy
 
 - `/api/auth` $\rightarrow$ Register, Login, Logout, Password Recovery, Token Refresh (Logs `LOGIN`, `LOGOUT`)
@@ -197,7 +226,7 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 - `/api/notifications` $\rightarrow$ Notification feed, Unread counters, Preferences (`GET/PUT /preferences`), Multi-channel test simulator (`POST /test-dispatch`), Smart attendance recovery breakdown (`GET /smart-summary`), Web Push tokens, Announcements broadcast
 - `/api/leaves` $\rightarrow$ Leave applications submission, Document attachment upload, Approval/Rejection workflow (Logs `APPROVE_LEAVE`, `REJECT_LEAVE`)
 - `/api/ai` $\rightarrow$ Attendance Forecasting Engine (`POST /forecast/calculate`, `GET /forecast/me`), Attendance 75% prediction (`GET /predict`), Natural language chatbot (`POST /chat`), Proxy anomaly detection (`GET /suspicious-detection`)
-- `/api/analytics` $\rightarrow$ Student personal analytics dashboard (`/student/me`, `/student/:studentId`), Most absent deficit calculator, Best attendance leaderboard, Dept rankings, Teacher metrics, Daily inspector
+- `/api/analytics` $\rightarrow$ Teacher classroom analytics (`/teacher/me`, `/teacher/:teacherId`), Student personal analytics dashboard (`/student/me`, `/student/:studentId`), Most absent deficit calculator, Best attendance leaderboard, Dept rankings, Teacher metrics, Daily inspector
 - `/api/academic` $\rightarrow$ Academic hierarchy tree, Academic Years, Dynamic Semesters, Divisions (`IT-A`), Batch Student Promotion Engine
 - `/api/attendance-rules` $\rightarrow$ Institutional rule thresholds, 7-status matrix definitions, Sandbox check-in simulator (Logs `CHANGE_SETTINGS`)
 - `/api/sessions` $\rightarrow$ Attendance Session Engine, Session ID generator, QR/GPS session start & stop lifecycle
@@ -205,5 +234,6 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 - `/api/corrections` $\rightarrow$ Attendance Modification Workflow, Request submission, Mandatory reasons, Teacher & Admin Review Consoles (Logs `EDIT_ATTENDANCE`)
 - `/api/audit-logs` $\rightarrow$ Institutional Audit Trail Ledger, 10-Action breakdown stats, Multi-column CSV export (Logs `EXPORT_REPORT`)
 - `/api/health` $\rightarrow$ Infrastructure health check & security stack status
+
 
 

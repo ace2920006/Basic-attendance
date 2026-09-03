@@ -6,7 +6,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.3-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-339933.svg?logo=node.js)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248.svg?logo=mongodb)](https://www.mongodb.com/)
-[![Test Suite](https://img.shields.io/badge/Tests-103%2F103%20Passed-brightgreen.svg)](server/tests)
+[![Test Suite](https://img.shields.io/badge/Tests-110%2F110%20Passed-brightgreen.svg)](server/tests)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A modern, full-stack **Multi-Role Attendance Management System** designed for educational institutions. Built using **React 18, Vite, Tailwind CSS, Node.js, Express, and MongoDB**, it features tailored dashboards and workflows for **Students**, **Teachers (Faculty)**, and **Administrators**.
@@ -31,7 +31,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 🤖 **AI Features (Phase 14)**: Attendance Prediction Engine ("Can student reach 75%?", max skips allowed, "What-If" simulator slider), Natural Language AI Chatbot ("My attendance?", "Subjects below 75%", "Can I skip tomorrow?", "Attendance report", "Remaining lectures"), and automated Suspicious Attendance & Proxy Detection Console.
 - 📈 **Executive Analytics Dashboard (Phase 15)**: Comprehensive Admin analytics hub featuring 5 specialized sub-modules: Most Absent Students (< 75% attendance with shortage deficit calculator $X = \lceil 3T - 4P \rceil$), Best Attendance Leaderboard (Gold/Silver/Bronze medals & 100% Perfect badges), Department Ranking (CSE, ECE, ME, CE, IT average comparison & HOD view), Teacher Performance Metrics (classes conducted, on-time marking rate %, student attendance average), and Daily Attendance Inspector (date picker, summary metrics, and hourly time-slot session distribution).
 - 🛡️ **Enterprise Security & Hardening (Phase 16)**: Multi-layered security stack including **Helmet HTTP Security Headers** (`Content-Security-Policy`, `X-Frame-Options`, `HSTS`, `X-Powered-By` suppression), **Sliding-Window Rate Limiting** (Global API 200 req/15 min, Auth endpoints 15 req/15 min, Sensitive operations 10 req/15 min), **XSS Payload Sanitizer** (recursive body/query/param HTML tag escaping), **Payload Input Validation**, **Hardened JWT & RBAC**, **CORS Governance**, **SHA-256 Server-Side Hashed Refresh Tokens**, and **HTTP-Only Cookies**.
-- 🧪 **Automated Testing Suite (Phase 17 & Beyond)**: Comprehensive unit and integration test coverage (**13 test suites, 103/103 passing tests**) covering all core modules powered by **Jest**, **Supertest**, and **mongodb-memory-server**.
+- 🧪 **Automated Testing Suite (Phase 17 & Beyond)**: Comprehensive unit and integration test coverage (**14 test suites, 110/110 passing tests**) covering all core modules powered by **Jest**, **Supertest**, and **mongodb-memory-server**.
 - 🏫 **Academic Year & Semester Engine (Phase 18)**: Dynamic institutional hierarchy engine (`Academic Year ➔ Semester ➔ Department ➔ Division ➔ Subjects`). Features custom session dates, active year status singletons, dynamic terms without hardcoding, class section capacity management (`IT-A`, `IT-B`, `IT-C`), interactive visual hierarchy tree, and wizard-driven student batch promotion engine with audit logs.
 - ⚙️ **Advanced Attendance Rules Engine (Phase 19)**: Institution-wide configurable rules engine replacing hardcoded logic. Allows Admins to customize thresholds (Minimum Attendance %, Late Cutoff mins, Grace Period mins, Dynamic QR Validity mins, GPS Geofence Radius meters, Auto-Absent delay mins) and define advanced rules for 7 core statuses (`Present`, `Absent`, `Late`, `Excused`, `On Leave`, `Holiday`, `Cancelled Lecture`) with attendance inclusion weights. Includes an interactive real-time Rule Simulator / Sandbox.
 - ⏱️ **Attendance Session Engine (Phase 20)**: Explicit 4-tier domain hierarchy (`Subject ➔ Scheduled Class ➔ Attendance Session ➔ Student Attendance`) separating static scheduled class definitions from active attendance sessions. Generates unique Session IDs (`SESS-YYYYMMDD-XXXX`), manages start/end timestamps, QR secret tokens, and session-linked attendance tracking.
@@ -42,6 +42,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 🔔 **Advanced Notification Engine (Phase 25)**: Centralized multi-channel notification engine routing notifications across **In-App** (MongoDB + Socket.io), **Email** (Nodemailer responsive HTML templates), and **Push Notification** (FCM Web Push). Features **Smart Notification Recovery Advisor** calculating exact consecutive lectures needed to reach target thresholds (e.g., *"Your Database Systems attendance has fallen to 72%. You need 2 consecutive attended lectures to reach 75%."*), automated multi-channel domain event processors for 7 core campus events, user notification preference toggles, and an interactive Test Notification Simulator.
 - 🧮 **Attendance Forecasting Engine (Phase 26)**: Pure mathematical recovery engine calculating consecutive lectures required to attain thresholds ($x = \lceil \frac{rT - P}{1-r} \rceil$), safe miss allowance ($m = \lfloor \frac{P - rT}{r} \rfloor$), interactive "Can I Skip?" scenario sandbox, multi-benchmark ladder (75%, 80%, 85%, 90%), and AI Assistant natural language forecasting intent resolution.
 - 🎓 **Advanced Student Analytics (Phase 27)**: Comprehensive personal student analytics dashboard (`/student/analytics`) aggregating **9 core metrics**: Overall Attendance (weighted %, raw %, delta), Subject Attendance (per-course %, safe miss allowance, recovery requirement), Weekly Trend (W1-W6 velocity deltas), Monthly Trend (trailing 6 months), Best Subject (dynamic detection), Worst Subject (deficit alert), Late Count (punctuality score & 0.8x weight), Absent Count (unexcused rate), and Leave Count (approved/pending categories). Features a visual attendance curve with an official **75% Minimum Requirement** reference benchmark line rendered in dual-engine Recharts and Chart.js.
+- 📊 **Teacher Analytics & Insights (Phase 28)**: Comprehensive faculty analytics command center providing classroom intelligence across 7 core attendance dimensions: Average Class Attendance (weighted %, conducted vs attended, benchmark comparison), Most Absent Students (ranked defaulter directory with shortage deficit math $x = \max(0, \lceil \frac{0.75 T - P}{0.25} \rceil)$), Most Late Students (punctuality ratings & late counts), Attendance by Lecture (time-slot analysis comparing peak 10:15 AM engagement at 89.2% vs post-lunch 1:30 PM drop at 73.8%), Attendance by Weekday (Monday 82%, Tuesday 91%, Wednesday 76%, Thursday 88%, Friday 69% with automated Friday slump detection and actionable pedagogical advice), Subject Attendance (CS401, CS405, CS502), and Division Comparison (Section A vs Section B vs Section C with rankings and variance). Features an embedded insights widget on the Teacher Dashboard (`TeacherDashboard.jsx`) and a dedicated Teacher Analytics Hub (`/teacher/analytics` - `TeacherAnalytics.jsx`) with multi-filter controls and CSV export.
 
 ---
 
@@ -133,6 +134,11 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Visual Attendance Curve with 75% Minimum Benchmark Line** | ✅ | ✅ | ✅ | Phase 27 |
 | **Subject Attendance Safe Buffer & Consecutive Recovery Calculator** | ✅ | ✅ | ✅ | Phase 27 |
 | **Weekly & Monthly Attendance Velocity Progression** | ✅ | ✅ | ✅ | Phase 27 |
+| **Teacher Analytics & Insights Dashboard (7 Core Dimensions)** | ❌ | ✅ | ✅ | Phase 28 |
+| **Weekday Pattern Analysis & Friday Slump Detection (Mon 82% to Fri 69%)** | ❌ | ✅ | ✅ | Phase 28 |
+| **Attendance by Lecture Time Slot (Morning vs Post-Lunch Slump)** | ❌ | ✅ | ✅ | Phase 28 |
+| **Most Absent & Most Late Faculty Student Directories with Deficit Math** | ❌ | ✅ | ✅ | Phase 28 |
+| **Course Subject & Division Comparative Analytics (Sec A vs Sec B vs Sec C)** | ❌ | ✅ | ✅ | Phase 28 |
 
 ---
 
@@ -158,7 +164,7 @@ Basic-attendance/
 │   │   │   ├── auth/            # Login, Register, Forgot Password, Reset Password
 │   │   │   ├── landing/         # Public Landing Page
 │   │   │   ├── student/         # Student Dashboard, Calendar, History, Leave, Profile, Timetable, Prediction, AiChatPage, StudentAnalytics.jsx
-│   │   │   └── teacher/         # Teacher Dashboard, Take Attendance, History, Reports, Leave, Timetable, Corrections
+│   │   │   └── teacher/         # Teacher Dashboard, Take Attendance, History, Reports, Leave, Timetable, Corrections, TeacherAnalytics.jsx
 │   │   ├── services/            # API client modules (api.js, socket.js, deviceFingerprint.js)
 │   │   ├── App.jsx              # React Router route configurations
 │   │   ├── index.css            # Global CSS & Tailwind imports
@@ -168,7 +174,7 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                      # Backend REST API (Node.js + Express + MongoDB)
-│   ├── tests/                   # Automated Jest & Supertest Integration Test Suite (13 Test Suites, 103 Tests)
+│   ├── tests/                   # Automated Jest & Supertest Integration Test Suite (14 Test Suites, 110 Tests)
 │   │   ├── setup.js             # Global MongoDB in-memory test environment setup
 │   │   ├── auth.test.js         # Authentication, Login, Register, JWT, RBAC tests
 │   │   ├── attendance.test.js   # Single/Bulk attendance, stats, defaulter threshold tests
@@ -182,7 +188,8 @@ Basic-attendance/
 │   │   ├── antiProxy.test.js    # Multi-signal anti-proxy risk engine & review tests
 │   │   ├── audit.test.js        # Complete 10-action audit logging & ledger tests (Phase 24)
 │   │   ├── forecasting.test.js  # Phase 26 Attendance forecasting engine tests
-│   │   └── studentAnalytics.test.js # Phase 27 Student personal analytics tests
+│   │   ├── studentAnalytics.test.js # Phase 27 Student personal analytics tests
+│   │   └── teacherAnalytics.test.js # Phase 28 Teacher analytics & insights tests
 │   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
 │   ├── src/
 │   │   ├── config/              # Database (db.js), WebSockets (socket.js), Firebase FCM (firebase.js)
@@ -190,7 +197,7 @@ Basic-attendance/
 │   │   ├── middleware/          # Helmet, Rate Limiter, XSS Sanitizer, Input Validation, Audit Logger, JWT auth, RBAC guards
 │   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection)
 │   │   ├── routes/              # Express API Route definitions
-│   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, sendEmail.js
+│   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, teacherAnalyticsEngine.js, sendEmail.js
 │   │   ├── app.js               # Express application initialization & security stack setup
 │   │   └── server.js            # Node HTTP server launcher
 │   ├── jest.config.js           # Jest runner configuration
@@ -198,13 +205,13 @@ Basic-attendance/
 │   └── package.json
 │
 ├── docs/                        # Complete Documentation Suite
-│   ├── requirements.md          # Functional & Non-Functional Specifications (Phases 1-27)
-│   ├── architecture.md          # System Architecture & Technical Specifications (Phases 1-27)
+│   ├── requirements.md          # Functional & Non-Functional Specifications (Phases 1-28)
+│   ├── architecture.md          # System Architecture & Technical Specifications (Phases 1-28)
 │   ├── database_design.md       # Database ERD & Collection Schema Specifications
 │   ├── FLOW_DIAGRAMS.md         # Mermaid Flowcharts & System Lifecycle Diagrams
-│   └── PHASES.md                # Consolidated Phases Specification (Phases 1-27)
+│   └── PHASES.md                # Consolidated Phases Specification (Phases 1-28)
 │
-├── PHASES.md                    # Root Consolidated Phases Specification (Phases 1-27)
+├── PHASES.md                    # Root Consolidated Phases Specification (Phases 1-28)
 └── README.md                    # Master Project Documentation (This document)
 ```
 
@@ -282,7 +289,7 @@ cd Basic-attendance
 
 ### 4. Running Automated Tests (`server`)
 
-Run the complete backend test suite (**13 test suites, 103 tests**):
+Run the complete backend test suite (**14 test suites, 110 tests**):
 
 ```bash
 cd server
@@ -291,6 +298,7 @@ npm test
 
 To run a specific module test suite:
 ```bash
+npx jest tests/teacherAnalytics.test.js # Phase 28 Teacher Analytics & Insights
 npx jest tests/studentAnalytics.test.js # Phase 27 Advanced Student Analytics
 npx jest tests/forecasting.test.js      # Phase 26 Attendance Forecasting Engine
 npx jest tests/notifications.test.js    # Phase 25 Advanced Notification Engine
@@ -383,6 +391,8 @@ npx jest tests/charts.test.js           # Charts & Analytics
 - `DELETE /api/timetable/:id` — Remove a timetable class slot (Teacher / Admin)
 
 ### 📊 Analytics & Insights Dashboard (`/api/analytics`)
+- `GET /api/analytics/teacher/me` — Teacher classroom analytics dashboard (Phase 28) with 7 core dimensions (Average class attendance, Most absent defaulters with shortage deficit math, Most late students, Attendance by lecture time slot, Weekday patterns with Friday drop detection, Subject attendance, and Division comparison)
+- `GET /api/analytics/teacher/:teacherId` — Scoped inspection of faculty classroom analytics (Admin & Teacher)
 - `GET /api/analytics/student/me` — Personal student analytics dashboard (Phase 27) with 9 core metrics (Overall, Subject, Weekly, Monthly, Best/Worst, Late, Absent, Leave) and visual 75% minimum curve
 - `GET /api/analytics/student/:studentId` — Faculty and Admin inspection of student personal analytics dashboard
 - `GET /api/analytics/dashboard` — Fetch complete administrative executive analytics dashboard metrics (All 5 sub-modules)

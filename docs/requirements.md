@@ -67,6 +67,10 @@ This document details the functional specifications, feature requirements, and a
 - **Attendance Correction Workflow (Phase 23)**:
   - **Correction Review Console (`/teacher/corrections`)**: Review pending correction requests with original status, requested status, and mandatory justification note.
   - Submit correction requests on past attendance records with mandatory audit justification.
+- **Teacher Analytics & Classroom Insights (Phase 28)**:
+  - **7 Core Analytics Dimensions**: Average Class Attendance (weighted %, benchmark delta), Most Absent Students (ranked defaulters with deficit calculation $x = \max(0, \lceil \frac{0.75 T - P}{0.25} \rceil)$), Most Late Students (punctuality ratings & late counts), Attendance by Lecture Slot (10:15 AM peak 89.2% vs 1:30 PM post-lunch drop 73.8%), Attendance by Weekday (Monday 82%, Tuesday 91%, Wednesday 76%, Thursday 88%, Friday 69% with automated Friday slump detection and pedagogical advice), Subject Attendance Breakdown (CS401, CS405, CS502), and Division Comparison (Section A vs Section B vs Section C with rankings and variance).
+  - **Teacher Dashboard Insights Widget**: Embedded weekday pattern strip and Friday drop alert banner right on `TeacherDashboard.jsx`.
+  - **Dedicated Teacher Analytics Hub (`TeacherAnalytics.jsx`)**: Full console at `/teacher/analytics` with Subject, Division, and Timeframe filters, Recharts bar charts, student shortage tables, and CSV export.
 - **Multi-Channel Notification Triggers (Phase 25)**:
   - Automated dispatch to enrolled students upon marking roster, creating timetable slots, or cancelling lectures.
 
@@ -161,6 +165,11 @@ This document details the functional specifications, feature requirements, and a
 | **Visual Attendance Curve with 75% Minimum Benchmark Line** | ✅ | ✅ | ✅ | Phase 27 |
 | **Subject Attendance Safe Buffer & Consecutive Recovery Calculator** | ✅ | ✅ | ✅ | Phase 27 |
 | **Weekly & Monthly Attendance Velocity Progression** | ✅ | ✅ | ✅ | Phase 27 |
+| **Teacher Analytics & Classroom Insights Hub** | ❌ | ✅ | ✅ | Phase 28 |
+| **Weekday Pattern Analysis & Friday Slump Detection (Mon 82% to Fri 69%)** | ❌ | ✅ | ✅ | Phase 28 |
+| **Attendance by Lecture Time Slot (Morning vs Post-Lunch Slump)** | ❌ | ✅ | ✅ | Phase 28 |
+| **Chronic Defaulters & Latecomers Tracking with Deficit Math** | ❌ | ✅ | ✅ | Phase 28 |
+| **Subject Attendance & Division Comparative Analytics (Sec A vs Sec B vs Sec C)** | ❌ | ✅ | ✅ | Phase 28 |
 
 ---
 
