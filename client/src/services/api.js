@@ -448,6 +448,19 @@ export const getStudentPersonalAnalyticsApi = async (studentId = null) => {
   return apiRequest(endpoint, { method: 'GET' });
 };
 
+// Phase 28: Teacher Analytics API
+export const getTeacherAnalyticsApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.subject) queryParams.append('subject', params.subject);
+  if (params.division) queryParams.append('division', params.division);
+  if (params.timeframe) queryParams.append('timeframe', params.timeframe);
+  if (params.teacherId) queryParams.append('teacherId', params.teacherId);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  const endpoint = params.teacherId ? `/analytics/teacher/${params.teacherId}${queryStr}` : `/analytics/teacher/me${queryStr}`;
+  return apiRequest(endpoint, { method: 'GET' });
+};
+
+
 
 // Notification APIs
 export const getNotificationsApi = async (params = {}) => {
