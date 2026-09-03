@@ -60,6 +60,7 @@ export default function Sidebar({ role, user: userProp }) {
       case 'teacher':
         return [
           { to: '/teacher', label: 'Dashboard', icon: FiHome, end: true },
+          { to: '/teacher/analytics', label: 'Teacher Analytics', icon: FiBarChart2 },
           { to: '/teacher/corrections', label: 'Attendance Corrections', icon: FiEdit3 },
           { to: '/teacher/suspicious', label: 'Anti-Proxy Console 🛡️', icon: FiShield },
           { to: '/teacher/classes', label: "Today's Classes", icon: FiCalendar },

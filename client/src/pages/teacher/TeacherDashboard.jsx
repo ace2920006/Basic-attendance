@@ -1,10 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FiBookOpen, FiCheckSquare, FiFileText, FiBarChart2, FiUsers, FiClock, FiPlusCircle, FiTrash2 } from 'react-icons/fi';
+import { 
+  FiBookOpen, 
+  FiCheckSquare, 
+  FiFileText, 
+  FiBarChart2, 
+  FiUsers, 
+  FiClock, 
+  FiPlusCircle, 
+  FiTrash2,
+  FiActivity,
+  FiAlertTriangle,
+  FiTrendingUp,
+  FiChevronRight,
+  FiCalendar,
+  FiLayers
+} from 'react-icons/fi';
 import StatCard from '../../components/common/StatCard';
 import { teacherTodaysClasses, currentUser } from '../../data/mockData';
 import CreateClassModal from '../../components/teacher/CreateClassModal';
-import { getClassesApi, deleteClassApi } from '../../services/api';
+import { getClassesApi, deleteClassApi, getTeacherAnalyticsApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
 export default function TeacherDashboard() {
@@ -12,12 +27,25 @@ export default function TeacherDashboard() {
   const user = authUser || currentUser.teacher;
 
   const [classes, setClasses] = useState(teacherTodaysClasses);
+  const [analytics, setAnalytics] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchClasses();
+    fetchAnalytics();
   }, []);
+
+  const fetchAnalytics = async () => {
+    try {
+      const res = await getTeacherAnalyticsApi();
+      if (res?.success && res.data) {
+        setAnalytics(res.data);
+      }
+    } catch (err) {
+      console.warn('Using default analytics preview for dashboard:', err);
+    }
+  };
 
   const fetchClasses = async () => {
     try {
@@ -86,10 +114,130 @@ export default function TeacherDashboard() {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard title="Assigned Courses" value={`${classes.length} Active`} subtitle="Fall Semester 2026" icon={FiBookOpen} color="#6366f1" />
-        <StatCard title="Today's Sessions" value={`${classes.length} Classes`} subtitle={`${classes.filter(c => c.marked).length} Marked, ${classes.filter(c => !c.marked).length} Pending`} icon={FiClock} color="#06b6d4" />
-        <StatCard title="Avg Class Attendance" value="89.5%" subtitle="Across all sections" icon={FiBarChart2} color="#10b981" />
-        <StatCard title="At-Risk Students" value="2 Flagged" subtitle="Below 75% threshold" icon={FiUsers} color="#f43f5e" />
+        <StatCard 
+          title="Assigned Courses" 
+          value={`${classes.length} Active`} 
+          subtitle="Fall Semester 2026" 
+          icon={FiBookOpen} 
+          color="#6366f1" 
+        />
+        <StatCard 
+          title="Today's Sessions" 
+          value={`${classes.length} Classes`} 
+          subtitle={`${classes.filter(c => c.marked).length} Marked, ${classes.filter(c => !c.marked).length} Pending`} 
+          icon={FiClock} 
+          color="#06b6d4" 
+        />
+        <StatCard 
+          title="Avg Class Attendance" 
+          value={analytics?.overallAttendance?.averageRate ? `${analytics.overallAttendance.averageRate}%` : "82.5%"} 
+          subtitle="Weighted across sections" 
+          icon={FiBarChart2} 
+          color="#10b981" 
+        />
+        <StatCard 
+          title="At-Risk Students" 
+          value={`${analytics?.mostAbsentStudents?.length || 2} Flagged`} 
+          subtitle="Below 75% threshold" 
+          icon={FiUsers} 
+          color="#f43f5e" 
+        />
+      </div>
+
+      {/* Phase 28: Classroom Analytics & Weekday Insights Panel */}
+      <div className="glass-panel p-6 border-slate-800 space-y-4 relative overflow-hidden">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="badge badge-primary text-[10px] uppercase font-bold tracking-wider">
+                Phase 28 Insights
+              </span>
+              <span className="badge badge-absent text-[10px] font-bold">
+                ⚠️ Friday Drop Detected (69%)
+              </span>
+            </div>
+            <h3 className="text-lg font-bold text-white mt-1 flex items-center gap-2">
+              <FiActivity className="w-5 h-5 text-indigo-400" />
+              Classroom Attendance Insights & Weekday Patterns
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Weekday attendance distributions and behavioral pattern diagnostics across your classes
+            </p>
+          </div>
+
+          <Link
+            to="/teacher/analytics"
+            className="btn btn-primary py-2 px-4 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-indigo-600/20 self-start sm:self-auto"
+          >
+            <span>Explore Full Analytics Hub</span>
+            <FiChevronRight className="w-4 h-4" />
+          </Link>
+        </div>
+
+        {/* Weekday Strip matching user prompt */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 pt-1">
+          {[
+            { day: 'Monday', rate: 82, badge: 'Average', color: 'indigo' },
+            { day: 'Tuesday', rate: 91, badge: 'Peak Day', color: 'emerald' },
+            { day: 'Wednesday', rate: 76, badge: 'Below Avg', color: 'amber' },
+            { day: 'Thursday', rate: 88, badge: 'Above Avg', color: 'cyan' },
+            { day: 'Friday', rate: 69, badge: 'Friday Slump', color: 'rose' }
+          ].map((w) => (
+            <div
+              key={w.day}
+              className={`p-3.5 rounded-xl border transition-all ${
+                w.day === 'Friday'
+                  ? 'bg-rose-950/30 border-rose-500/50 text-rose-300 ring-1 ring-rose-500/30'
+                  : 'bg-slate-950/60 border-slate-800 text-slate-200'
+              }`}
+            >
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                <span>{w.day}</span>
+                <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${
+                  w.day === 'Friday' ? 'bg-rose-500/20 text-rose-300' : (w.rate >= 90 ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-300')
+                }`}>
+                  {w.badge}
+                </span>
+              </div>
+              <div className={`text-2xl font-extrabold mt-1 ${
+                w.rate >= 90 ? 'text-emerald-400' : (w.rate < 75 ? 'text-rose-400' : 'text-white')
+              }`}>
+                {w.rate}%
+              </div>
+              <div className="w-full bg-slate-800/80 h-1.5 rounded-full overflow-hidden mt-2">
+                <div
+                  className={`h-full rounded-full ${
+                    w.rate >= 90 ? 'bg-emerald-400' : (w.rate < 75 ? 'bg-rose-500' : 'bg-indigo-500')
+                  }`}
+                  style={{ width: `${w.rate}%` }}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Insight Diagnostic Callout */}
+        <div className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-rose-500/20 text-rose-400 shrink-0">
+              <FiAlertTriangle className="w-4 h-4" />
+            </div>
+            <div>
+              <span className="font-bold text-white">Pattern Alert: Poor Friday Attendance (69%)</span>
+              <p className="text-slate-400 text-[11px] mt-0.5">
+                Attendance drops 12.2% on Fridays ahead of the weekend. Recommendation: Move interactive labs or graded problem sets to Fridays.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+            <span className="text-[11px] text-slate-400">Division A leads at 86.8%</span>
+            <Link to="/teacher/analytics" className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1">
+              <span>View Details</span>
+              <FiChevronRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Main Grid Content */}
@@ -171,6 +319,10 @@ export default function TeacherDashboard() {
             <Link to="/teacher/students" className="btn btn-secondary w-full justify-start text-xs py-2.5">
               <FiUsers className="w-4 h-4 text-amber-400" />
               <span>View Enrolled Students Roster</span>
+            </Link>
+            <Link to="/teacher/analytics" className="btn btn-secondary w-full justify-start text-xs py-2.5 bg-indigo-950/40 border-indigo-500/30 hover:bg-indigo-900/40 text-indigo-300 font-semibold">
+              <FiActivity className="w-4 h-4 text-indigo-400" />
+              <span>Teacher Analytics & Insights</span>
             </Link>
             <Link to="/teacher/reports" className="btn btn-secondary w-full justify-start text-xs py-2.5">
               <FiFileText className="w-4 h-4 text-rose-400" />
