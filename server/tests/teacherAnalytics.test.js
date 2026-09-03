@@ -15,7 +15,22 @@ describe('📊 Phase 28: Teacher Analytics Test Suite', () => {
   let subject1, subject2;
 
   beforeEach(async () => {
-    // 1. Create Teacher
+    // 1. Seed subjects first
+    subject1 = await Subject.create({
+      code: 'CS401',
+      name: 'Database Systems',
+      department: 'Computer Science',
+      instructor: 'Dr. John Smith'
+    });
+
+    subject2 = await Subject.create({
+      code: 'CS405',
+      name: 'Web Technologies',
+      department: 'Computer Science',
+      instructor: 'Dr. John Smith'
+    });
+
+    // 2. Create Teacher with subject references
     teacherUser = await User.create({
       name: 'Dr. John Smith',
       email: 'john.smith@univ.edu',
@@ -23,11 +38,11 @@ describe('📊 Phase 28: Teacher Analytics Test Suite', () => {
       role: 'teacher',
       department: 'Computer Science',
       designation: 'Professor',
-      assignedSubjects: ['CS401', 'CS405']
+      assignedSubjects: [subject1._id, subject2._id]
     });
     teacherToken = generateAccessToken(teacherUser._id, 'teacher');
 
-    // 2. Create Admin
+    // 3. Create Admin
     adminUser = await User.create({
       name: 'Dean Wilson',
       email: 'dean.wilson@univ.edu',
@@ -37,7 +52,7 @@ describe('📊 Phase 28: Teacher Analytics Test Suite', () => {
     });
     adminToken = generateAccessToken(adminUser._id, 'admin');
 
-    // 3. Create Student
+    // 4. Create Student
     studentUser = await User.create({
       name: 'Alex Rivera',
       email: 'alex.rivera@student.edu',
@@ -78,21 +93,6 @@ describe('📊 Phase 28: Teacher Analytics Test Suite', () => {
       rollNo: 'CS-2024-004',
       department: 'Computer Science',
       division: 'Sec A'
-    });
-
-    // 5. Seed subjects
-    subject1 = await Subject.create({
-      code: 'CS401',
-      name: 'Database Systems',
-      department: 'Computer Science',
-      instructor: 'Dr. John Smith'
-    });
-
-    subject2 = await Subject.create({
-      code: 'CS405',
-      name: 'Web Technologies',
-      department: 'Computer Science',
-      instructor: 'Dr. John Smith'
     });
   });
 
