@@ -6,6 +6,7 @@ const Subject = require('../models/Subject');
 const Class = require('../models/Class');
 const Leave = require('../models/Leave');
 const { computeStudentAnalytics } = require('../utils/studentAnalyticsEngine');
+const { computeTeacherAnalytics, getFallbackTeacherAnalytics } = require('../utils/teacherAnalyticsEngine');
 const { getSystemRules } = require('../utils/attendanceRulesEngine');
 
 // Helper to provide realistic rich fallback data if MongoDB lacks full records
@@ -652,6 +653,94 @@ const getStudentPersonalAnalytics = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get Teacher Analytics Dashboard Data (Phase 28)
+// @route   GET /api/analytics/teacher/me or GET /api/analytics/teacher/:teacherId
+// @access  Private (Teacher, Admin)
+const getTeacherAnalytics = asyncHandler(async (req, res) => {
+  let targetTeacherId = req.user._id;
+
+  if (req.params.teacherId && (req.user.role === 'admin' || req.user.role === 'teacher')) {
+    targetTeacherId = req.params.teacherId;
+  } else if (req.query.teacherId && (req.user.role === 'admin' || req.user.role === 'teacher')) {
+    targetTeacherId = req.query.teacherId;
+  }
+
+  const teacher = await User.findById(targetTeacherId).lean();
+  if (!teacher && req.user.role !== 'teacher') {
+    return res.status(404).json({ success: false, message: 'Teacher not found' });
+  }
+
+  const activeTeacher = teacher || req.user;
+
+  // Retrieve assigned subjects
+  const subjectList = await Subject.find().lean();
+  const assignedCodes = [];
+  if (Array.isArray(activeTeacher.assignedSubjects)) {
+    activeTeacher.assignedSubjects.forEach(s => {
+      assignedCodes.push(typeof s === 'string' ? s : (s.code || s.name));
+    });
+  }
+  if (Array.isArray(activeTeacher.subjects)) {
+    activeTeacher.subjects.forEach(s => {
+      assignedCodes.push(typeof s === 'string' ? s : (s.code || s.name));
+    });
+  }
+
+  // Find attendance query conditions
+  const queryConditions = [
+    { markedBy: targetTeacherId }
+  ];
+  if (assignedCodes.length > 0) {
+    queryConditions.push({ subjectCode: { $in: assignedCodes } });
+    queryConditions.push({ subject: { $in: assignedCodes } });
+  }
+
+  // Support timeframe filter
+  let dateQuery = {};
+  if (req.query.timeframe === '30days') {
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    dateQuery = { date: { $gte: thirtyDaysAgo } };
+  } else if (req.query.timeframe === '7days') {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    dateQuery = { date: { $gte: sevenDaysAgo } };
+  }
+
+  const finalQuery = {
+    $or: queryConditions,
+    ...dateQuery
+  };
+
+  const attendanceRecords = await Attendance.find(finalQuery)
+    .populate('student', 'name rollNo email department semester division')
+    .sort({ date: 1 })
+    .lean();
+
+  const classes = await Class.find({
+    $or: [
+      { instructorId: targetTeacherId },
+      { instructor: activeTeacher.name }
+    ]
+  }).lean();
+
+  const rules = await getSystemRules();
+
+  const analytics = computeTeacherAnalytics({
+    teacher: activeTeacher,
+    attendanceRecords,
+    classes,
+    subjects: subjectList,
+    rules,
+    filters: req.query
+  });
+
+  res.json({
+    success: true,
+    data: analytics
+  });
+});
+
 module.exports = {
   getDashboardAnalytics,
   getMostAbsentStudents,
@@ -659,6 +748,8 @@ module.exports = {
   getDepartmentRankings,
   getTeacherPerformance,
   getDailyAttendance,
-  getStudentPersonalAnalytics
+  getStudentPersonalAnalytics,
+  getTeacherAnalytics
 };
+
 

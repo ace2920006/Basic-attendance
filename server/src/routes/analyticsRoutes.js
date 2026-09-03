@@ -7,7 +7,8 @@ const {
   getDepartmentRankings,
   getTeacherPerformance,
   getDailyAttendance,
-  getStudentPersonalAnalytics
+  getStudentPersonalAnalytics,
+  getTeacherAnalytics
 } = require('../controllers/analyticsController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -16,6 +17,10 @@ router.use(protect);
 // Student Personal Analytics Dashboard (Phase 27)
 router.get('/student/me', getStudentPersonalAnalytics);
 router.get('/student/:studentId', getStudentPersonalAnalytics);
+
+// Teacher Analytics Dashboard (Phase 28)
+router.get('/teacher/me', authorize('teacher', 'admin'), getTeacherAnalytics);
+router.get('/teacher/:teacherId', authorize('teacher', 'admin'), getTeacherAnalytics);
 
 // Admin Analytics Consoles
 router.get('/dashboard', authorize('admin'), getDashboardAnalytics);
