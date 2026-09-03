@@ -37,6 +37,7 @@ import StudentsList from './pages/teacher/StudentsList';
 import TeacherReports from './pages/teacher/TeacherReports';
 import TeacherLeave from './pages/teacher/TeacherLeave';
 import TeacherCorrections from './pages/teacher/TeacherCorrections';
+import TeacherAnalytics from './pages/teacher/TeacherAnalytics';
 
 // Admin Portal
 import AdminLayout from './pages/admin/AdminLayout';
@@ -112,6 +113,7 @@ export default function App() {
               }
             >
               <Route index element={<TeacherDashboard />} />
+              <Route path="analytics" element={<TeacherAnalytics />} />
               <Route path="corrections" element={<TeacherCorrections />} />
               <Route path="suspicious" element={<SuspiciousDetection />} />
               <Route path="classes" element={<TeacherDashboard />} />
