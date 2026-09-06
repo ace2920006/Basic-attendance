@@ -7,6 +7,7 @@ const Class = require('../models/Class');
 const Leave = require('../models/Leave');
 const { computeStudentAnalytics } = require('../utils/studentAnalyticsEngine');
 const { computeTeacherAnalytics, getFallbackTeacherAnalytics } = require('../utils/teacherAnalyticsEngine');
+const { computeAdminIntelligence, getFallbackAdminIntelligence } = require('../utils/adminIntelligenceEngine');
 const { getSystemRules } = require('../utils/attendanceRulesEngine');
 
 // Helper to provide realistic rich fallback data if MongoDB lacks full records
