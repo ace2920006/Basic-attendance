@@ -460,6 +460,17 @@ export const getTeacherAnalyticsApi = async (params = {}) => {
   return apiRequest(endpoint, { method: 'GET' });
 };
 
+// Phase 29: Admin Intelligence Dashboard API (College-Level Control Center)
+export const getAdminIntelligenceApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.department) queryParams.append('department', params.department);
+  if (params.division) queryParams.append('division', params.division);
+  if (params.timeframe) queryParams.append('timeframe', params.timeframe);
+  if (params.search) queryParams.append('search', params.search);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/analytics/admin-intelligence${queryStr}`, { method: 'GET' });
+};
+
 
 
 // Notification APIs
