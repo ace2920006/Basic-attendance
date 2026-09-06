@@ -41,6 +41,7 @@ import TeacherAnalytics from './pages/teacher/TeacherAnalytics';
 
 // Admin Portal
 import AdminLayout from './pages/admin/AdminLayout';
+import AdminIntelligenceDashboard from './pages/admin/AdminIntelligenceDashboard';
 import AdminAnalytics from './pages/admin/AdminAnalytics';
 import AdminDepartments from './pages/admin/AdminDepartments';
 import AdminCourses from './pages/admin/AdminCourses';
@@ -136,7 +137,9 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<AdminAnalytics />} />
+              <Route index element={<AdminIntelligenceDashboard />} />
+              <Route path="intelligence" element={<AdminIntelligenceDashboard />} />
+              <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="corrections" element={<AdminCorrections />} />
               <Route path="audit-logs" element={<AdminAuditLogs />} />
               <Route path="suspicious" element={<SuspiciousDetection />} />
