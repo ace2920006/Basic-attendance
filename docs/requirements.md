@@ -1,6 +1,6 @@
 # Multi-Role Attendance System - Requirements & Features Specification
 
-This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 27**) for the **Attendance Management System**.
+This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 29**) for the **Attendance Management System**.
 
 ---
 
@@ -116,6 +116,16 @@ This document details the functional specifications, feature requirements, and a
   - **Nodemailer Password Reset Delivery**: Password reset token links are dispatched via Nodemailer HTML email service (`sendEmail.js`).
   - **SHA-256 Server-Side Token Hashing**: Refresh tokens are stored in MongoDB as SHA-256 hashes rather than plain text JWT strings.
   - **HTTP-Only Cookie Transport**: Refresh tokens are transported using secure HTTP-Only cookies.
+- **Admin Intelligence Dashboard & Control Center (Phase 29)**:
+  - **College-Level Executive Control Center**: Unified command center (`/admin` and `/admin/intelligence`) aggregating campus telemetry across departments, student divisions, faculty, security scanners, and leave tracking.
+  - **Top Executive KPI Console**: Displays exact institutional statistics (**Total Students: 2,481**, **Total Teachers: 143**, **Today's Attendance: 87.4%**, **Students <75%: 312**) with real-time operational pulse indicators.
+  - **Department Comparison**: Cross-department ranking (CSE, IT, AI&DS, ECE, ME, CE), comparative bar charts, and variance vs college average.
+  - **Division Comparison**: Section breakdown across classes (CSE-A, CSE-B, IT-A, etc.) with enrollments, class coordinators, and risk statuses.
+  - **Attendance Trends & Day Velocity**: 6-month aggregate trendline with 75% UGC minimum benchmark; weekly pattern analysis detecting Tuesday peak (90.4%) and automated Friday slump alert (73.1%, a -17.3% drop).
+  - **Defaulter Analysis & Deficit Math**: 3-tier severity classification (Severe <50%, Critical 50-65%, Warning 65-75%), exact mathematical formula calculation $x = \lceil \frac{0.75T - P}{0.25} \rceil$, student search, and simulated bulk warning alerts dispatch.
+  - **Teacher / Class Statistics**: 1,870 scheduled vs 1,824 conducted classes (97.5% conduction), on-time marking punctuality index (94.8%), faculty leaderboard, and lecture time slot distribution.
+  - **Suspicious Attendance Telemetry**: Anti-proxy monitoring (24 flagged scans today, 6 high risk), multi-signal distribution (hardware collisions 50%, GPS breaches 33.3%, rapid scans 16.7%), and live incident inspection feed.
+  - **Leave Statistics & Truancy Impact**: 184 applications with 77.2% approval rate, category breakdown (Medical, Duty, Casual, Sports), and department leave load.
 
 ---
 
@@ -170,6 +180,15 @@ This document details the functional specifications, feature requirements, and a
 | **Attendance by Lecture Time Slot (Morning vs Post-Lunch Slump)** | ❌ | ✅ | ✅ | Phase 28 |
 | **Chronic Defaulters & Latecomers Tracking with Deficit Math** | ❌ | ✅ | ✅ | Phase 28 |
 | **Subject Attendance & Division Comparative Analytics (Sec A vs Sec B vs Sec C)** | ❌ | ✅ | ✅ | Phase 28 |
+| **Admin Intelligence Dashboard (College-Level Control Center)** | ❌ | ❌ | ✅ | Phase 29 |
+| **Top Executive KPI Console (Students: 2,481, Teachers: 143, Today: 87.4%, Defaulters: 312)** | ❌ | ❌ | ✅ | Phase 29 |
+| **Cross-Department Performance Benchmark & Variance Analysis** | ❌ | ❌ | ✅ | Phase 29 |
+| **Inter-Division & Section Matrix (Class Size, Mentors, Defaulters)** | ❌ | ❌ | ✅ | Phase 29 |
+| **College-Wide 6-Month Trendline & Weekday Slump Analysis** | ❌ | ❌ | ✅ | Phase 29 |
+| **Defaulter Intelligence & Recovery Roster ($x = \lceil \frac{0.75T - P}{0.25} \rceil$)** | ❌ | ❌ | ✅ | Phase 29 |
+| **Faculty Teaching Compliance, On-Time Marking & Slot Distribution** | ❌ | ❌ | ✅ | Phase 29 |
+| **College Anti-Proxy & Fraud Telemetry Console** | ❌ | ❌ | ✅ | Phase 29 |
+| **Institutional Leave Analytics & Truancy Impact** | ❌ | ❌ | ✅ | Phase 29 |
 
 ---
 

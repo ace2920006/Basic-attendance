@@ -211,6 +211,35 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 
 ---
 
+## 🧠 Phase 29 Architecture: Admin Intelligence Dashboard (College-Level Control Center)
+
+```
+                       [ College Administrator Query ]
+                                      |
+                                      v
+                      +-------------------------------+
+                      |   Admin Intelligence Engine   | (server/src/utils/adminIntelligenceEngine.js)
+                      +-------------------------------+
+                                      |
+         +----------------------------+----------------------------+
+         |                                                         |
+         v                                                         v
+[ Executive KPI Command Center ]                        [ 7 Analytical Intelligence Hubs ]
+ • Total Students: 2,481 (+4.2% YoY)                     1. Department Comparison & Variance
+ • Total Faculty: 143 (1:17 Ratio)                       2. Inter-Division Matrix (CSE-A, IT-A, etc.)
+ • Today's Live Attendance: 87.4%                        3. 6-Month Trajectory & Friday Slump Alert
+ • Students <75%: 312 (12.6% Defaulters)                 4. Defaulter Math: x = ceil((0.75T - P)/0.25)
+ • Secondary Pulse: Depts, Divisions, Leaves, Flags      5. Faculty Compliance & Teaching Slots
+                                                         6. Multi-Signal Anti-Proxy Telemetry
+                                                         7. Leave Approval & Truancy Impact
+```
+
+### Endpoints:
+- `GET /api/analytics/admin-intelligence`: Complete college-level control center analytics (with optional `department`, `division`, `timeframe`, `search` filters).
+- `GET /api/analytics/intelligence`: Alias endpoint for institutional intelligence telemetry.
+
+---
+
 ## 🔌 API Endpoint Hierarchy
 
 - `/api/auth` $\rightarrow$ Register, Login, Logout, Password Recovery, Token Refresh (Logs `LOGIN`, `LOGOUT`)
@@ -226,7 +255,7 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 - `/api/notifications` $\rightarrow$ Notification feed, Unread counters, Preferences (`GET/PUT /preferences`), Multi-channel test simulator (`POST /test-dispatch`), Smart attendance recovery breakdown (`GET /smart-summary`), Web Push tokens, Announcements broadcast
 - `/api/leaves` $\rightarrow$ Leave applications submission, Document attachment upload, Approval/Rejection workflow (Logs `APPROVE_LEAVE`, `REJECT_LEAVE`)
 - `/api/ai` $\rightarrow$ Attendance Forecasting Engine (`POST /forecast/calculate`, `GET /forecast/me`), Attendance 75% prediction (`GET /predict`), Natural language chatbot (`POST /chat`), Proxy anomaly detection (`GET /suspicious-detection`)
-- `/api/analytics` $\rightarrow$ Teacher classroom analytics (`/teacher/me`, `/teacher/:teacherId`), Student personal analytics dashboard (`/student/me`, `/student/:studentId`), Most absent deficit calculator, Best attendance leaderboard, Dept rankings, Teacher metrics, Daily inspector
+- `/api/analytics` $\rightarrow$ Admin Intelligence Dashboard (`/admin-intelligence`, `/intelligence`), Teacher classroom analytics (`/teacher/me`, `/teacher/:teacherId`), Student personal analytics dashboard (`/student/me`, `/student/:studentId`), Most absent deficit calculator, Best attendance leaderboard, Dept rankings, Teacher metrics, Daily inspector
 - `/api/academic` $\rightarrow$ Academic hierarchy tree, Academic Years, Dynamic Semesters, Divisions (`IT-A`), Batch Student Promotion Engine
 - `/api/attendance-rules` $\rightarrow$ Institutional rule thresholds, 7-status matrix definitions, Sandbox check-in simulator (Logs `CHANGE_SETTINGS`)
 - `/api/sessions` $\rightarrow$ Attendance Session Engine, Session ID generator, QR/GPS session start & stop lifecycle

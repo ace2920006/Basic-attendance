@@ -6,7 +6,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.3-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-339933.svg?logo=node.js)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248.svg?logo=mongodb)](https://www.mongodb.com/)
-[![Test Suite](https://img.shields.io/badge/Tests-110%2F110%20Passed-brightgreen.svg)](server/tests)
+[![Test Suite](https://img.shields.io/badge/Tests-122%2F122%20Passed-brightgreen.svg)](server/tests)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A modern, full-stack **Multi-Role Attendance Management System** designed for educational institutions. Built using **React 18, Vite, Tailwind CSS, Node.js, Express, and MongoDB**, it features tailored dashboards and workflows for **Students**, **Teachers (Faculty)**, and **Administrators**.
@@ -43,6 +43,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 🧮 **Attendance Forecasting Engine (Phase 26)**: Pure mathematical recovery engine calculating consecutive lectures required to attain thresholds ($x = \lceil \frac{rT - P}{1-r} \rceil$), safe miss allowance ($m = \lfloor \frac{P - rT}{r} \rfloor$), interactive "Can I Skip?" scenario sandbox, multi-benchmark ladder (75%, 80%, 85%, 90%), and AI Assistant natural language forecasting intent resolution.
 - 🎓 **Advanced Student Analytics (Phase 27)**: Comprehensive personal student analytics dashboard (`/student/analytics`) aggregating **9 core metrics**: Overall Attendance (weighted %, raw %, delta), Subject Attendance (per-course %, safe miss allowance, recovery requirement), Weekly Trend (W1-W6 velocity deltas), Monthly Trend (trailing 6 months), Best Subject (dynamic detection), Worst Subject (deficit alert), Late Count (punctuality score & 0.8x weight), Absent Count (unexcused rate), and Leave Count (approved/pending categories). Features a visual attendance curve with an official **75% Minimum Requirement** reference benchmark line rendered in dual-engine Recharts and Chart.js.
 - 📊 **Teacher Analytics & Insights (Phase 28)**: Comprehensive faculty analytics command center providing classroom intelligence across 7 core attendance dimensions: Average Class Attendance (weighted %, conducted vs attended, benchmark comparison), Most Absent Students (ranked defaulter directory with shortage deficit math $x = \max(0, \lceil \frac{0.75 T - P}{0.25} \rceil)$), Most Late Students (punctuality ratings & late counts), Attendance by Lecture (time-slot analysis comparing peak 10:15 AM engagement at 89.2% vs post-lunch 1:30 PM drop at 73.8%), Attendance by Weekday (Monday 82%, Tuesday 91%, Wednesday 76%, Thursday 88%, Friday 69% with automated Friday slump detection and actionable pedagogical advice), Subject Attendance (CS401, CS405, CS502), and Division Comparison (Section A vs Section B vs Section C with rankings and variance). Features an embedded insights widget on the Teacher Dashboard (`TeacherDashboard.jsx`) and a dedicated Teacher Analytics Hub (`/teacher/analytics` - `TeacherAnalytics.jsx`) with multi-filter controls and CSV export.
+- 🧠 **Admin Intelligence Dashboard (Phase 29)**: College-level executive control center (`/admin` and `/admin/intelligence`) featuring top KPI summary cards matching institutional telemetry (**Total Students: 2,481**, **Total Teachers: 143**, **Today's Attendance: 87.4%**, **Students <75%: 312**) alongside 7 deep institutional modules: Cross-department benchmarking with variance from college average, Division and section comparison matrix (class sizes, mentors, defaulters), 6-month attendance trajectory with 75% UGC benchmark line, weekly velocity tracking (detecting Friday slump at 73.1% vs Tuesday peak at 90.4%), Defaulter analysis with exact mathematical deficit calculations ($x = \lceil \frac{0.75T - P}{0.25} \rceil$) and simulated bulk warning alerts dispatch, Teacher compliance and class scheduling metrics (97.5% conduction, 94.8% on-time marking, lecture time slots), Suspicious attendance and anti-proxy telemetry (device collisions, geofence breaches >500m, rapid scans), and College leave statistics and truancy impact.
 
 ---
 
@@ -139,6 +140,15 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Attendance by Lecture Time Slot (Morning vs Post-Lunch Slump)** | ❌ | ✅ | ✅ | Phase 28 |
 | **Most Absent & Most Late Faculty Student Directories with Deficit Math** | ❌ | ✅ | ✅ | Phase 28 |
 | **Course Subject & Division Comparative Analytics (Sec A vs Sec B vs Sec C)** | ❌ | ✅ | ✅ | Phase 28 |
+| **Admin Intelligence Dashboard (College-Level Control Center)** | ❌ | ❌ | ✅ | Phase 29 |
+| **Top Executive KPI Console (Students: 2,481, Teachers: 143, Today: 87.4%, Defaulters: 312)** | ❌ | ❌ | ✅ | Phase 29 |
+| **Cross-Department Performance Benchmark & Variance Analysis** | ❌ | ❌ | ✅ | Phase 29 |
+| **Inter-Division & Section Matrix (Class Size, Mentors, Defaulters)** | ❌ | ❌ | ✅ | Phase 29 |
+| **College-Wide 6-Month Trendline & Weekday Slump Analysis** | ❌ | ❌ | ✅ | Phase 29 |
+| **Defaulter Intelligence & Recovery Roster ($x = \lceil \frac{0.75T - P}{0.25} \rceil$)** | ❌ | ❌ | ✅ | Phase 29 |
+| **Faculty Teaching Compliance, On-Time Marking & Slot Distribution** | ❌ | ❌ | ✅ | Phase 29 |
+| **College Anti-Proxy & Fraud Telemetry Console** | ❌ | ❌ | ✅ | Phase 29 |
+| **Institutional Leave Analytics & Truancy Impact** | ❌ | ❌ | ✅ | Phase 29 |
 
 ---
 
@@ -159,7 +169,7 @@ Basic-attendance/
 │   │   │   └── ui/              # Buttons, Cards, Inputs, Badges, Modals
 │   │   ├── context/             # React State Contexts (AuthContext, NotificationContext)
 │   │   ├── pages/
-│   │   │   ├── admin/           # Admin Dashboard, Academic Engine, Rules Engine, Corrections, Audit Logs, Suspicious
+│   │   │   ├── admin/           # Admin Intelligence Dashboard (AdminIntelligenceDashboard.jsx), Academic Engine, Rules Engine, Corrections, Audit Logs, Suspicious
 │   │   │   ├── analytics/       # Visual Charts Hub (ChartsPage.jsx)
 │   │   │   ├── auth/            # Login, Register, Forgot Password, Reset Password
 │   │   │   ├── landing/         # Public Landing Page
@@ -174,7 +184,7 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                      # Backend REST API (Node.js + Express + MongoDB)
-│   ├── tests/                   # Automated Jest & Supertest Integration Test Suite (14 Test Suites, 110 Tests)
+│   ├── tests/                   # Automated Jest & Supertest Integration Test Suite (15 Test Suites, 122 Tests)
 │   │   ├── setup.js             # Global MongoDB in-memory test environment setup
 │   │   ├── auth.test.js         # Authentication, Login, Register, JWT, RBAC tests
 │   │   ├── attendance.test.js   # Single/Bulk attendance, stats, defaulter threshold tests
@@ -189,7 +199,8 @@ Basic-attendance/
 │   │   ├── audit.test.js        # Complete 10-action audit logging & ledger tests (Phase 24)
 │   │   ├── forecasting.test.js  # Phase 26 Attendance forecasting engine tests
 │   │   ├── studentAnalytics.test.js # Phase 27 Student personal analytics tests
-│   │   └── teacherAnalytics.test.js # Phase 28 Teacher analytics & insights tests
+│   │   ├── teacherAnalytics.test.js # Phase 28 Teacher analytics & insights tests
+│   │   └── adminIntelligence.test.js # Phase 29 Admin intelligence control center tests
 │   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
 │   ├── src/
 │   │   ├── config/              # Database (db.js), WebSockets (socket.js), Firebase FCM (firebase.js)
@@ -197,7 +208,7 @@ Basic-attendance/
 │   │   ├── middleware/          # Helmet, Rate Limiter, XSS Sanitizer, Input Validation, Audit Logger, JWT auth, RBAC guards
 │   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection)
 │   │   ├── routes/              # Express API Route definitions
-│   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, teacherAnalyticsEngine.js, sendEmail.js
+│   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, teacherAnalyticsEngine.js, adminIntelligenceEngine.js, sendEmail.js
 │   │   ├── app.js               # Express application initialization & security stack setup
 │   │   └── server.js            # Node HTTP server launcher
 │   ├── jest.config.js           # Jest runner configuration
@@ -205,13 +216,13 @@ Basic-attendance/
 │   └── package.json
 │
 ├── docs/                        # Complete Documentation Suite
-│   ├── requirements.md          # Functional & Non-Functional Specifications (Phases 1-28)
-│   ├── architecture.md          # System Architecture & Technical Specifications (Phases 1-28)
+│   ├── requirements.md          # Functional & Non-Functional Specifications (Phases 1-29)
+│   ├── architecture.md          # System Architecture & Technical Specifications (Phases 1-29)
 │   ├── database_design.md       # Database ERD & Collection Schema Specifications
 │   ├── FLOW_DIAGRAMS.md         # Mermaid Flowcharts & System Lifecycle Diagrams
-│   └── PHASES.md                # Consolidated Phases Specification (Phases 1-28)
+│   └── PHASES.md                # Consolidated Phases Specification (Phases 1-29)
 │
-├── PHASES.md                    # Root Consolidated Phases Specification (Phases 1-28)
+├── PHASES.md                    # Root Consolidated Phases Specification (Phases 1-29)
 └── README.md                    # Master Project Documentation (This document)
 ```
 
@@ -391,6 +402,8 @@ npx jest tests/charts.test.js           # Charts & Analytics
 - `DELETE /api/timetable/:id` — Remove a timetable class slot (Teacher / Admin)
 
 ### 📊 Analytics & Insights Dashboard (`/api/analytics`)
+- `GET /api/analytics/admin-intelligence` — **Admin Intelligence Dashboard (Phase 29)**: College-level executive control center delivering 4 core KPI summary cards (Total Students: 2,481, Total Teachers: 143, Today's Attendance: 87.4%, Students <75%: 312) alongside all 7 analytical modules (Department comparison, Division comparison, Attendance trends with 75% benchmark line & Friday slump, Defaulter analysis with $x = \lceil \frac{0.75T - P}{0.25} \rceil$ deficit math & bulk alerts, Teacher compliance and time slots, Suspicious anti-proxy telemetry, and Leave impact statistics) (Admin only)
+- `GET /api/analytics/intelligence` — Alias endpoint for the Phase 29 College Intelligence Control Center (Admin only)
 - `GET /api/analytics/teacher/me` — Teacher classroom analytics dashboard (Phase 28) with 7 core dimensions (Average class attendance, Most absent defaulters with shortage deficit math, Most late students, Attendance by lecture time slot, Weekday patterns with Friday drop detection, Subject attendance, and Division comparison)
 - `GET /api/analytics/teacher/:teacherId` — Scoped inspection of faculty classroom analytics (Admin & Teacher)
 - `GET /api/analytics/student/me` — Personal student analytics dashboard (Phase 27) with 9 core metrics (Overall, Subject, Weekly, Monthly, Best/Worst, Late, Absent, Leave) and visual 75% minimum curve

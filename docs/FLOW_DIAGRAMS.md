@@ -573,5 +573,66 @@ flowchart TB
     end
 ```
 
+---
+
+## 22. Phase 29: Admin Intelligence Dashboard & College Control Center Dataflow
+
+```mermaid
+flowchart TD
+    subgraph DataSources ["Institutional Big Data Telemetry"]
+        DB_Users[("User Collection <br/> (Students: 2,481, Faculty: 143)")]
+        DB_Attend[("Attendance Collection <br/> (Today: 87.4% Rate)")]
+        DB_Depts[("Department Collection <br/> (6 Active Depts: CSE, IT, etc.)")]
+        DB_Divs[("Division Collection <br/> (11 Class Sections)")]
+        DB_Leaves[("Leave Collection <br/> (184 Total, 26 Pending)")]
+        DB_Sessions[("AttendanceSession Collection <br/> (Daily Schedules & Scanners)")]
+    end
+
+    subgraph IntelligenceEngine ["Admin Intelligence Engine (adminIntelligenceEngine.js)"]
+        Aggregator["Real-Time Aggregator & Fallback Synthesis"]
+        DB_Users --> Aggregator
+        DB_Attend --> Aggregator
+        DB_Depts --> Aggregator
+        DB_Divs --> Aggregator
+        DB_Leaves --> Aggregator
+        DB_Sessions --> Aggregator
+
+        Aggregator --> Mod1["1. Executive KPI Summary <br/> • Total Students: 2,481 <br/> • Total Teachers: 143 <br/> • Today's Rate: 87.4% <br/> • Defaulters &lt;75%: 312"]
+        Aggregator --> Mod2["2. Cross-Department Benchmark <br/> • Attendance Rankings & Volumes <br/> • Variance vs College Average"]
+        Aggregator --> Mod3["3. Division Matrix <br/> • Section Sizes & Mentors <br/> • Today's vs Monthly %"]
+        Aggregator --> Mod4["4. Attendance Velocity Trends <br/> • 6-Month 75% Benchmark Curve <br/> • Weekday Slump: Friday 73.1%"]
+        Aggregator --> Mod5["5. Defaulter Mathematical Recovery <br/> • x = ceil((0.75T - P)/0.25) <br/> • Severity Tiers: Severe, Critical, Warning"]
+        Aggregator --> Mod6["6. Faculty Compliance & Teaching <br/> • 97.5% Conduction & 94.8% Punctuality <br/> • Slot Analysis: Morning, Mid, Afternoon"]
+        Aggregator --> Mod7["7. Anti-Proxy Telemetry <br/> • Hardware Fingerprints, GPS, Rapid Scans <br/> • High/Med/Low Risk Score Tiers"]
+        Aggregator --> Mod8["8. Leave Statistics & Truancy <br/> • Medical, Duty, Casual, Sports <br/> • Department Load Distribution"]
+    end
+
+    subgraph APIChannel ["Secure Admin REST Route"]
+        Mod1 --> RouteHandler["GET /api/analytics/admin-intelligence <br/> (protect + authorize('admin'))"]
+        Mod2 --> RouteHandler
+        Mod3 --> RouteHandler
+        Mod4 --> RouteHandler
+        Mod5 --> RouteHandler
+        Mod6 --> RouteHandler
+        Mod7 --> RouteHandler
+        Mod8 --> RouteHandler
+    end
+
+    subgraph ControlCenterUI ["Admin Intelligence Control Center (/admin)"]
+        RouteHandler --> KPICards["Executive ASCII Spec Metric Cards <br/> (Students, Teachers, Today %, Defaulters)"]
+        RouteHandler --> TabDept["Department Comparison Bar Charts & Table"]
+        RouteHandler --> TabDiv["Division Grid & Mentor Status"]
+        RouteHandler --> TabTrend["6-Month Curve & Weekday Progression"]
+        RouteHandler --> TabDef["Defaulter Table & Bulk Alert Dispatcher"]
+        RouteHandler --> TabFac["Faculty Leaderboard & Teaching Compliance"]
+        RouteHandler --> TabSec["Anti-Proxy Scanner Live Feeds"]
+        RouteHandler --> TabLeave["Leave Category Ratios & Truancy Charts"]
+
+        TabDef --> Action1["⚡ One-Click Bulk Defaulter Alerts"]
+        RouteHandler --> Action2["📄 Export Institutional CSV Report"]
+    end
+```
+
+
 
 
