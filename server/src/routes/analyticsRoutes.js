@@ -8,7 +8,8 @@ const {
   getTeacherPerformance,
   getDailyAttendance,
   getStudentPersonalAnalytics,
-  getTeacherAnalytics
+  getTeacherAnalytics,
+  getAdminIntelligence
 } = require('../controllers/analyticsController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -21,6 +22,10 @@ router.get('/student/:studentId', getStudentPersonalAnalytics);
 // Teacher Analytics Dashboard (Phase 28)
 router.get('/teacher/me', authorize('teacher', 'admin'), getTeacherAnalytics);
 router.get('/teacher/:teacherId', authorize('teacher', 'admin'), getTeacherAnalytics);
+
+// Phase 29: Admin Intelligence Dashboard (College-Level Control Center)
+router.get('/admin-intelligence', authorize('admin'), getAdminIntelligence);
+router.get('/intelligence', authorize('admin'), getAdminIntelligence);
 
 // Admin Analytics Consoles
 router.get('/dashboard', authorize('admin'), getDashboardAnalytics);

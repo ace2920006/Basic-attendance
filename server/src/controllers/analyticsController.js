@@ -742,6 +742,18 @@ const getTeacherAnalytics = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Get College-Level Admin Intelligence Control Center Data (Phase 29)
+// @route   GET /api/analytics/admin-intelligence
+// @access  Private/Admin
+const getAdminIntelligence = asyncHandler(async (req, res) => {
+  const intelligenceData = await computeAdminIntelligence(req.query);
+
+  res.json({
+    success: true,
+    data: intelligenceData
+  });
+});
+
 module.exports = {
   getDashboardAnalytics,
   getMostAbsentStudents,
@@ -750,7 +762,9 @@ module.exports = {
   getTeacherPerformance,
   getDailyAttendance,
   getStudentPersonalAnalytics,
-  getTeacherAnalytics
+  getTeacherAnalytics,
+  getAdminIntelligence
 };
+
 
 
