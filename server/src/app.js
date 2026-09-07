@@ -113,6 +113,7 @@ app.use('/api/attendance-rules', rulesRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/anti-proxy', antiProxyRoutes);
 app.use('/api/attendance-corrections', correctionRoutes);
+app.use('/api/defaulters', defaulterRoutes);
 
 
 // Error Handling Middlewares
