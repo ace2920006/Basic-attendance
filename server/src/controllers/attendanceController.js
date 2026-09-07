@@ -41,6 +41,14 @@ async function checkAndSendAttendanceAlerts(studentId, subject, status, metadata
         });
       }
     }
+
+    // 3. Automated Defaulter Management & Escalation Engine (Phase 30)
+    try {
+      const { evaluateStudentDefaulter } = require('../services/defaulterService');
+      await evaluateStudentDefaulter(studentId);
+    } catch (defaulterErr) {
+      console.error('[DefaulterService] Automated student evaluation error:', defaulterErr.message);
+    }
   } catch (err) {
     console.error('Failed to send attendance notification alert:', err.message);
   }

@@ -753,6 +753,168 @@ const notifyTimetableChanged = async ({
   });
 };
 
+/**
+ * Event 8: Automated Defaulter Escalation Tiers (<75%, <70%, <65%, <60%)
+ */
+const notifyDefaulterEscalation = async ({
+  student,
+  defaulterRecord,
+  tier,
+  config = {}
+}) => {
+  const warningTh = config.warningThreshold || 75;
+  const seriousTh = config.seriousWarningThreshold || 70;
+  const adminTh = config.adminAlertThreshold || 65;
+  const parentTh = config.parentAlertThreshold || 60;
+  const pct = Number(defaulterRecord.attendancePercentage.toFixed(1));
+  const deficit = defaulterRecord.classesNeededToTarget || 0;
+  const studentId = student._id || student;
+
+  let eventType = 'DEFAULTER_WARNING';
+  let notifType = 'warning';
+  let title = '';
+  let message = '';
+
+  switch (tier) {
+    case 'PARENT_ALERT':
+      eventType = 'DEFAULTER_PARENT_ALERT';
+      notifType = 'error';
+      title = `🚨 Critical Defaulter: Parent/Guardian Alert (<${parentTh}%)`;
+      message = `Critical Notice: Your cumulative attendance has fallen to ${pct}% (below the ${parentTh}% parental alert cutoff). An urgent notification is dispatched to your registered parent/guardian. You require ${deficit} consecutive classes to recover to ${warningTh}%.`;
+      break;
+
+    case 'ADMIN_ALERT':
+      eventType = 'DEFAULTER_ADMIN_ALERT';
+      notifType = 'error';
+      title = `🏛️ Defaulter Escalation: Admin Review Alert (<${adminTh}%)`;
+      message = `Official Warning: Your cumulative attendance is ${pct}% (below ${adminTh}%). Your profile is logged on the Administration Defaulter Roster for review by Department HOD. Recovery deficit: ${deficit} classes.`;
+      break;
+
+    case 'SERIOUS_WARNING':
+      eventType = 'DEFAULTER_SERIOUS';
+      notifType = 'warning';
+      title = `⚠️ Serious Attendance Warning (<${seriousTh}%)`;
+      message = `Urgent Warning: Your attendance has declined to ${pct}% (below ${seriousTh}%). Please report to your class counselor/mentor immediately. Recovery deficit: ${deficit} consecutive classes.`;
+      break;
+
+    case 'WARNING':
+    default:
+      eventType = 'DEFAULTER_WARNING';
+      notifType = 'warning';
+      title = `⚠️ Low Attendance Warning (<${warningTh}%)`;
+      message = `Notice: Your cumulative attendance is ${pct}%, which is below the required ${warningTh}% benchmark. You need to attend at least ${deficit} consecutive classes to clear defaulter status.`;
+      break;
+  }
+
+  // 1. Dispatch Notification to Student (In-app, Push, Email)
+  const studentNotifs = await dispatchNotification({
+    recipientId: studentId,
+    title,
+    message,
+    type: notifType,
+    eventType,
+    smartAdvice: {
+      currentPercentage: pct,
+      targetPercentage: warningTh,
+      lecturesNeeded: deficit,
+      attendedLectures: defaulterRecord.attendedClasses || 0,
+      totalLectures: defaulterRecord.totalClasses || 0,
+      actionableText: message
+    },
+    data: {
+      tier,
+      attendancePercentage: pct,
+      deficit,
+      targetPercentage: warningTh,
+      recordId: defaulterRecord._id
+    }
+  });
+
+  // 2. If ADMIN_ALERT or PARENT_ALERT, dispatch administrative alert to admin role
+  if (tier === 'ADMIN_ALERT' || tier === 'PARENT_ALERT') {
+    const adminTitle = `🏛️ Defaulter Alert: ${student.name || 'Student'} (${pct}%)`;
+    const adminMsg = `Student ${student.name || 'Student'} (${student.rollNo || 'N/A'}) in ${student.department || 'College'} has dropped to ${pct}% attendance (${tier.replace('_', ' ')} tier). Recovery deficit: ${deficit} classes.`;
+
+    await dispatchNotification({
+      role: 'admin',
+      department: student.department || null,
+      title: adminTitle,
+      message: adminMsg,
+      type: 'error',
+      eventType,
+      data: {
+        studentId,
+        studentName: student.name,
+        rollNo: student.rollNo,
+        tier,
+        percentage: pct,
+        deficit
+      }
+    }).catch((err) => console.error('[NotificationService] Admin alert dispatch error:', err.message));
+  }
+
+  // 3. If PARENT_ALERT and guardianEmail is configured, dispatch direct email to Parent/Guardian
+  let parentEmailSent = false;
+  const guardianEmail = student.guardianEmail || defaulterRecord.guardianEmail;
+  if (tier === 'PARENT_ALERT' && config.sendParentEmail !== false && guardianEmail) {
+    try {
+      const guardianName = student.guardianName || defaulterRecord.guardianName || 'Parent / Guardian';
+      const emailSubject = `⚠️ Official University Notice: Low Attendance Alert for ${student.name || 'Your Ward'}`;
+      const emailHtml = `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px;">
+          <div style="background: linear-gradient(135deg, #e11d48, #9f1239); color: #ffffff; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px;">
+            <h1 style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: 0.5px;">COLLEGE ATTENDANCE DEFAULTER NOTICE</h1>
+            <p style="margin: 6px 0 0; font-size: 13px; opacity: 0.9;">Official Communication from Academic Administration</p>
+          </div>
+          <p style="font-size: 15px; color: #334155; line-height: 1.5;">Dear <strong>${guardianName}</strong>,</p>
+          <p style="font-size: 14px; color: #475569; line-height: 1.6;">
+            This is an urgent formal notice regarding your ward, <strong>${student.name || 'Student'}</strong> (Roll No: <strong>${student.rollNo || 'N/A'}</strong>), enrolled in the <strong>${student.department || 'Academic Department'}</strong>.
+          </p>
+          <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px; padding: 16px; margin: 20px 0;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: #9f1239; font-weight: 600; font-size: 13px;">Current Cumulative Attendance:</span>
+              <span style="color: #e11d48; font-weight: 800; font-size: 16px;">${pct}%</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: #9f1239; font-weight: 600; font-size: 13px;">Institutional Benchmark:</span>
+              <span style="color: #334155; font-weight: 700; font-size: 14px;">${warningTh}%</span>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: #9f1239; font-weight: 600; font-size: 13px;">Recovery Deficit Required:</span>
+              <span style="color: #047857; font-weight: 700; font-size: 14px;">${deficit} Consecutive Classes</span>
+            </div>
+          </div>
+          <p style="font-size: 13px; color: #64748b; line-height: 1.6;">
+            The student's attendance has fallen below the critical <strong>${parentTh}%</strong> threshold. Failure to attend required recovery sessions may result in debarment from upcoming semester examinations in accordance with university regulations.
+          </p>
+          <p style="font-size: 13px; color: #64748b; line-height: 1.6;">
+            Please contact the Academic Counseling cell or Head of Department at your earliest convenience to review an attendance rehabilitation plan.
+          </p>
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;" />
+          <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">
+            AttendPro Academic Automated Defaulter Management System &bull; University Administration
+          </p>
+        </div>
+      `;
+
+      await sendEmail({
+        email: guardianEmail,
+        subject: emailSubject,
+        message: `Official Defaulter Notice: Cumulative attendance for ${student.name} is ${pct}%, below the required ${warningTh}%. Immediate intervention required.`,
+        html: emailHtml
+      });
+      parentEmailSent = true;
+    } catch (err) {
+      console.error(`[NotificationService] Failed to send parent notice to ${guardianEmail}:`, err.message);
+    }
+  }
+
+  return {
+    studentNotifs,
+    parentEmailSent
+  };
+};
+
 module.exports = {
   dispatchNotification,
   calculateSmartAttendanceAdvice,
@@ -763,5 +925,7 @@ module.exports = {
   notifyLeaveRejected,
   notifyAnnouncement,
   notifyClassCancelled,
-  notifyTimetableChanged
+  notifyTimetableChanged,
+  notifyDefaulterEscalation
 };
+
