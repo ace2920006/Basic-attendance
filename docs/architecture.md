@@ -41,7 +41,7 @@ Basic-attendance/
 │   │   │   └── teacher/        # Teacher QR Modal, CreateClassModal, CreateTimetableModal
 │   │   ├── context/            # React State Contexts (AuthContext, NotificationContext)
 │   │   ├── pages/              # Role-based Route Pages
-│   │   │   ├── admin/          # Admin Analytics, Academic Engine, Rules Engine, Corrections, Audit Logs (AdminAuditLogs.jsx), Suspicious
+│   │   │   ├── admin/          # Admin Analytics, Academic Engine, Rules Engine, Corrections, Audit Logs (AdminAuditLogs.jsx), Suspicious, AdminIntelligenceDashboard.jsx, AdminDefaulterManagement.jsx
 │   │   │   ├── analytics/      # Visual Charts Hub (ChartsPage.jsx)
 │   │   │   ├── auth/           # Login, Register, Password Recovery
 │   │   │   ├── student/        # Student Dashboard, Calendar, History, Timetable, Prediction, AiChatPage, NotificationsList.jsx, StudentAnalytics.jsx
@@ -52,26 +52,26 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                     # Backend REST API Server (Node.js + Express + MongoDB)
-│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (13 Test Suites, 103 Tests)
+│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (16 Test Suites, 136 Tests)
 │   ├── uploads/                # Static Uploaded File Attachments (Medical Certificates, Avatars)
 │   ├── src/
 │   │   ├── config/             # DB Connection (db.js), WebSockets (socket.js), Firebase FCM (firebase.js)
-│   │   ├── controllers/        # Request Controllers (auth, user, attendance, class, timetable, report, chart, notification, leave, ai, analytics, audit, academic, rules, session, antiProxy, correction)
+│   │   ├── controllers/        # Request Controllers (auth, user, attendance, class, timetable, report, chart, notification, leave, ai, analytics, audit, academic, rules, session, antiProxy, correction, defaulter)
 │   │   ├── middleware/         # Security Stack (Helmet, Rate Limiter, XSS, Input Validation, Audit Logger, JWT Auth, RBAC Authorization)
-│   │   ├── models/             # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection)
-│   │   ├── routes/             # Express API Endpoints
-│   │   ├── services/           # Business Services (notificationService.js)
-│   │   ├── utils/              # GeoUtils (Haversine formula), JWT Generator, Async Handler, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, sendEmail.js
+│   │   ├── models/             # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection, DefaulterRecord)
+│   │   ├── routes/             # Express API Endpoints (including defaulterRoutes.js)
+│   │   ├── services/           # Business Services (notificationService.js, defaulterService.js)
+│   │   ├── utils/              # GeoUtils (Haversine formula), JWT Generator, Async Handler, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, adminIntelligenceEngine.js, sendEmail.js
 │   │   ├── app.js              # Express Application Bootstrap & Security Layer
 │   │   └── server.js           # Node HTTP Server Launcher
 │   └── package.json
 │
 └── docs/                       # Project Documentation Suite
-    ├── requirements.md         # Requirements Specifications & Matrix (Phases 1-27)
+    ├── requirements.md         # Requirements Specifications & Matrix (Phases 1-30)
     ├── architecture.md         # System Architecture & Technical Specs (This document)
     ├── database_design.md      # Database ERD & Schema Specs
     ├── FLOW_DIAGRAMS.md        # Comprehensive System Flow Diagrams (Mermaid)
-    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-27)
+    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-30)
 ```
 
 ---
@@ -240,10 +240,60 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 
 ---
 
+## 🚨 Phase 30 Architecture: Automated Defaulter Management & Escalation Pipeline
+
+```
+                       [ Student Attendance Check-In / Live Mark ]
+                                          |
+                                          v
+                    +-------------------------------------------+
+                    | Defaulter Evaluation Engine               | (server/src/services/defaulterService.js)
+                    | Checks Rule Thresholds & Minimum Classes  |
+                    +-------------------------------------------+
+                                          |
+                      +-------------------+-------------------+
+                      |                                       |
+             Attendance >= 75%                       Attendance < 75%
+                      |                                       |
+                      v                                       v
+         [ Clear / Auto-Resolve ]                 [ 4-Tier Escalation Pipeline ]
+          • Transition: Active -> Resolved        • Calculate Deficit: x = ceil((rT - P)/(1 - r))
+          • Timestamp & Recovery Audit            • Upsert DefaulterRecord (student, tier, status)
+                                                              |
+          +-----------------------+---------------------------+-----------------------+
+          |                       |                           |                       |
+          v                       v                           v                       v
+      [ < 75% ]               [ < 70% ]                   [ < 65% ]               [ < 60% ]
+   Tier 1: Warning     Tier 2: Serious Warning     Tier 3: Admin Alert    Tier 4: Parent Alert
+   • In-App Notice     • Warning Flag Marked       • HOD Watchlist         • Urgent Escalation
+   • Push Notification • Mandatory Counseling Call • Exam Debarment Alert  • Parent HTML Email
+```
+
+### Mathematical Deficit Recovery Formula
+For a required benchmark percentage $r = \frac{\text{threshold}}{100}$ (e.g. 0.75), given total classes $T$ and attended classes $P$:
+$$x = \left\lceil \frac{r \cdot T - P}{1 - r} \right\rceil$$
+
+### Automated Action Dispatchers
+- **Automatic Event Triggering**: Integrated directly into `checkAndSendAttendanceAlerts` on every attendance marking event.
+- **Parent/Guardian Email Dispatcher**: Dispatches high-priority HTML emails with recovery mathematics and institutional contact details when attendance drops below the Tier 4 threshold (default `< 60%`).
+- **Resolution & Audit Ledger**: Records student counselor resolutions with verified notes, or auto-resolves when cumulative attendance rises $\ge 75\%$.
+
+### Endpoints:
+- `GET /api/defaulters`: Query active/resolved defaulters with multi-filter search (`department`, `tier`, `status`, `search`).
+- `GET /api/defaulters/summary`: Defaulter KPI summary cards and tier distribution counts.
+- `GET /api/defaulters/config` & `PUT /api/defaulters/config`: Read and dynamically update 4-tier threshold rules.
+- `POST /api/defaulters/evaluate`: Trigger on-demand college-wide batch defaulter evaluation.
+- `POST /api/defaulters/escalate/:id`: Manually escalate a student's defaulter tier with counselor notes.
+- `POST /api/defaulters/resolve/:id`: Record counselor clearance and resolve defaulter status.
+- `POST /api/defaulters/notify-bulk`: Dispatch multi-channel warning notices to filtered defaulter cohorts.
+- `GET /api/defaulters/student/:studentId`: Retrieve student-facing defaulter status and escalation timeline.
+
+---
+
 ## 🔌 API Endpoint Hierarchy
 
 - `/api/auth` $\rightarrow$ Register, Login, Logout, Password Recovery, Token Refresh (Logs `LOGIN`, `LOGOUT`)
-- `/api/users` $\rightarrow$ Profile management, User directories, Role updates (Logs `CREATE_USER`, `DELETE_USER`, `CHANGE_SETTINGS`)
+- `/api/users` $\rightarrow$ Profile management, User directories, Role updates, Guardian contact info (Logs `CREATE_USER`, `DELETE_USER`, `CHANGE_SETTINGS`)
 - `/api/departments` $\rightarrow$ Department CRUD operations & HOD assignments
 - `/api/courses` $\rightarrow$ Degree program courses CRUD operations
 - `/api/subjects` $\rightarrow$ Subject CRUD & course allocations
@@ -257,11 +307,12 @@ $$\text{safeMisses} = \max\left(0, \left\lfloor \frac{\text{attended} - \text{ta
 - `/api/ai` $\rightarrow$ Attendance Forecasting Engine (`POST /forecast/calculate`, `GET /forecast/me`), Attendance 75% prediction (`GET /predict`), Natural language chatbot (`POST /chat`), Proxy anomaly detection (`GET /suspicious-detection`)
 - `/api/analytics` $\rightarrow$ Admin Intelligence Dashboard (`/admin-intelligence`, `/intelligence`), Teacher classroom analytics (`/teacher/me`, `/teacher/:teacherId`), Student personal analytics dashboard (`/student/me`, `/student/:studentId`), Most absent deficit calculator, Best attendance leaderboard, Dept rankings, Teacher metrics, Daily inspector
 - `/api/academic` $\rightarrow$ Academic hierarchy tree, Academic Years, Dynamic Semesters, Divisions (`IT-A`), Batch Student Promotion Engine
-- `/api/attendance-rules` $\rightarrow$ Institutional rule thresholds, 7-status matrix definitions, Sandbox check-in simulator (Logs `CHANGE_SETTINGS`)
+- `/api/attendance-rules` $\rightarrow$ Institutional rule thresholds, Defaulter policy config, 7-status matrix definitions, Sandbox check-in simulator (Logs `CHANGE_SETTINGS`)
 - `/api/sessions` $\rightarrow$ Attendance Session Engine, Session ID generator, QR/GPS session start & stop lifecycle
 - `/api/anti-proxy` $\rightarrow$ Anti-Proxy Multi-Signal Risk Engine, Phase 22 Attendance Risk Scoring (0-100), 3-Tier Classification (0-30 Normal, 31-60 Review, 61-100 High Risk), Flagged Records Review Console, Bulk Review, Device Clusters, Analytics
 - `/api/corrections` $\rightarrow$ Attendance Modification Workflow, Request submission, Mandatory reasons, Teacher & Admin Review Consoles (Logs `EDIT_ATTENDANCE`)
 - `/api/audit-logs` $\rightarrow$ Institutional Audit Trail Ledger, 10-Action breakdown stats, Multi-column CSV export (Logs `EXPORT_REPORT`)
+- `/api/defaulters` $\rightarrow$ Automated Defaulter Management Engine, 4-Tier Escalation Pipeline, Configurable Thresholds, Batch Evaluation, Parent HTML Email Dispatcher, Counselor Resolution Ledger
 - `/api/health` $\rightarrow$ Infrastructure health check & security stack status
 
 

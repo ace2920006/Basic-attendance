@@ -1,6 +1,6 @@
 # Multi-Role Attendance System - Requirements & Features Specification
 
-This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 29**) for the **Attendance Management System**.
+This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 30**) for the **Attendance Management System**.
 
 ---
 
@@ -11,6 +11,7 @@ This document details the functional specifications, feature requirements, and a
   - Register new account (Roll Number, Department, Course, Semester).
   - Secure Login (JWT token authentication with HTTP-only refresh tokens).
   - Password recovery and profile change management.
+  - Parent/Guardian contact details registration (`guardianName`, `guardianEmail`, `guardianPhone`).
 - **Attendance Overview & Analytics**:
   - Real-time overall attendance percentage score with exam eligibility status badge (>75%).
   - Subject-wise attendance breakdown (Present, Absent, Late counts & percentages).
@@ -40,6 +41,10 @@ This document details the functional specifications, feature requirements, and a
 - **Advanced Student Analytics Dashboard (Phase 27)**:
   - Dedicated personal analytics dashboard (`/student/analytics`) aggregating **9 core metrics**: Overall Attendance (weighted %, raw %, delta), Subject Attendance (per-course %, safe miss allowance, recovery requirement), Weekly Trend (rolling 6-8 weeks velocity deltas), Monthly Trend (trailing 6 months), Best Subject (dynamic detection), Worst Subject (deficit alert), Late Count (punctuality score & 0.8x weight factor), Absent Count (unexcused rate), and Leave Count (approved/pending categories).
   - **Visual Attendance Curve & 75% Minimum Benchmark**: Monotone spline curve with glowing gradient and prominent horizontal dashed rose **75% Minimum Requirement** reference benchmark line rendered in dual-engine Recharts and Chart.js, accompanied by a retro-modern visual threshold matrix card.
+- **Automated Defaulter Management & Escalation Awareness (Phase 30)**:
+  - **Defaulter Escalation Banner**: Prominent warning banner rendered directly on the Student Dashboard (`/student`) when student attendance falls into any shortage tier (`Warning`, `Serious Warning`, `Admin Alert`, `Parent Alert`).
+  - **Mathematical Deficit & Recovery Path**: Explicit guidance computing consecutive lectures needed to clear defaulter status ($x = \lceil \frac{rT - P}{1 - r} \rceil$).
+  - **Student-Scoped Status Inspection**: Dedicated endpoint (`GET /api/defaulters/student/:id`) enabling students to monitor their active defaulter tier and full escalation audit history.
 
 ---
 
@@ -126,6 +131,14 @@ This document details the functional specifications, feature requirements, and a
   - **Teacher / Class Statistics**: 1,870 scheduled vs 1,824 conducted classes (97.5% conduction), on-time marking punctuality index (94.8%), faculty leaderboard, and lecture time slot distribution.
   - **Suspicious Attendance Telemetry**: Anti-proxy monitoring (24 flagged scans today, 6 high risk), multi-signal distribution (hardware collisions 50%, GPS breaches 33.3%, rapid scans 16.7%), and live incident inspection feed.
   - **Leave Statistics & Truancy Impact**: 184 applications with 77.2% approval rate, category breakdown (Medical, Duty, Casual, Sports), and department leave load.
+- **Automated Defaulter Management Console (Phase 30)**:
+  - **Progressive 4-Tier Escalation Hierarchy**: Automated classification into Warning (< 75%), Serious Warning (< 70%), Admin Alert (< 65%), and Parent/Guardian Alert (< 60%).
+  - **Dynamic Configurable Thresholds**: Real-time slider configuration interface to adjust all 4 cutoff thresholds, auto-evaluation triggers, and channel toggles.
+  - **Automated Batch Evaluation**: Campus-wide or filtered (department/division) evaluation runner (`POST /api/defaulters/evaluate`).
+  - **Parent/Guardian Email Alert Dispatch**: Automated generation and email dispatch of formal parental notifications (`guardianEmail`) upon student crossing the < 60% critical shortage boundary.
+  - **Deficit Mathematical Recovery**: Live calculation of exact consecutive lectures required ($x = \lceil \frac{rT - P}{1 - r} \rceil$) to restore standing.
+  - **Defaulter Resolution Ledger**: Administrative clearance workflow allowing counselors to clear records with verified medical/counseling justification notes.
+  - **Executive Console (`/admin/defaulters`)**: Rich visual pipeline diagram, 4-tier cards, searchable roster, audit timeline modal, and CSV export.
 
 ---
 
@@ -189,6 +202,10 @@ This document details the functional specifications, feature requirements, and a
 | **Faculty Teaching Compliance, On-Time Marking & Slot Distribution** | ❌ | ❌ | ✅ | Phase 29 |
 | **College Anti-Proxy & Fraud Telemetry Console** | ❌ | ❌ | ✅ | Phase 29 |
 | **Institutional Leave Analytics & Truancy Impact** | ❌ | ❌ | ✅ | Phase 29 |
+| **Automated Defaulter Management & Escalation Engine** | ✅ | ✅ | ✅ | Phase 30 |
+| **Configurable Escalation Thresholds (<75%, <70%, <65%, <60%)** | ❌ | ❌ | ✅ | Phase 30 |
+| **Automated Parent/Guardian Email Alert Dispatch (<60%)** | ✅ | ✅ | ✅ | Phase 30 |
+| **Defaulter Resolution Ledger & Counselor Audit Roster** | ❌ | ✅ | ✅ | Phase 30 |
 
 ---
 

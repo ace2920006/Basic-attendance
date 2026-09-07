@@ -33,7 +33,9 @@ This document provides a single, unified reference for all project implementatio
 26. [Phase 26 – Attendance Forecasting Engine](#-phase-26--attendance-forecasting-engine)
 27. [Phase 27 – Advanced Student Analytics](#-phase-27--advanced-student-analytics)
 28. [Phase 28 – Teacher Analytics](#-phase-28--teacher-analytics)
-29. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+29. [Phase 29 – Admin Intelligence Dashboard](#-phase-29--admin-intelligence-dashboard-)
+30. [Phase 30 – Automated Defaulter Management](#-phase-30--automated-defaulter-management-)
+31. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -1279,6 +1281,10 @@ Every modification preserves a complete audit log recording:
 | **Faculty Teaching Compliance, On-Time Marking & Slot Distribution** | ❌ | ❌ | ✅ | Phase 29 |
 | **College Anti-Proxy & Fraud Telemetry Console** | ❌ | ❌ | ✅ | Phase 29 |
 | **Institutional Leave Analytics & Truancy Impact** | ❌ | ❌ | ✅ | Phase 29 |
+| **Automated Defaulter Management & Multi-Tier Escalation** | ✅ | ✅ | ✅ | Phase 30 |
+| **Configurable Escalation Thresholds (<75%, <70%, <65%, <60%)** | ❌ | ❌ | ✅ | Phase 30 |
+| **Automated Parent/Guardian Email Alert Dispatch (<60%)** | ✅ | ✅ | ✅ | Phase 30 |
+| **Persistent Defaulter Tracking & Counselor Audit Ledger** | ❌ | ✅ | ✅ | Phase 30 |
 
 ---
 
@@ -1292,7 +1298,7 @@ Phase 29 transforms the administrator portal into an executive, college-level co
    - Total Enrolled Students: `2,481` (across 6 academic departments)
    - Total Faculty Instructors: `143` (1:17 student-teacher ratio)
    - Today's Live Attendance Rate: `87.4%` (2,168 Present, 213 Absent, 100 Late)
-   - Critical Defaulters (&lt;75%): `312` students (12.6% institution-wide)
+   - Critical Defaulters (<75%): `312` students (12.6% institution-wide)
    - Operational telemetry: Active departments, divisions, pending leaves, flagged proxy scans.
 
 2. **Department Comparison**:
@@ -1310,7 +1316,7 @@ Phase 29 transforms the administrator portal into an executive, college-level co
    - Strategic institutional recommendations.
 
 5. **Defaulter Analysis & Deficit Math**:
-   - 3-tier severity classification: Severe Emergency (&lt;50%), Critical Shortage (50-65%), Warning Borderline (65-75%).
+   - 3-tier severity classification: Severe Emergency (<50%), Critical Shortage (50-65%), Warning Borderline (65-75%).
    - Exact mathematical formula for clearing defaulter status: $x = \lceil \frac{0.75T - P}{0.25} \rceil$.
    - Ranked defaulter roster with search, department filtering, and simulated bulk warning alerts dispatch.
 
@@ -1328,6 +1334,51 @@ Phase 29 transforms the administrator portal into an executive, college-level co
    - 184 total applications with 77.2% approval rate (142 approved, 26 pending, 16 rejected).
    - Leave type breakdown: Medical Leave (42.4%), Official Duty (28.3%), Casual Emergency (19.5%), Sports & Cultural (9.8%).
    - Department leave load distribution.
+
+---
+
+## 📌 Phase 30: Automated Defaulter Management 🚨
+
+### Overview & Escalation Pipeline Architecture
+Phase 30 establishes an automated, policy-governed defaulter management system that proactively tracks student attendance, evaluates shortages against configurable institutional thresholds, and dispatches progressive multi-channel escalations.
+
+### Escalation Hierarchy & Workflow
+```
+Student Check-In / Lecture Conducted
+                  ↓
+       Attendance Rate Evaluated
+                  ↓
+          Attendance < 75%
+                  ↓
+               Warning
+                  ↓
+            Notification
+                  ↓
+            Defaulter List
+```
+
+### Progressive Multi-Tier Escalation Thresholds (Configurable)
+1. **< 75% → Warning**:
+   - Low Attendance Warning dispatched to student (In-App, Push, Email).
+   - Computes recovery classes needed: $x = \lceil \frac{rT - P}{1 - r} \rceil$ where $r = 0.75$.
+2. **< 70% → Serious Warning**:
+   - Serious Attendance Warning issued.
+   - Student status flagged as `Warning`.
+   - Prompts mandatory faculty mentor / academic advisor counseling meeting.
+3. **< 65% → Admin Alert**:
+   - Administrative Defaulter Alert dispatched to Academic Administrators and Department HODs.
+   - Student placed on high-priority central examination watchlist.
+4. **< 60% → Parent/Guardian Alert**:
+   - Critical Defaulter Alert dispatched.
+   - Automated formal notice generated and emailed directly to registered parent/guardian (`guardianEmail`).
+   - Advises urgent institutional intervention to prevent semester debarment.
+
+### Key Features
+- **Configurable Thresholds**: Administrators can dynamically modify Warning, Serious Warning, Admin Alert, and Parent Alert percentages via an interactive slider panel.
+- **Deficit Recovery Mathematics**: Real-time calculation of consecutive lectures required to restore standing ($x = \lceil \frac{rT - P}{1 - r} \rceil$).
+- **Automated Trigger Hooks**: Automatically re-evaluates student status upon attendance mark, bulk marking, or QR self check-in.
+- **Recovery & Resolution Ledger**: Clears defaulter status automatically when cumulative attendance reaches benchmark ($\ge 75\%$), or allows administrators to record verified counselor/medical clearance.
+- **Executive Console**: Dedicated Admin Defaulter Management Console (`/admin/defaulters`) with filtering, search, CSV export, timeline modal, and bulk dispatch.
 
 ---
 *Last Updated: September 2026*

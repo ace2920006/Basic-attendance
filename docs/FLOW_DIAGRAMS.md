@@ -20,6 +20,9 @@ This document contains comprehensive flowcharts and system diagrams for the **At
 13. [Phase 25 Advanced Notification Engine & Multi-Channel Pipeline](#13-phase-25-advanced-notification-engine--multi-channel-pipeline)
 14. [Phase 26 Attendance Forecasting Engine & Scenario Simulator](#14-phase-26-attendance-forecasting-engine--scenario-simulator)
 15. [Phase 27 Personal Student Analytics & Visual Threshold Engine](#15-phase-27-personal-student-analytics--visual-threshold-engine)
+16. [Phase 28 Teacher Analytics & Classroom Insights Engine](#16-phase-28-teacher-analytics--classroom-insights-engine)
+17. [Phase 29 Admin Intelligence Dashboard & College Control Center Dataflow](#17-phase-29-admin-intelligence-dashboard--college-control-center-dataflow)
+18. [Phase 30 Automated Defaulter Management & Escalation Pipeline](#18-phase-30-automated-defaulter-management--escalation-pipeline)
 
 ---
 
@@ -525,7 +528,7 @@ flowchart TD
 
 ---
 
-## 28. Phase 28 – Teacher Analytics & Classroom Insights Engine
+## 16. Phase 28: Teacher Analytics & Classroom Insights Engine
 
 ```mermaid
 flowchart TB
@@ -575,7 +578,7 @@ flowchart TB
 
 ---
 
-## 22. Phase 29: Admin Intelligence Dashboard & College Control Center Dataflow
+## 17. Phase 29: Admin Intelligence Dashboard & College Control Center Dataflow
 
 ```mermaid
 flowchart TD
@@ -630,6 +633,58 @@ flowchart TD
 
         TabDef --> Action1["⚡ One-Click Bulk Defaulter Alerts"]
         RouteHandler --> Action2["📄 Export Institutional CSV Report"]
+    end
+```
+
+---
+
+## 18. Phase 30: Automated Defaulter Management & Escalation Pipeline
+
+```mermaid
+flowchart TD
+    subgraph TriggerLayer ["1. Trigger Event & Evaluation Scope"]
+        LiveMark["Class Attendance Marked / Self Check-In / CSV Upload"]
+        BatchJob["Automated / Admin Batch Evaluation (POST /api/defaulters/evaluate)"]
+        LiveMark --> DefaulterService["Defaulter Service Engine (defaulterService.js)"]
+        BatchJob --> DefaulterService
+    end
+
+    subgraph ConfigLayer ["2. Configurable Institutional Rules (AttendanceRule)"]
+        RuleConfig["defaulterConfig Object <br/> • Warning: &lt; 75% <br/> • Serious Warning: &lt; 70% <br/> • Admin Alert: &lt; 65% <br/> • Parent Alert: &lt; 60% <br/> • Min Classes Required: 5"]
+        RuleConfig -.-> DefaulterService
+    end
+
+    subgraph MathPipeline ["3. Mathematical Classification & Recovery Deficit"]
+        DefaulterService --> EvalStatus{"Cumulative Attendance <br/> vs Thresholds"}
+        EvalStatus -- ">= 75%" --> AutoResolve["Auto-Resolve / Clear Defaulter <br/> • Status: resolved <br/> • Recovery Timestamp & Audit"]
+        EvalStatus -- "< 75%" --> CalcRecovery["Recovery Classes Math: <br/> x = ceil((rT - P) / (1 - r)) <br/> where r = 0.75"]
+        CalcRecovery --> TierClassifier{"Tier Classification"}
+        
+        TierClassifier -- "< 75% and >= 70%" --> Tier1["Tier 1: Warning <br/> (Status: Active)"]
+        TierClassifier -- "< 70% and >= 65%" --> Tier2["Tier 2: Serious Warning <br/> (Status: Warning)"]
+        TierClassifier -- "< 65% and >= 60%" --> Tier3["Tier 3: Admin Alert <br/> (High-Priority Watchlist)"]
+        TierClassifier -- "< 60%" --> Tier4["Tier 4: Parent Alert <br/> (Critical Escalation)"]
+    end
+
+    subgraph RecordLedger ["4. DefaulterRecord Persistence & Audit"]
+        Tier1 --> UpsertRecord[("DefaulterRecord Collection <br/> • student, tier, deficit, status <br/> • escalationHistory: [{ tier, timestamp, reason }]")]
+        Tier2 --> UpsertRecord
+        Tier3 --> UpsertRecord
+        Tier4 --> UpsertRecord
+        AutoResolve --> UpsertRecord
+    end
+
+    subgraph DispatchLayer ["5. Progressive Multi-Channel Notifications"]
+        Tier1 --> StudentInApp["Student In-App & Push Notification <br/> ('Attendance dropped below 75%')"]
+        Tier2 --> StudentWarningBanner["Student Dashboard Warning Banner <br/> + Mentor Counseling Callout"]
+        Tier3 --> AdminDashboardAlert["Admin Intelligence Watchlist Badge <br/> + HOD Escalation Notice"]
+        Tier4 --> ParentEmailDispatch["Automated Responsive HTML Parent Email <br/> • Recipient: guardianEmail <br/> • Deficit Recovery Math Included <br/> • Debarment Prevention Advisory"]
+    end
+
+    subgraph AdminConsoleUI ["6. Admin Defaulter Management Console (/admin/defaulters)"]
+        UpsertRecord --> DefaulterConsole["Admin Defaulter Console <br/> • Dynamic Threshold Sliders (75/70/65/60) <br/> • Searchable Roster with Tier Badges <br/> • One-Click Bulk Warning Dispatch <br/> • Timeline Modal with Transition History <br/> • Counselor Resolution & Clearance Modal <br/> • Multi-Column CSV Export"]
+        DefaulterConsole --> CounselorAction["Resolution Ledger: <br/> Record Counselor Notes & Mark Resolved"]
+        CounselorAction --> UpsertRecord
     end
 ```
 

@@ -22,13 +22,13 @@ This document outlines the MongoDB Mongoose database schema, collection definiti
   +--------------------+                 +--------------------+                 +--------------------+
   |  AttendanceRules   | --------------> | AttendanceSessions | --------------> |     Attendance     |
   +--------------------+  (Evaluator)    +--------------------+                 +--------------------+
-                                                   ^                                      ^
-                                                   | 1:N                                  | 1:N
-                                         +--------------------+                 +--------------------+
-                                         |      Classes       |                 | AttendanceCorrect- |
-                                         +--------------------+                 |      ions (P23)    |
-                                                   |                            +--------------------+
-                                                   |                                      |
+            |                                      ^                                      ^
+            | (DefaulterConfig)                    | 1:N                                  | 1:N
+            v                            +--------------------+                 +--------------------+
+  +--------------------+                 |      Classes       |                 | AttendanceCorrect- |
+  |  DefaulterRecords  | <-------------- +--------------------+                 |      ions (P23)    |
+  |  (Phase 30 Engine) |   (Student Ref)           |                            +--------------------+
+  +--------------------+                           |                                      |
                                                    v                                      v
                                          +--------------------+                 +--------------------+
                                          | Notifications(P25) |                 |  AuditLogs (P24)   |
@@ -130,6 +130,10 @@ Authentication credentials, role RBAC, active academic profile, and notification
 | `lastBrowserId` | String | DEFAULT '' | Client browser ID |
 | `fcmTokens` | [String] | Array | Registered FCM web push tokens |
 | `notificationPreferences` | Object | Channels & Events toggles | `{ channels: { inApp, email, push }, events: { attendanceMarked, lowAttendance, leaveStatus, announcements, timetableChanged, classCancelled } }` |
+| `guardianName` | String | DEFAULT '' | Parent/Guardian display name |
+| `guardianEmail` | String | DEFAULT '' | Parent/Guardian email address for automated defaulter escalation dispatch |
+| `guardianPhone` | String | DEFAULT '' | Parent/Guardian telephone contact |
+| `guardianRelation` | String | ENUM (`Parent`, `Mother`, `Father`, `Guardian`, `Other`), DEFAULT `Parent` | Relationship to student |
 
 ---
 
@@ -245,6 +249,7 @@ Institutional thresholds engine and 7-status matrix definitions.
 | `allowStudentSelfCheckIn` | Boolean | DEFAULT true | Student self-service check-in toggle |
 | `consecutiveAbsentAlertThreshold` | Number | DEFAULT 3 | Alert trigger for consecutive absentees |
 | `statusConfigs` | Array [Object] | REQUIRED (7 Statuses) | Matrix rules defining `statusCode`, `label`, `countsAsAttended`, `countsAsConducted`, `attendanceWeight`, and `color` |
+| `defaulterConfig` | Object | Configurable Thresholds (Phase 30) | `{ enabled: Boolean, warningThreshold: 75, seriousWarningThreshold: 70, adminAlertThreshold: 65, parentAlertThreshold: 60, minClassesRequired: 5, autoNotifyParent: Boolean, autoNotifyAdmin: Boolean }` |
 
 ---
 
@@ -305,7 +310,7 @@ Centralized multi-channel alerts and smart attendance recovery advice collection
 | `title` | String | REQUIRED | Notification headline |
 | `message` | String | REQUIRED | Detailed message content |
 | `type` | String | ENUM (`info`, `success`, `warning`, `error`), DEFAULT `info` | UI theme severity level |
-| `eventType` | String | ENUM (10 Event Types) | `ATTENDANCE_MARKED`, `LOW_ATTENDANCE`, `LEAVE_APPROVED`, `LEAVE_REJECTED`, `LEAVE_STATUS`, `ANNOUNCEMENT`, `CLASS_CANCELLED`, `TIMETABLE_CHANGED`, `ANTI_PROXY_REVIEW`, `GENERAL` |
+| `eventType` | String | ENUM (14 Event Types) | `ATTENDANCE_MARKED`, `LOW_ATTENDANCE`, `LEAVE_APPROVED`, `LEAVE_REJECTED`, `LEAVE_STATUS`, `ANNOUNCEMENT`, `CLASS_CANCELLED`, `TIMETABLE_CHANGED`, `ANTI_PROXY_REVIEW`, `DEFAULTER_WARNING`, `DEFAULTER_SERIOUS`, `DEFAULTER_ADMIN_ALERT`, `DEFAULTER_PARENT_ALERT`, `GENERAL` |
 | `read` | Boolean | DEFAULT false | Read receipt flag |
 | `unread` | Boolean | DEFAULT true | Unread state flag |
 | `channelsSent` | [String] | Array of `in_app`, `email`, `push` | Multi-channel dispatch delivery log |
@@ -315,9 +320,41 @@ Centralized multi-channel alerts and smart attendance recovery advice collection
 
 ---
 
+### 14. `DefaulterRecords`
+Persistent automated defaulter tracking, recovery deficit calculations, escalation histories, and counselor resolutions (Phase 30).
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `_id` | ObjectId | PRIMARY KEY | Unique Defaulter Record Mongo ID |
+| `student` | ObjectId | REF `User`, REQUIRED | Target defaulter student reference |
+| `department` | String | DEFAULT 'Computer Science' | Academic department |
+| `attendancePercentage`| Number | REQUIRED (0 to 100) | Current cumulative attendance percentage |
+| `attendedClasses` | Number | REQUIRED, MIN 0 | Number of classes attended |
+| `totalClasses` | Number | REQUIRED, MIN 0 | Total number of classes conducted |
+| `classesNeededToTarget` | Number | REQUIRED, MIN 0 | Consecutive classes needed to reach 75% |
+| `tier` | String | ENUM (`warning`, `serious_warning`, `admin_alert`, `parent_alert`), REQUIRED | Active escalation tier |
+| `status` | String | ENUM (`active`, `resolved`, `escalated`), DEFAULT `active` | Active tracking or resolution state |
+| `escalationHistory` | Array [Object] | Audit Log of Transitions | `[{ tier, triggeredAt, attendancePercentage, classesNeeded, reason, notifiedChannels }]` |
+| `parentNotified` | Boolean | DEFAULT false | Parent alert dispatch flag |
+| `parentNotifiedAt` | Date | OPTIONAL | Timestamp of parent email notification |
+| `resolvedAt` | Date | OPTIONAL | Timestamp of resolution / recovery |
+| `resolvedBy` | ObjectId | REF `User`, OPTIONAL | Admin / Counselor who recorded resolution |
+| `resolutionNotes` | String | DEFAULT '' | Justification or counselor action plan notes |
+| `lastEvaluatedAt` | Date | DEFAULT Date.now | Most recent evaluation timestamp |
+| `createdAt` | Date | DEFAULT Date.now | Record creation timestamp |
+| `updatedAt` | Date | DEFAULT Date.now | Last update timestamp |
+
+---
+
 ## ⚡ Performance Indexes
 
 ```javascript
+// Phase 30 Automated Defaulter Management Indexes
+DefaulterRecordSchema.index({ department: 1, status: 1, tier: 1 });
+DefaulterRecordSchema.index({ student: 1, status: 1 });
+DefaulterRecordSchema.index({ tier: 1, status: 1 });
+DefaulterRecordSchema.index({ lastEvaluatedAt: -1 });
+
 // Phase 25 Notification Indexes
 NotificationSchema.index({ user: 1, unread: 1, createdAt: -1 });
 NotificationSchema.index({ user: 1, eventType: 1, createdAt: -1 });
