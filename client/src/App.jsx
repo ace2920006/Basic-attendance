@@ -146,6 +146,7 @@ export default function App() {
               <Route path="suspicious" element={<SuspiciousDetection />} />
               <Route path="academic" element={<AdminAcademicEngine />} />
               <Route path="rules" element={<AdminRulesEngine />} />
+              <Route path="defaulters" element={<AdminDefaulterManagement />} />
               <Route path="departments" element={<AdminDepartments />} />
               <Route path="courses" element={<AdminCourses />} />
               <Route path="subjects" element={<AdminSubjects />} />

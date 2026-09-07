@@ -22,7 +22,8 @@ import {
   FiZap,
   FiShield,
   FiEdit3,
-  FiActivity
+  FiActivity,
+  FiAlertTriangle
 } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
 import { useAuth } from '../../context/AuthContext';
@@ -77,6 +78,7 @@ export default function Sidebar({ role, user: userProp }) {
           { to: '/admin', label: 'Intelligence Dashboard 🧠', icon: FiHome, end: true },
           { to: '/admin/analytics', label: 'Analytics Sub-Console', icon: FiBarChart2 },
           { to: '/admin/corrections', label: 'Correction Audit Trail', icon: FiEdit3 },
+          { to: '/admin/defaulters', label: 'Defaulter Escalation 🚨', icon: FiAlertTriangle },
           { to: '/admin/academic', label: 'Academic Engine', icon: HiOutlineAcademicCap },
           { to: '/admin/rules', label: 'Rules Engine', icon: FiShield },
           { to: '/admin/audit-logs', label: 'Security Audit Logs', icon: FiShield },
