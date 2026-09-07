@@ -31,6 +31,7 @@ const rulesRoutes = require('./routes/rulesRoutes');
 const sessionRoutes = require('./routes/sessionRoutes');
 const antiProxyRoutes = require('./routes/antiProxyRoutes');
 const correctionRoutes = require('./routes/correctionRoutes');
+const defaulterRoutes = require('./routes/defaulterRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const cookieParser = require('cookie-parser');
