@@ -54,6 +54,7 @@ import AdminAuditLogs from './pages/admin/AdminAuditLogs';
 import AdminAcademicEngine from './pages/admin/AdminAcademicEngine';
 import AdminRulesEngine from './pages/admin/AdminRulesEngine';
 import AdminCorrections from './pages/admin/AdminCorrections';
+import AdminDefaulterManagement from './pages/admin/AdminDefaulterManagement';
 
 // Phase 11 Charts
 import ChartsPage from './pages/analytics/ChartsPage';

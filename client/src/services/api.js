@@ -858,3 +858,68 @@ export const reviewCorrectionRequestApi = async (id, data) => {
 export const getAttendanceAuditTrailApi = async (attendanceId) => {
   return apiRequest(`/attendance-corrections/history/${attendanceId}`, { method: 'GET' });
 };
+
+// Phase 30 Automated Defaulter Management APIs
+export const getDefaultersApi = async (params = {}) => {
+  const queryParams = new URLSearchParams();
+  if (params.tier) queryParams.append('tier', params.tier);
+  if (params.department) queryParams.append('department', params.department);
+  if (params.division) queryParams.append('division', params.division);
+  if (params.status) queryParams.append('status', params.status);
+  if (params.search) queryParams.append('search', params.search);
+  if (params.page) queryParams.append('page', params.page);
+  if (params.limit) queryParams.append('limit', params.limit);
+  if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+  if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
+  const queryStr = queryParams.toString() ? `?${queryParams.toString()}` : '';
+  return apiRequest(`/defaulters${queryStr}`, { method: 'GET' });
+};
+
+export const getDefaulterSummaryApi = async () => {
+  return apiRequest('/defaulters/summary', { method: 'GET' });
+};
+
+export const getDefaulterConfigApi = async () => {
+  return apiRequest('/defaulters/config', { method: 'GET' });
+};
+
+export const updateDefaulterConfigApi = async (data) => {
+  return apiRequest('/defaulters/config', {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
+
+export const evaluateDefaultersBatchApi = async (data = {}) => {
+  return apiRequest('/defaulters/evaluate', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const escalateDefaulterApi = async (id, data) => {
+  return apiRequest(`/defaulters/${id}/escalate`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const resolveDefaulterApi = async (id, data) => {
+  return apiRequest(`/defaulters/${id}/resolve`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const bulkNotifyDefaultersApi = async (data) => {
+  return apiRequest('/defaulters/notify-bulk', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const getStudentDefaulterStatusApi = async (studentId = '') => {
+  const endpoint = studentId ? `/defaulters/student/${studentId}` : '/defaulters/student/me';
+  return apiRequest(endpoint, { method: 'GET' });
+};
+
