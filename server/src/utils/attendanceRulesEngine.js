@@ -18,7 +18,19 @@ const DEFAULT_RULES = {
     { status: 'On Leave', label: 'On Approved Leave', countsAsAttended: false, countsAsConducted: false, attendanceWeight: 0.0, badgeColor: '#3B82F6', description: 'Approved leave of absence' },
     { status: 'Holiday', label: 'Institutional Holiday', countsAsAttended: false, countsAsConducted: false, attendanceWeight: 0.0, badgeColor: '#6B7280', description: 'Scheduled holiday' },
     { status: 'Cancelled Lecture', label: 'Cancelled Lecture', countsAsAttended: false, countsAsConducted: false, attendanceWeight: 0.0, badgeColor: '#EC4899', description: 'Lecture cancelled' }
-  ]
+  ],
+  defaulterConfig: {
+    enabled: true,
+    warningThreshold: 75,
+    seriousWarningThreshold: 70,
+    adminAlertThreshold: 65,
+    parentAlertThreshold: 60,
+    minClassesBeforeEvaluation: 3,
+    autoEscalateOnMark: true,
+    sendStudentNotification: true,
+    sendAdminAlert: true,
+    sendParentEmail: true
+  }
 };
 
 let cachedRules = null;

@@ -152,6 +152,57 @@ const attendanceRuleSchema = new mongoose.Schema(
         }
       ]
     },
+    defaulterConfig: {
+      enabled: {
+        type: Boolean,
+        default: true
+      },
+      warningThreshold: {
+        type: Number,
+        default: 75,
+        min: 0,
+        max: 100
+      },
+      seriousWarningThreshold: {
+        type: Number,
+        default: 70,
+        min: 0,
+        max: 100
+      },
+      adminAlertThreshold: {
+        type: Number,
+        default: 65,
+        min: 0,
+        max: 100
+      },
+      parentAlertThreshold: {
+        type: Number,
+        default: 60,
+        min: 0,
+        max: 100
+      },
+      minClassesBeforeEvaluation: {
+        type: Number,
+        default: 3,
+        min: 1
+      },
+      autoEscalateOnMark: {
+        type: Boolean,
+        default: true
+      },
+      sendStudentNotification: {
+        type: Boolean,
+        default: true
+      },
+      sendAdminAlert: {
+        type: Boolean,
+        default: true
+      },
+      sendParentEmail: {
+        type: Boolean,
+        default: true
+      }
+    },
     updatedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
