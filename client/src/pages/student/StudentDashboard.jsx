@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   FiClock, 
@@ -12,7 +12,8 @@ import {
   FiAlertTriangle,
   FiArrowRight,
   FiFileText,
-  FiActivity
+  FiActivity,
+  FiShield
 } from 'react-icons/fi';
 import { QrCode } from 'lucide-react';
 
@@ -27,6 +28,7 @@ import {
 } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
 import AttendanceBadge from '../../components/common/AttendanceBadge';
+import { getStudentDefaulterStatusApi } from '../../services/api';
 
 export default function StudentDashboard() {
   const { user: authUser } = useAuth();
@@ -34,6 +36,19 @@ export default function StudentDashboard() {
   const upcoming = studentUpcomingLecture;
   const leaves = studentLeaves;
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [defaulterData, setDefaulterData] = useState(null);
+
+  useEffect(() => {
+    getStudentDefaulterStatusApi(user?._id)
+      .then((res) => {
+        if (res?.success && res.data) {
+          setDefaulterData(res.data);
+        }
+      })
+      .catch(() => {});
+  }, [user?._id]);
+
+  const activeDefaulter = defaulterData?.currentRecord;
 
   return (
     <div className="space-y-6">
@@ -88,6 +103,68 @@ export default function StudentDashboard() {
           </Link>
         </div>
       </div>
+
+      {/* Phase 30: Automated Defaulter Escalation Warning Banner */}
+      {activeDefaulter && (
+        <div
+          className={`p-5 rounded-2xl border backdrop-blur-md shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 animate-slideDown ${
+            activeDefaulter.tier === 'PARENT_ALERT'
+              ? 'bg-gradient-to-r from-rose-950/80 via-red-950/50 to-slate-900 border-rose-500/50'
+              : activeDefaulter.tier === 'ADMIN_ALERT'
+              ? 'bg-gradient-to-r from-pink-950/80 via-rose-950/40 to-slate-900 border-pink-500/50'
+              : activeDefaulter.tier === 'SERIOUS_WARNING'
+              ? 'bg-gradient-to-r from-amber-950/80 via-orange-950/40 to-slate-900 border-amber-500/50'
+              : 'bg-gradient-to-r from-yellow-950/80 via-amber-950/40 to-slate-900 border-yellow-500/50'
+          }`}
+        >
+          <div className="flex items-start gap-3.5">
+            <div
+              className={`p-2.5 rounded-xl border mt-0.5 ${
+                activeDefaulter.tier === 'PARENT_ALERT'
+                  ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                  : activeDefaulter.tier === 'ADMIN_ALERT'
+                  ? 'bg-pink-500/20 text-pink-300 border-pink-500/40'
+                  : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+              }`}
+            >
+              <FiAlertTriangle className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-extrabold text-white">
+                  {activeDefaulter.tier === 'PARENT_ALERT'
+                    ? '🚨 Critical Defaulter: Parental Alert Dispatched'
+                    : activeDefaulter.tier === 'ADMIN_ALERT'
+                    ? '🛑 High-Priority Admin Defaulter Alert'
+                    : activeDefaulter.tier === 'SERIOUS_WARNING'
+                    ? '⚠️ Serious Attendance Warning: Mentor Meeting Required'
+                    : '⚠️ Attendance Warning: Shortage Detected'}
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-slate-900/80 text-white border border-slate-700">
+                  {activeDefaulter.attendancePercentage}% (Min {activeDefaulter.targetPercentage || 75}%)
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-1 max-w-2xl leading-relaxed">
+                Your cumulative attendance has dropped below the threshold. You must attend the next{' '}
+                <strong className="text-cyan-300 underline font-bold">
+                  {activeDefaulter.classesNeededToTarget} consecutive lectures
+                </strong>{' '}
+                without missing any sessions to clear this status and qualify for semester examinations.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start md:self-center shrink-0">
+            <Link
+              to="/student/predict"
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-white/10 hover:bg-white/20 text-white border border-white/20 transition flex items-center gap-1.5 shadow-sm"
+            >
+              <FiTrendingUp className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Simulate Recovery</span>
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Metric Section: Attendance % Score & Breakdown */}
       <AttendanceCard user={user} />

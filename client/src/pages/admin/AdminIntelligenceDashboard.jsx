@@ -200,6 +200,15 @@ export default function AdminIntelligenceDashboard() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 self-start lg:self-center">
+            <Link
+              to="/admin/defaulters"
+              className="px-3.5 py-2 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+              title="Open Automated Defaulter Management & Escalation Hub"
+            >
+              <FiAlertTriangle className="w-3.5 h-3.5 text-rose-400" />
+              <span>Defaulter Console 🚨</span>
+            </Link>
+
             <button
               onClick={handleDispatchBulkAlerts}
               className="px-3.5 py-2 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-rose-600/20 flex items-center gap-1.5 transition-all"
