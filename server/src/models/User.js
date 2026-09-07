@@ -81,6 +81,22 @@ const userSchema = new mongoose.Schema(
       enum: ['Active', 'Inactive', 'Warning'],
       default: 'Active'
     },
+    guardianName: {
+      type: String,
+      default: ''
+    },
+    guardianEmail: {
+      type: String,
+      default: ''
+    },
+    guardianPhone: {
+      type: String,
+      default: ''
+    },
+    guardianRelation: {
+      type: String,
+      default: 'Parent/Guardian'
+    },
     refreshToken: {
       type: String,
       default: ''

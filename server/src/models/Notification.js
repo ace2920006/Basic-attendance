@@ -32,6 +32,10 @@ const notificationSchema = new mongoose.Schema(
         'CLASS_CANCELLED',
         'TIMETABLE_CHANGED',
         'ANTI_PROXY_REVIEW',
+        'DEFAULTER_WARNING',
+        'DEFAULTER_SERIOUS',
+        'DEFAULTER_ADMIN_ALERT',
+        'DEFAULTER_PARENT_ALERT',
         'GENERAL'
       ],
       default: 'GENERAL'
