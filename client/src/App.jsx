@@ -65,6 +65,15 @@ import AiChatPage from './pages/student/AiChatPage';
 import SuspiciousDetection from './pages/admin/SuspiciousDetection';
 import AiChatWidget from './components/ai/AiChatWidget';
 
+// Phase 31 Parent Portal
+import ParentLayout from './pages/parent/ParentLayout';
+import ParentDashboard from './pages/parent/ParentDashboard';
+import ParentAttendance from './pages/parent/ParentAttendance';
+import ParentSubjects from './pages/parent/ParentSubjects';
+import ParentLeaves from './pages/parent/ParentLeaves';
+import ParentWarnings from './pages/parent/ParentWarnings';
+import ParentNotifications from './pages/parent/ParentNotifications';
+
 export default function App() {
   return (
     <AuthProvider>
@@ -158,6 +167,22 @@ export default function App() {
               <Route path="settings" element={<AdminSettings />} />
             </Route>
 
+            {/* Parent Portal Routes (Phase 31) */}
+            <Route 
+              path="/parent" 
+              element={
+                <ProtectedRoute allowedRoles={['parent', 'admin']}>
+                  <ParentLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<ParentDashboard />} />
+              <Route path="attendance" element={<ParentAttendance />} />
+              <Route path="subjects" element={<ParentSubjects />} />
+              <Route path="leaves" element={<ParentLeaves />} />
+              <Route path="warnings" element={<ParentWarnings />} />
+              <Route path="notifications" element={<ParentNotifications />} />
+            </Route>
 
             {/* Fallback to Home */}
             <Route path="*" element={<Navigate to="/" replace />} />
