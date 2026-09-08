@@ -909,6 +909,44 @@ const notifyDefaulterEscalation = async ({
     }
   }
 
+  // 4. Create in-app notification for registered parent user accounts linked to this student
+  if (tier === 'PARENT_ALERT') {
+    try {
+      const parentUsers = await User.find({
+        role: 'parent',
+        $or: [
+          { linkedStudents: student._id },
+          ...(guardianEmail ? [{ email: { $regex: new RegExp(`^${guardianEmail}$`, 'i') } }] : [])
+        ]
+      });
+      for (const pUser of parentUsers) {
+        await Notification.create({
+          recipient: pUser._id,
+          title: `🚨 Critical Defaulter Alert: ${student.name || 'Your Ward'} (<${parentTh}%)`,
+          message: `Your ward ${student.name || 'Student'} (${student.rollNo || ''}) has dropped to ${pct}% attendance. Recovery required: ${deficit} consecutive classes.`,
+          type: 'error',
+          eventType: 'DEFAULTER_PARENT_ALERT',
+          channelsSent: ['in_app', 'email'],
+          targetRole: 'parent',
+          smartAdvice: {
+            currentPercentage: pct,
+            targetPercentage: warningTh,
+            lecturesNeeded: deficit
+          },
+          data: {
+            studentId: student._id,
+            studentName: student.name,
+            rollNo: student.rollNo,
+            percentage: pct,
+            tier
+          }
+        });
+      }
+    } catch (err) {
+      console.error('[NotificationService] Failed to notify parent user accounts:', err.message);
+    }
+  }
+
   return {
     studentNotifs,
     parentEmailSent

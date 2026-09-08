@@ -32,6 +32,7 @@ const sessionRoutes = require('./routes/sessionRoutes');
 const antiProxyRoutes = require('./routes/antiProxyRoutes');
 const correctionRoutes = require('./routes/correctionRoutes');
 const defaulterRoutes = require('./routes/defaulterRoutes');
+const parentRoutes = require('./routes/parentRoutes');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const cookieParser = require('cookie-parser');
@@ -114,6 +115,7 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/anti-proxy', antiProxyRoutes);
 app.use('/api/attendance-corrections', correctionRoutes);
 app.use('/api/defaulters', defaulterRoutes);
+app.use('/api/parent', parentRoutes);
 
 
 // Error Handling Middlewares
