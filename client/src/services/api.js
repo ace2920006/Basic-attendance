@@ -923,3 +923,50 @@ export const getStudentDefaulterStatusApi = async (studentId = '') => {
   return apiRequest(endpoint, { method: 'GET' });
 };
 
+// ==========================================
+// Phase 31: Parent / Guardian Portal APIs
+// ==========================================
+
+export const getParentWardsApi = async () => {
+  return apiRequest('/parent/wards', { method: 'GET' });
+};
+
+export const linkParentWardApi = async (data) => {
+  return apiRequest('/parent/link-ward', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const getParentOverviewApi = async (studentId = '') => {
+  const endpoint = studentId ? `/parent/overview/${studentId}` : '/parent/overview';
+  return apiRequest(endpoint, { method: 'GET' });
+};
+
+export const getParentAttendanceApi = async (studentId = '', params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  const base = studentId ? `/parent/attendance/${studentId}` : '/parent/attendance';
+  const endpoint = query ? `${base}?${query}` : base;
+  return apiRequest(endpoint, { method: 'GET' });
+};
+
+export const getParentSubjectsApi = async (studentId = '') => {
+  const endpoint = studentId ? `/parent/subjects/${studentId}` : '/parent/subjects';
+  return apiRequest(endpoint, { method: 'GET' });
+};
+
+export const getParentLeavesApi = async (studentId = '') => {
+  const endpoint = studentId ? `/parent/leaves/${studentId}` : '/parent/leaves';
+  return apiRequest(endpoint, { method: 'GET' });
+};
+
+export const getParentWarningsApi = async (studentId = '') => {
+  const endpoint = studentId ? `/parent/warnings/${studentId}` : '/parent/warnings';
+  return apiRequest(endpoint, { method: 'GET' });
+};
+
+export const getParentNotificationsApi = async (studentId = '') => {
+  const endpoint = studentId ? `/parent/notifications?studentId=${studentId}` : '/parent/notifications';
+  return apiRequest(endpoint, { method: 'GET' });
+};
+

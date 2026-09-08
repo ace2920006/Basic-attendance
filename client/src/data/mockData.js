@@ -41,6 +41,18 @@ export const currentUser = {
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=250',
     designation: 'Chief System Administrator',
     department: 'Central Administration',
+  },
+  parent: {
+    id: 'PAR-2024-001',
+    name: 'Elena Rivera',
+    email: 'parent.rivera@family.edu',
+    phone: '+1 (555) 345-9876',
+    role: 'parent',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=250',
+    wardRollNo: 'CS-2024-089',
+    wardName: 'Alex Rivera',
+    relationship: 'Mother',
+    linkedStudents: ['STU-2024-001']
   }
 };
 
