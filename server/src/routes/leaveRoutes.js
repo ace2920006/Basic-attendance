@@ -11,7 +11,7 @@ const { protect, authorize } = require('../middleware/authMiddleware');
 router.use(protect);
 
 router.route('/')
-  .post(applyLeave)
+  .post(authorize('student'), applyLeave)
   .get(authorize('teacher', 'admin'), getAllLeaves);
 
 router.get('/my', getMyLeaves);
