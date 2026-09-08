@@ -46,9 +46,19 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error('User already exists with this email');
   }
 
-  // Security Hardening Fix #1: Public self-registration is strictly forced to 'student' role.
-  // Teacher and Admin accounts must be provisioned by an authorized administrator via /api/users.
-  const forcedRole = 'student';
+  // Public registration allows 'student' or 'parent'. Teacher/Admin accounts must be provisioned by an authorized administrator.
+  const forcedRole = req.body.role === 'parent' ? 'parent' : 'student';
+
+  let initialLinkedStudents = [];
+  if (forcedRole === 'parent' && req.body.wardRollNo) {
+    const studentMatch = await User.findOne({
+      role: 'student',
+      rollNo: { $regex: new RegExp(`^${req.body.wardRollNo.trim()}$`, 'i') }
+    });
+    if (studentMatch) {
+      initialLinkedStudents.push(studentMatch._id);
+    }
+  }
 
   const user = await User.create({
     name,
@@ -56,6 +66,8 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     role: forcedRole,
     rollNo: rollNo || '',
+    wardRollNo: req.body.wardRollNo || '',
+    linkedStudents: initialLinkedStudents,
     department: department || 'Computer Science & Engineering',
     designation: designation || '',
     semester: semester || ''

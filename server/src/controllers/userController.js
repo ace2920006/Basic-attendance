@@ -55,7 +55,7 @@ const getUserById = asyncHandler(async (req, res) => {
 // @route   POST /api/users
 // @access  Private/Admin
 const createUser = asyncHandler(async (req, res) => {
-  const { name, email, password, role, rollNo, department, course, designation, semester } = req.body;
+  const { name, email, password, role, rollNo, department, course, designation, semester, linkedStudents, wardRollNo } = req.body;
 
   const userExists = await User.findOne({ email });
 
@@ -72,6 +72,8 @@ const createUser = asyncHandler(async (req, res) => {
     password: password || '123456',
     role: userRole,
     rollNo: rollNo || '',
+    wardRollNo: wardRollNo || '',
+    linkedStudents: Array.isArray(linkedStudents) ? linkedStudents : [],
     department: department || 'Computer Science & Engineering',
     course: course || '',
     designation: designation || '',
