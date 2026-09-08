@@ -10,7 +10,7 @@ const auditLogSchema = new mongoose.Schema(
     },
     userRole: {
       type: String,
-      enum: ['student', 'teacher', 'admin', 'anonymous', 'system'],
+      enum: ['student', 'teacher', 'admin', 'parent', 'anonymous', 'system'],
       default: 'anonymous'
     },
     userName: {

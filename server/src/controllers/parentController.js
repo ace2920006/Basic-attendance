@@ -8,6 +8,15 @@ const Subject = require('../models/Subject');
 const { getSystemRules, calculateAttendanceStats } = require('../utils/attendanceRulesEngine');
 const { calculateConsecutiveNeeded, calculateSafeMisses } = require('../utils/forecastingEngine');
 
+// Wrappers for forecasting functions to ensure object-param compatibility
+const getConsecutiveNeeded = (attended, total, targetPercentage = 75) => {
+  return calculateConsecutiveNeeded({ attended, total, targetPercentage });
+};
+
+const getSafeMisses = (attended, total, targetPercentage = 75) => {
+  return calculateSafeMisses({ attended, total, targetPercentage });
+};
+
 /**
  * Helper to resolve the active ward (student) for the current parent/admin user
  */
@@ -203,8 +212,8 @@ const getParentOverview = asyncHandler(async (req, res) => {
 
   const subjectSummary = Object.values(subjectMap).map((sub) => {
     const pct = sub.total > 0 ? Number(((sub.attended / sub.total) * 100).toFixed(1)) : 0;
-    const consecutiveNeeded = pct < minRequired ? calculateConsecutiveNeeded(sub.attended, sub.total, minRequired) : 0;
-    const safeMisses = pct >= minRequired ? calculateSafeMisses(sub.attended, sub.total, minRequired) : 0;
+    const consecutiveNeeded = pct < minRequired ? getConsecutiveNeeded(sub.attended, sub.total, minRequired) : 0;
+    const safeMisses = pct >= minRequired ? getSafeMisses(sub.attended, sub.total, minRequired) : 0;
     return {
       ...sub,
       percentage: pct,
@@ -231,12 +240,12 @@ const getParentOverview = asyncHandler(async (req, res) => {
   // Calculate consecutive classes needed for overall score if below benchmark
   const overallConsecutiveNeeded =
     stats.weightedPercentage < minRequired
-      ? calculateConsecutiveNeeded(stats.totalAttended, stats.totalConducted, minRequired)
+      ? getConsecutiveNeeded(stats.totalAttended, stats.totalConducted, minRequired)
       : 0;
 
   const overallSafeMisses =
     stats.weightedPercentage >= minRequired
-      ? calculateSafeMisses(stats.totalAttended, stats.totalConducted, minRequired)
+      ? getSafeMisses(stats.totalAttended, stats.totalConducted, minRequired)
       : 0;
 
   res.json({
@@ -422,8 +431,8 @@ const getParentSubjects = asyncHandler(async (req, res) => {
 
   const subjects = Object.values(subjectMap).map((sub) => {
     const pct = sub.totalClasses > 0 ? Number(((sub.attended / sub.totalClasses) * 100).toFixed(1)) : 0;
-    const consecutiveNeeded = pct < minRequired ? calculateConsecutiveNeeded(sub.attended, sub.totalClasses, minRequired) : 0;
-    const safeMisses = pct >= minRequired ? calculateSafeMisses(sub.attended, sub.totalClasses, minRequired) : 0;
+    const consecutiveNeeded = pct < minRequired ? getConsecutiveNeeded(sub.attended, sub.totalClasses, minRequired) : 0;
+    const safeMisses = pct >= minRequired ? getSafeMisses(sub.attended, sub.totalClasses, minRequired) : 0;
 
     return {
       ...sub,
@@ -499,7 +508,7 @@ const getParentWarnings = asyncHandler(async (req, res) => {
 
   const consecutiveNeeded =
     stats.weightedPercentage < minRequired
-      ? calculateConsecutiveNeeded(stats.totalAttended, stats.totalConducted, minRequired)
+      ? getConsecutiveNeeded(stats.totalAttended, stats.totalConducted, minRequired)
       : 0;
 
   // Determine current tier

@@ -25,6 +25,7 @@ export default function ProtectedRoute({ children, allowedRoles }) {
     // If role is unauthorized for this section, redirect to their own portal
     if (user.role === 'admin') return <Navigate to="/admin" replace />;
     if (user.role === 'teacher') return <Navigate to="/teacher" replace />;
+    if (user.role === 'parent') return <Navigate to="/parent" replace />;
     return <Navigate to="/student" replace />;
   }
 
