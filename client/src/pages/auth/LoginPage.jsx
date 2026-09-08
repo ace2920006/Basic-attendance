@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FiLock, FiMail, FiArrowRight, FiShield, FiUserCheck, FiAlertCircle } from 'react-icons/fi';
+import { FiLock, FiMail, FiArrowRight, FiShield, FiUserCheck, FiAlertCircle, FiHeart } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
 import Navbar from '../../components/layout/Navbar';
 import Footer from '../../components/layout/Footer';
@@ -20,6 +20,7 @@ export default function LoginPage() {
     if (newRole === 'student') setEmail('alex.rivera@university.edu');
     else if (newRole === 'teacher') setEmail('sarah.jenkins@university.edu');
     else if (newRole === 'admin') setEmail('admin.marcus@university.edu');
+    else if (newRole === 'parent') setEmail('parent.rivera@family.edu');
   };
 
   const handleLogin = async (e) => {
@@ -66,7 +67,7 @@ export default function LoginPage() {
           )}
 
           {/* Role Switcher Pills */}
-          <div className="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 mb-6">
+          <div className="grid grid-cols-4 gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800 mb-6">
             <button
               type="button"
               onClick={() => handleRoleChange('student')}
@@ -96,6 +97,16 @@ export default function LoginPage() {
             >
               <FiShield className="w-3.5 h-3.5" />
               <span>Admin</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleRoleChange('parent')}
+              className={`py-2 text-xs font-semibold rounded-lg flex items-center justify-center gap-1.5 transition-all ${
+                role === 'parent' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <FiHeart className="w-3.5 h-3.5" />
+              <span>Parent</span>
             </button>
           </div>
 
