@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { FiCheckSquare, FiMenu, FiX, FiUserCheck, FiShield } from 'react-icons/fi';
+import { FiCheckSquare, FiMenu, FiX, FiUserCheck, FiShield, FiHeart } from 'react-icons/fi';
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
 
 export default function Navbar() {
@@ -53,6 +53,9 @@ export default function Navbar() {
               <Link to="/admin" className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center gap-1.5">
                 <FiShield className="w-3.5 h-3.5 text-emerald-400" /> Admin
               </Link>
+              <Link to="/parent" className="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800/60 transition-all flex items-center gap-1.5">
+                <FiHeart className="w-3.5 h-3.5 text-rose-400" /> Parent
+              </Link>
             </div>
 
             <Link to="/login" className="btn btn-secondary py-2 text-xs">
@@ -82,10 +85,11 @@ export default function Navbar() {
             
             <div className="pt-3 border-t border-slate-800 space-y-2">
               <div className="text-xs font-semibold text-slate-400 px-3 uppercase tracking-wider">Demo Dashboards</div>
-              <div className="grid grid-cols-3 gap-2 px-3">
+              <div className="grid grid-cols-4 gap-2 px-3">
                 <Link to="/student" onClick={() => setMobileMenuOpen(false)} className="px-2 py-1.5 bg-slate-800 rounded text-center text-xs text-indigo-300 font-medium">Student</Link>
                 <Link to="/teacher" onClick={() => setMobileMenuOpen(false)} className="px-2 py-1.5 bg-slate-800 rounded text-center text-xs text-cyan-300 font-medium">Teacher</Link>
                 <Link to="/admin" onClick={() => setMobileMenuOpen(false)} className="px-2 py-1.5 bg-slate-800 rounded text-center text-xs text-emerald-300 font-medium">Admin</Link>
+                <Link to="/parent" onClick={() => setMobileMenuOpen(false)} className="px-2 py-1.5 bg-slate-800 rounded text-center text-xs text-rose-300 font-medium">Parent</Link>
               </div>
               <div className="flex gap-2 px-3 pt-2">
                 <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="w-1/2 btn btn-secondary text-center text-xs">Sign In</Link>

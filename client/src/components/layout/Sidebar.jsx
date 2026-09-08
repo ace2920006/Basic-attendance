@@ -93,6 +93,16 @@ export default function Sidebar({ role, user: userProp }) {
           { to: '/admin/settings', label: 'System Settings', icon: FiSettings },
         ];
 
+      case 'parent':
+        return [
+          { to: '/parent', label: 'Ward Dashboard 👨‍👩‍👧', icon: FiHome, end: true },
+          { to: '/parent/attendance', label: 'Attendance History', icon: FiBarChart2 },
+          { to: '/parent/subjects', label: 'Subject-Wise Records', icon: FiBookOpen },
+          { to: '/parent/leaves', label: 'Leave Requests & Status', icon: FiCheckSquare },
+          { to: '/parent/warnings', label: 'Attendance Warnings 🚨', icon: FiAlertTriangle },
+          { to: '/parent/notifications', label: 'Alerts & Notices', icon: FiBell },
+        ];
+
       default:
         return [];
     }

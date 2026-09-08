@@ -74,6 +74,7 @@ export default function Header({ title, subtitle, user: userProp }) {
 
   const getNotificationsPath = () => {
     if (activeUser?.role === 'student') return '/student/notifications';
+    if (activeUser?.role === 'parent') return '/parent/notifications';
     return '#';
   };
 
