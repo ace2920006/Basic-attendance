@@ -1,6 +1,6 @@
 # Multi-Role Attendance System - Requirements & Features Specification
 
-This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 30**) for the **Attendance Management System**.
+This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 31**) for the **Attendance Management System**.
 
 ---
 
@@ -142,70 +142,105 @@ This document details the functional specifications, feature requirements, and a
 
 ---
 
+### 4. 👨‍👩‍👧 Parent/Guardian Module (Phase 31)
+- **Authentication & Multi-Ward Linking**:
+  - Parent account registration (`role = 'parent'`) and secure JWT authentication.
+  - Multi-ward support allowing parents with multiple enrolled children to switch active ward context seamlessly.
+  - Link additional ward by providing student roll number (`POST /api/parent/link-ward`).
+- **Cumulative Attendance & Threshold Monitoring**:
+  - Real-time cumulative attendance percentage indicator with 75% University Benchmark alert banner.
+  - Overall status badges: Safe Zone ($>75\%$) vs Defaulter Shortage ($<75\%$).
+  - Summary metrics: Total classes conducted, attended, absent, late arrivals, and sanctioned medical leaves.
+- **Subject-Wise Breakdown & Deficit Forecasting**:
+  - Course-by-course breakdown displaying individual course attendance percentages and lecture counts.
+  - Safe miss allowance indicator ($m = \lfloor \frac{P - rT}{r} \rfloor$) showing how many lectures can be missed while remaining above 75%.
+  - Consecutive recovery calculator ($x = \lceil \frac{rT - P}{1 - r} \rceil$) computing exact consecutive attendances required to restore 75% compliance.
+  - Instructor name, subject code, and faculty department contact details.
+- **Leave Request & Medical Proof Inspection**:
+  - Transparent inspection of student-submitted leave requests (Medical, Emergency, Duty).
+  - Review date ranges, total days, uploaded medical proof files/certificates, and faculty approval/rejection remarks.
+  - Explicit notification that leave applications can only be created by the enrolled student.
+- **Defaulter Warnings & Escalation Center**:
+  - Visual 4-tier escalation status tracker (Warning $<75\%$, Serious Warning $<70\%$, Admin Alert $<65\%$, Parent Alert $<60\%$).
+  - Mathematical recovery deficit countdown and direct contact links for the Academic Counseling Cell and Department Head.
+- **Parent Notification Feed & Circulars**:
+  - Dedicated notification stream categorizing attendance shortage alerts, leave approval status changes, and campus circulars.
+- **Strict Read-Only Access Enforcement**:
+  - Absolute read-only architecture: parents cannot create, edit, mark, or override any attendance records or leave requests (`403 Forbidden`).
+
+---
+
 ## 🔐 Access Control Matrix (RBAC)
 
-| Feature / Resource | Student | Teacher | Admin | Implementation Phase |
-| :--- | :---: | :---: | :---: | :---: |
-| **User Authentication & Token Refresh** | ✅ | ✅ | ✅ | Phase 1 & 16 |
-| **Role-Based Access Control (RBAC)** | ✅ | ✅ | ✅ | Phase 1 & 16 |
-| **Executive Dashboard & Global Analytics** | ❌ | ❌ | ✅ | Phase 5 & 15 |
-| **Academic Year & Semester Engine** | ❌ | ❌ | ✅ | Phase 18 |
-| **Class Divisions & Student Batch Promotion** | ❌ | ❌ | ✅ | Phase 18 |
-| **Department, Course & Subject Management** | ❌ | ❌ | ✅ | Phase 5 |
-| **Faculty & Student Account Management** | ❌ | ❌ | ✅ | Phase 5 & 16 |
-| **Create Active Class & Generate 30s Dynamic QR** | ❌ | ✅ | ✅ | Phase 7, 8 & 20 |
-| **Scan QR Code & Mark Attendance** | ✅ | ❌ | ❌ | Phase 8 & 20 |
-| **GPS Campus Geofencing & Anti-Proxy Verification** | ✅ | ✅ | ✅ | Phase 8 & 21 |
-| **Weekly Timetable Creator & Schedule Matrix** | ✅ | ✅ | ✅ | Phase 9 |
-| **Submit Leave Request & Upload Document** | ✅ | ❌ | ❌ | Phase 6 & 13 |
-| **Review / Approve Leave Requests & Remarks** | ❌ | ✅ | ✅ | Phase 13 |
-| **View Attendance Charts (Pie, Dept, Trend, Subject, Ranking)** | ✅ | ✅ | ✅ | Phase 11 |
-| **Real-Time Socket.io & FCM Web Push Notifications** | ✅ | ✅ | ✅ | Phase 12 |
-| **Attendance Prediction Engine & AI Chatbot** | ✅ | ✅ | ✅ | Phase 14 |
-| **Suspicious Proxy Detection Console** | ❌ | ✅ | ✅ | Phase 14 & 21 |
-| **Executive Analytics Hub (5 Sub-Modules)** | ❌ | ❌ | ✅ | Phase 15 |
-| **Configurable Attendance Rules & Thresholds Engine** | ❌ | ❌ | ✅ | Phase 19 |
-| **7-Status Matrix Rules & Attendance Weights** | ❌ | ❌ | ✅ | Phase 19 |
-| **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ | Phase 19 |
-| **Attendance Session Engine (Session ID, Start/End Timestamps)** | ❌ | ✅ | ✅ | Phase 20 |
-| **Session-Linked Attendance Logs & QR/GPS Session Management** | ✅ | ✅ | ✅ | Phase 20 |
-| **Attendance Risk Scoring Engine (0-100 Scoring & 3-Tier Classification)** | ✅ | ✅ | ✅ | Phase 22 |
-| **Attendance Correction Workflow (Request, Reason, Review, Audit)** | ✅ | ✅ | ✅ | Phase 23 |
-| **Complete 10-Action Audit Logging & Ledger Inspection** | ❌ | ❌ | ✅ | Phase 24 |
-| **State Mutation Diff Cards (`Absent → Present`) & Reason Callouts** | ❌ | ❌ | ✅ | Phase 24 |
-| **Institutional Audit CSV Export** | ❌ | ❌ | ✅ | Phase 24 |
-| **Multi-Channel Notification Dispatching (In-App, Email, Push)** | ✅ | ✅ | ✅ | Phase 25 |
-| **Smart Notification Recovery Advisor ("N lectures needed for 75%")** | ✅ | ❌ | ❌ | Phase 25 |
-| **User Notification Preferences & Channel Toggles** | ✅ | ✅ | ✅ | Phase 25 |
-| **Automated Multi-Channel Domain Events (7 Event Processors)** | ✅ | ✅ | ✅ | Phase 25 |
-| **Interactive Notification Simulator & Smart Summary Sandbox** | ✅ | ✅ | ✅ | Phase 25 |
-| **Attendance Forecasting Mathematical Recovery Engine ($x = \lceil \frac{rT - P}{1-r} \rceil$)** | ✅ | ✅ | ✅ | Phase 26 |
-| **Safe Miss Allowance Calculator ($m = \lfloor \frac{P - rT}{r} \rfloor$)** | ✅ | ✅ | ✅ | Phase 26 |
-| **Interactive "Can I Skip?" Scenario Simulator & What-If Sandbox** | ✅ | ✅ | ✅ | Phase 26 |
-| **Multi-Benchmark Milestone Ladder (75%, 80%, 85%, 90%)** | ✅ | ✅ | ✅ | Phase 26 |
-| **AI Assistant NLP Forecasting Integration (Skip & Recovery Cards)** | ✅ | ✅ | ✅ | Phase 26 |
-| **Personal Student Analytics Dashboard (9 Core Metrics & Status Breakdown)** | ✅ | ✅ | ✅ | Phase 27 |
-| **Visual Attendance Curve with 75% Minimum Benchmark Line** | ✅ | ✅ | ✅ | Phase 27 |
-| **Subject Attendance Safe Buffer & Consecutive Recovery Calculator** | ✅ | ✅ | ✅ | Phase 27 |
-| **Weekly & Monthly Attendance Velocity Progression** | ✅ | ✅ | ✅ | Phase 27 |
-| **Teacher Analytics & Classroom Insights Hub** | ❌ | ✅ | ✅ | Phase 28 |
-| **Weekday Pattern Analysis & Friday Slump Detection (Mon 82% to Fri 69%)** | ❌ | ✅ | ✅ | Phase 28 |
-| **Attendance by Lecture Time Slot (Morning vs Post-Lunch Slump)** | ❌ | ✅ | ✅ | Phase 28 |
-| **Chronic Defaulters & Latecomers Tracking with Deficit Math** | ❌ | ✅ | ✅ | Phase 28 |
-| **Subject Attendance & Division Comparative Analytics (Sec A vs Sec B vs Sec C)** | ❌ | ✅ | ✅ | Phase 28 |
-| **Admin Intelligence Dashboard (College-Level Control Center)** | ❌ | ❌ | ✅ | Phase 29 |
-| **Top Executive KPI Console (Students: 2,481, Teachers: 143, Today: 87.4%, Defaulters: 312)** | ❌ | ❌ | ✅ | Phase 29 |
-| **Cross-Department Performance Benchmark & Variance Analysis** | ❌ | ❌ | ✅ | Phase 29 |
-| **Inter-Division & Section Matrix (Class Size, Mentors, Defaulters)** | ❌ | ❌ | ✅ | Phase 29 |
-| **College-Wide 6-Month Trendline & Weekday Slump Analysis** | ❌ | ❌ | ✅ | Phase 29 |
-| **Defaulter Intelligence & Recovery Roster ($x = \lceil \frac{0.75T - P}{0.25} \rceil$)** | ❌ | ❌ | ✅ | Phase 29 |
-| **Faculty Teaching Compliance, On-Time Marking & Slot Distribution** | ❌ | ❌ | ✅ | Phase 29 |
-| **College Anti-Proxy & Fraud Telemetry Console** | ❌ | ❌ | ✅ | Phase 29 |
-| **Institutional Leave Analytics & Truancy Impact** | ❌ | ❌ | ✅ | Phase 29 |
-| **Automated Defaulter Management & Escalation Engine** | ✅ | ✅ | ✅ | Phase 30 |
-| **Configurable Escalation Thresholds (<75%, <70%, <65%, <60%)** | ❌ | ❌ | ✅ | Phase 30 |
-| **Automated Parent/Guardian Email Alert Dispatch (<60%)** | ✅ | ✅ | ✅ | Phase 30 |
-| **Defaulter Resolution Ledger & Counselor Audit Roster** | ❌ | ✅ | ✅ | Phase 30 |
+| Feature / Resource | Student | Teacher | Admin | Parent | Implementation Phase |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **User Authentication & Token Refresh** | ✅ | ✅ | ✅ | ✅ | Phase 1 & 16 |
+| **Role-Based Access Control (RBAC)** | ✅ | ✅ | ✅ | ✅ | Phase 1 & 16 |
+| **Executive Dashboard & Global Analytics** | ❌ | ❌ | ✅ | ❌ | Phase 5 & 15 |
+| **Academic Year & Semester Engine** | ❌ | ❌ | ✅ | ❌ | Phase 18 |
+| **Class Divisions & Student Batch Promotion** | ❌ | ❌ | ✅ | ❌ | Phase 18 |
+| **Department, Course & Subject Management** | ❌ | ❌ | ✅ | ❌ | Phase 5 |
+| **Faculty & Student Account Management** | ❌ | ❌ | ✅ | ❌ | Phase 5 & 16 |
+| **Create Active Class & Generate 30s Dynamic QR** | ❌ | ✅ | ✅ | ❌ | Phase 7, 8 & 20 |
+| **Scan QR Code & Mark Attendance** | ✅ | ❌ | ❌ | ❌ | Phase 8 & 20 |
+| **GPS Campus Geofencing & Anti-Proxy Verification** | ✅ | ✅ | ✅ | ❌ | Phase 8 & 21 |
+| **Weekly Timetable Creator & Schedule Matrix** | ✅ | ✅ | ✅ | ❌ | Phase 9 |
+| **Submit Leave Request & Upload Document** | ✅ | ❌ | ❌ | ❌ | Phase 6 & 13 |
+| **Review / Approve Leave Requests & Remarks** | ❌ | ✅ | ✅ | ❌ | Phase 13 |
+| **View Attendance Charts (Pie, Dept, Trend, Subject, Ranking)** | ✅ | ✅ | ✅ | ❌ | Phase 11 |
+| **Real-Time Socket.io & FCM Web Push Notifications** | ✅ | ✅ | ✅ | ✅ | Phase 12 |
+| **Attendance Prediction Engine & AI Chatbot** | ✅ | ✅ | ✅ | ❌ | Phase 14 |
+| **Suspicious Proxy Detection Console** | ❌ | ✅ | ✅ | ❌ | Phase 14 & 21 |
+| **Executive Analytics Hub (5 Sub-Modules)** | ❌ | ❌ | ✅ | ❌ | Phase 15 |
+| **Configurable Attendance Rules & Thresholds Engine** | ❌ | ❌ | ✅ | ❌ | Phase 19 |
+| **7-Status Matrix Rules & Attendance Weights** | ❌ | ❌ | ✅ | ❌ | Phase 19 |
+| **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ | ❌ | Phase 19 |
+| **Attendance Session Engine (Session ID, Start/End Timestamps)** | ❌ | ✅ | ✅ | ❌ | Phase 20 |
+| **Session-Linked Attendance Logs & QR/GPS Session Management** | ✅ | ✅ | ✅ | ❌ | Phase 20 |
+| **Attendance Risk Scoring Engine (0-100 Scoring & 3-Tier Classification)** | ✅ | ✅ | ✅ | ❌ | Phase 22 |
+| **Attendance Correction Workflow (Request, Reason, Review, Audit)** | ✅ | ✅ | ✅ | ❌ | Phase 23 |
+| **Complete 10-Action Audit Logging & Ledger Inspection** | ❌ | ❌ | ✅ | ❌ | Phase 24 |
+| **State Mutation Diff Cards (`Absent → Present`) & Reason Callouts** | ❌ | ❌ | ✅ | ❌ | Phase 24 |
+| **Institutional Audit CSV Export** | ❌ | ❌ | ✅ | ❌ | Phase 24 |
+| **Multi-Channel Notification Dispatching (In-App, Email, Push)** | ✅ | ✅ | ✅ | ✅ | Phase 25 |
+| **Smart Notification Recovery Advisor ("N lectures needed for 75%")** | ✅ | ❌ | ❌ | ❌ | Phase 25 |
+| **User Notification Preferences & Channel Toggles** | ✅ | ✅ | ✅ | ✅ | Phase 25 |
+| **Automated Multi-Channel Domain Events (7 Event Processors)** | ✅ | ✅ | ✅ | ✅ | Phase 25 |
+| **Interactive Notification Simulator & Smart Summary Sandbox** | ✅ | ✅ | ✅ | ❌ | Phase 25 |
+| **Attendance Forecasting Mathematical Recovery Engine ($x = \lceil \frac{rT - P}{1-r} \rceil$)** | ✅ | ✅ | ✅ | ❌ | Phase 26 |
+| **Safe Miss Allowance Calculator ($m = \lfloor \frac{P - rT}{r} \rfloor$)** | ✅ | ✅ | ✅ | ❌ | Phase 26 |
+| **Interactive "Can I Skip?" Scenario Simulator & What-If Sandbox** | ✅ | ✅ | ✅ | ❌ | Phase 26 |
+| **Multi-Benchmark Milestone Ladder (75%, 80%, 85%, 90%)** | ✅ | ✅ | ✅ | ❌ | Phase 26 |
+| **AI Assistant NLP Forecasting Integration (Skip & Recovery Cards)** | ✅ | ✅ | ✅ | ❌ | Phase 26 |
+| **Personal Student Analytics Dashboard (9 Core Metrics & Status Breakdown)** | ✅ | ✅ | ✅ | ❌ | Phase 27 |
+| **Visual Attendance Curve with 75% Minimum Benchmark Line** | ✅ | ✅ | ✅ | ❌ | Phase 27 |
+| **Subject Attendance Safe Buffer & Consecutive Recovery Calculator** | ✅ | ✅ | ✅ | ❌ | Phase 27 |
+| **Weekly & Monthly Attendance Velocity Progression** | ✅ | ✅ | ✅ | ❌ | Phase 27 |
+| **Teacher Analytics & Classroom Insights Hub** | ❌ | ✅ | ✅ | ❌ | Phase 28 |
+| **Weekday Pattern Analysis & Friday Slump Detection (Mon 82% to Fri 69%)** | ❌ | ✅ | ✅ | ❌ | Phase 28 |
+| **Attendance by Lecture Time Slot (Morning vs Post-Lunch Slump)** | ❌ | ✅ | ✅ | ❌ | Phase 28 |
+| **Chronic Defaulters & Latecomers Tracking with Deficit Math** | ❌ | ✅ | ✅ | ❌ | Phase 28 |
+| **Subject Attendance & Division Comparative Analytics (Sec A vs Sec B vs Sec C)** | ❌ | ✅ | ✅ | ❌ | Phase 28 |
+| **Admin Intelligence Dashboard (College-Level Control Center)** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Top Executive KPI Console (Students: 2,481, Teachers: 143, Today: 87.4%, Defaulters: 312)** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Cross-Department Performance Benchmark & Variance Analysis** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Inter-Division & Section Matrix (Class Size, Mentors, Defaulters)** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **College-Wide 6-Month Trendline & Weekday Slump Analysis** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Defaulter Intelligence & Recovery Roster ($x = \lceil \frac{0.75T - P}{0.25} \rceil$)** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Faculty Teaching Compliance, On-Time Marking & Slot Distribution** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **College Anti-Proxy & Fraud Telemetry Console** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Institutional Leave Analytics & Truancy Impact** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Automated Defaulter Management & Escalation Engine** | ✅ | ✅ | ✅ | ❌ | Phase 30 |
+| **Configurable Escalation Thresholds (<75%, <70%, <65%, <60%)** | ❌ | ❌ | ✅ | ❌ | Phase 30 |
+| **Automated Parent/Guardian Email Alert Dispatch (<60%)** | ✅ | ✅ | ✅ | ✅ | Phase 30 |
+| **Defaulter Resolution Ledger & Counselor Audit Roster** | ❌ | ✅ | ✅ | ❌ | Phase 30 |
+| **Parent/Guardian Portal Access & Multi-Ward Selector** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Ward Cumulative Attendance & 75% Benchmark Status** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Ward Subject-Wise Breakdown & Recovery Deficit Countdown** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Inspect Ward Leave Records & Sanctioned Medical Proofs** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Ward 4-Tier Attendance Warning Tracker & Counseling Directory** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Parent In-App Notifications & Institutional Circulars** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Strict Read-Only Enforcement (No Attendance or Leave Alteration)** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
 
 ---
 

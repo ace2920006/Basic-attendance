@@ -44,6 +44,7 @@ Basic-attendance/
 │   │   │   ├── admin/          # Admin Analytics, Academic Engine, Rules Engine, Corrections, Audit Logs (AdminAuditLogs.jsx), Suspicious, AdminIntelligenceDashboard.jsx, AdminDefaulterManagement.jsx
 │   │   │   ├── analytics/      # Visual Charts Hub (ChartsPage.jsx)
 │   │   │   ├── auth/           # Login, Register, Password Recovery
+│   │   │   ├── parent/         # Parent/Guardian Portal (ParentLayout, ParentDashboard, ParentAttendance, ParentSubjects, ParentLeaves, ParentWarnings, ParentNotifications)
 │   │   │   ├── student/        # Student Dashboard, Calendar, History, Timetable, Prediction, AiChatPage, NotificationsList.jsx, StudentAnalytics.jsx
 │   │   │   └── teacher/        # Teacher Dashboard, Take Attendance, History, Reports, Leave Approval, Corrections
 │   │   ├── services/           # Centralized API Service Client (api.js, socket.js, deviceFingerprint.js)
@@ -52,14 +53,14 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                     # Backend REST API Server (Node.js + Express + MongoDB)
-│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (16 Test Suites, 136 Tests)
+│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (18 Test Suites, 154 Tests)
 │   ├── uploads/                # Static Uploaded File Attachments (Medical Certificates, Avatars)
 │   ├── src/
 │   │   ├── config/             # DB Connection (db.js), WebSockets (socket.js), Firebase FCM (firebase.js)
-│   │   ├── controllers/        # Request Controllers (auth, user, attendance, class, timetable, report, chart, notification, leave, ai, analytics, audit, academic, rules, session, antiProxy, correction, defaulter)
+│   │   ├── controllers/        # Request Controllers (auth, user, attendance, class, timetable, report, chart, notification, leave, ai, analytics, audit, academic, rules, session, antiProxy, correction, defaulter, parent)
 │   │   ├── middleware/         # Security Stack (Helmet, Rate Limiter, XSS, Input Validation, Audit Logger, JWT Auth, RBAC Authorization)
 │   │   ├── models/             # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection, DefaulterRecord)
-│   │   ├── routes/             # Express API Endpoints (including defaulterRoutes.js)
+│   │   ├── routes/             # Express API Endpoints (including defaulterRoutes.js, parentRoutes.js)
 │   │   ├── services/           # Business Services (notificationService.js, defaulterService.js)
 │   │   ├── utils/              # GeoUtils (Haversine formula), JWT Generator, Async Handler, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, adminIntelligenceEngine.js, sendEmail.js
 │   │   ├── app.js              # Express Application Bootstrap & Security Layer
@@ -67,11 +68,11 @@ Basic-attendance/
 │   └── package.json
 │
 └── docs/                       # Project Documentation Suite
-    ├── requirements.md         # Requirements Specifications & Matrix (Phases 1-30)
+    ├── requirements.md         # Requirements Specifications & Matrix (Phases 1-31)
     ├── architecture.md         # System Architecture & Technical Specs (This document)
     ├── database_design.md      # Database ERD & Schema Specs
     ├── FLOW_DIAGRAMS.md        # Comprehensive System Flow Diagrams (Mermaid)
-    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-30)
+    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-31)
 ```
 
 ---
@@ -290,6 +291,58 @@ $$x = \left\lceil \frac{r \cdot T - P}{1 - r} \right\rceil$$
 
 ---
 
+## 👨‍👩‍👧 Phase 31: Parent/Guardian Portal Subsystem Architecture
+
+### Architectural Overview & Ward Linking Topology
+The Parent/Guardian Portal enables family members to monitor their student's (ward's) attendance, academic standing, leave requests, and institutional warnings.
+
+```
+       [ Parent User (role: 'parent') ]
+                     |
+       (User.linkedStudents: [ObjectId])
+                     |
+       +-------------+-------------+
+       |                           |
+       v                           v
+[ Ward 1 (Student) ]        [ Ward 2 (Student) ]
+ (User: CS2024001)           (User: CS2024045)
+       |                           |
+       +-------------+-------------+
+                     |
+                     v
+   [ Read-Only Data Aggregation Subsystem ]
+   ├── Attendance Collection: Cumulative %, Days Log, 75% Benchmark
+   ├── Subject Collection: Course %, Safe Misses, Recovery Lectures
+   ├── Leaves Collection: Student-filed leaves & Medical Proof Attachments
+   ├── DefaulterRecords Collection: 4-Tier Warning Meter & Counselor Ledger
+   └── Notifications Collection: Attendance shortage alerts & circulars
+```
+
+### Strict Read-Only Security Architecture
+The system enforces a **Zero Mutation Policy** for the `parent` role. All mutation endpoints return `403 Forbidden`:
+
+| Endpoint | Method | Parent Role Authorization | Enforcement Mechanism |
+| :--- | :--- | :--- | :--- |
+| `/api/attendance` | POST | ❌ 403 Forbidden | `authorize('teacher', 'admin')` |
+| `/api/attendance/:id` | PUT | ❌ 403 Forbidden | `authorize('teacher', 'admin')` |
+| `/api/attendance/:id` | DELETE | ❌ 403 Forbidden | `authorize('admin')` |
+| `/api/attendance/bulk` | POST | ❌ 403 Forbidden | `authorize('teacher', 'admin')` |
+| `/api/attendance/scan-qr` | POST | ❌ 403 Forbidden | `authorize('student')` |
+| `/api/leaves` | POST | ❌ 403 Forbidden | `authorize('student')` |
+| `/api/leaves/:id/status` | PUT | ❌ 403 Forbidden | `authorize('teacher', 'admin')` |
+
+### Parent Endpoints (`/api/parent/*`):
+- `GET /api/parent/wards`: List all registered students linked to the authenticated parent.
+- `POST /api/parent/link-ward`: Link an additional ward using the student's unique roll number.
+- `GET /api/parent/overview`: Fetch cumulative attendance percentage, 75% benchmark status, and quick metrics.
+- `GET /api/parent/attendance`: Granular session logs with date, subject, and status filters.
+- `GET /api/parent/subjects`: Subject-wise attendance breakdown, safe skip allowances, and consecutive recovery math.
+- `GET /api/parent/leaves`: Ward's submitted leave applications, reviewer remarks, and proof attachments.
+- `GET /api/parent/warnings`: Active defaulter tier (4 tiers), deficit recovery calculations, and counseling contacts.
+- `GET /api/parent/notifications`: Read-only parent notification feed and institutional circulars.
+
+---
+
 ## 🔌 API Endpoint Hierarchy
 
 - `/api/auth` $\rightarrow$ Register, Login, Logout, Password Recovery, Token Refresh (Logs `LOGIN`, `LOGOUT`)
@@ -313,6 +366,7 @@ $$x = \left\lceil \frac{r \cdot T - P}{1 - r} \right\rceil$$
 - `/api/corrections` $\rightarrow$ Attendance Modification Workflow, Request submission, Mandatory reasons, Teacher & Admin Review Consoles (Logs `EDIT_ATTENDANCE`)
 - `/api/audit-logs` $\rightarrow$ Institutional Audit Trail Ledger, 10-Action breakdown stats, Multi-column CSV export (Logs `EXPORT_REPORT`)
 - `/api/defaulters` $\rightarrow$ Automated Defaulter Management Engine, 4-Tier Escalation Pipeline, Configurable Thresholds, Batch Evaluation, Parent HTML Email Dispatcher, Counselor Resolution Ledger
+- `/api/parent` $\rightarrow$ Parent/Guardian Portal, Multi-Ward Selector, Cumulative Overview, Subject-Wise Recovery Breakdown, Ward Leaves & Proofs, Defaulter Warnings, Read-Only Security Enforcement
 - `/api/health` $\rightarrow$ Infrastructure health check & security stack status
 
 

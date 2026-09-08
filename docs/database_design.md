@@ -15,26 +15,27 @@ This document outlines the MongoDB Mongoose database schema, collection definiti
             v                                      v                                      v
   +--------------------+                 +--------------------+                 +--------------------+
   | StudentEnrollments | <-------------- |       Users        | --------------> |      Subjects      |
-  +--------------------+  (Historical)   +--------------------+                 +--------------------+
-                                                   |                                      |
-                                                   | 1:N                                  | 1:N
-                                                   v                                      v
-  +--------------------+                 +--------------------+                 +--------------------+
-  |  AttendanceRules   | --------------> | AttendanceSessions | --------------> |     Attendance     |
-  +--------------------+  (Evaluator)    +--------------------+                 +--------------------+
-            |                                      ^                                      ^
-            | (DefaulterConfig)                    | 1:N                                  | 1:N
-            v                            +--------------------+                 +--------------------+
-  +--------------------+                 |      Classes       |                 | AttendanceCorrect- |
-  |  DefaulterRecords  | <-------------- +--------------------+                 |      ions (P23)    |
-  |  (Phase 30 Engine) |   (Student Ref)           |                            +--------------------+
-  +--------------------+                           |                                      |
-                                                   v                                      v
-                                         +--------------------+                 +--------------------+
-                                         | Notifications(P25) |                 |  AuditLogs (P24)   |
-                                         | (Multi-Channel +   |                 | (10 Institutional  |
-                                         |   Smart Advice)    |                 |   Actions + Diffs) |
-                                         +--------------------+                 +--------------------+
+  +--------------------+  (Historical)   |  (Student/Teacher/ |                 +--------------------+
+                                         |   Admin/Parent)    |                           |
+                                         +--------------------+                           | 1:N
+                                           |        |   ^ (linkedStudents 1:N)            v
+                                           | 1:N    |   +--------------------+  +--------------------+
+                                           v        |   |   Parent Users     |  |     Attendance     |
+  +--------------------+                 +----+     |   |    (Phase 31)      |  +--------------------+
+  |  AttendanceRules   | --------------> | At-| <---+   +--------------------+            ^
+  +--------------------+  (Evaluator)    | te-|                                           | 1:N
+            |                            | nd-|                ^                          |
+            | (DefaulterConfig)          | an-|                | 1:N            +--------------------+
+            v                            | ce-|      +--------------------+     | AttendanceCorrect- |
+  +--------------------+                 | Se-| <--- |      Classes       |     |      ions (P23)    |
+  |  DefaulterRecords  | <-------------- | ss-|      +--------------------+     +--------------------+
+  |  (Phase 30 Engine) |   (Student Ref) | io-|                |                          |
+  +--------------------+                 | ns-|                v                          v
+                                         +----+      +--------------------+     +--------------------+
+                                                     | Notifications(P25) |     |  AuditLogs (P24)   |
+                                                     | (Multi-Channel +   |     | (10 Institutional  |
+                                                     |   Smart Advice)    |     |   Actions + Diffs) |
+                                                     +--------------------+     +--------------------+
 ```
 
 ---
@@ -108,7 +109,7 @@ Tracks student academic enrollment history and promotion audit records.
 ---
 
 ### 5. `Users`
-Authentication credentials, role RBAC, active academic profile, and notification preferences.
+Authentication credentials, role RBAC, active academic profile, parent-ward relationships, and notification preferences.
 
 | Field | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
@@ -116,7 +117,7 @@ Authentication credentials, role RBAC, active academic profile, and notification
 | `name` | String | REQUIRED | Full display name |
 | `email` | String | UNIQUE, LOWERCASE, REQUIRED | Account email address |
 | `password` | String | REQUIRED (Hashed bcrypt) | Password hash |
-| `role` | String | ENUM (`student`, `teacher`, `admin`) | RBAC Access role |
+| `role` | String | ENUM (`student`, `teacher`, `admin`, `parent`) | RBAC Access role |
 | `rollNo` | String | DEFAULT '' | Student Roll/Reg number |
 | `department` | String | DEFAULT 'Computer Science' | Active department |
 | `course` | String | DEFAULT '' | Degree course program |
@@ -126,6 +127,8 @@ Authentication credentials, role RBAC, active academic profile, and notification
 | `divisionId` | ObjectId | REF `Division` | Current active Division |
 | `divisionName` | String | DEFAULT '' | Division section name |
 | `assignedSubjects` | [ObjectId] | REF `Subject` array | Assigned course subjects |
+| `linkedStudents` | [ObjectId] | REF `User` array | Linked student accounts monitored by this parent (Phase 31) |
+| `wardRollNo` | String | DEFAULT '' | Target student roll number specified during parent registration (Phase 31) |
 | `lastDeviceFingerprint`| String | DEFAULT '' | Client browser device fingerprint |
 | `lastBrowserId` | String | DEFAULT '' | Client browser ID |
 | `fcmTokens` | [String] | Array | Registered FCM web push tokens |
@@ -215,7 +218,7 @@ Master institutional and security audit ledger (Phase 24 Enriched).
 | `userId` | ObjectId | REF `User` | Actor User ID |
 | `userName` | String | REQUIRED | Actor full name |
 | `userEmail` | String | REQUIRED | Actor email address |
-| `userRole` | String | ENUM (`student`, `teacher`, `admin`, `system`, `guest`) | Actor role |
+| `userRole` | String | ENUM (`student`, `teacher`, `admin`, `parent`, `system`, `guest`) | Actor role |
 | `action` | String | REQUIRED (Enum: 10 Institutional Actions) | `LOGIN`, `LOGOUT`, `CREATE_STUDENT`, `DELETE_STUDENT`, `MARK_ATTENDANCE`, `EDIT_ATTENDANCE`, `APPROVE_LEAVE`, `REJECT_LEAVE`, `EXPORT_REPORT`, `CHANGE_SETTINGS` |
 | `resource` | String | REQUIRED | Target resource module (e.g. `AUTH`, `ATTENDANCE`, `LEAVES`, `SETTINGS`, `REPORTS`) |
 | `targetUser` | ObjectId | REF `User`, OPTIONAL | Target Student/User affected by the action |
@@ -381,6 +384,10 @@ StudentEnrollmentSchema.index({ student: 1, academicYear: 1, semester: 1 });
 // Phase 28 Teacher Analytics Index
 AttendanceSchema.index({ markedBy: 1, date: -1 });
 AttendanceSchema.index({ subjectCode: 1, markedBy: 1, date: -1 });
+
+// Phase 31 Parent/Guardian Portal Indexes
+UserSchema.index({ linkedStudents: 1 });
+UserSchema.index({ wardRollNo: 1 });
 
 // Core Performance Indexes
 UserSchema.index({ email: 1 }, { unique: true });

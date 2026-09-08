@@ -23,6 +23,7 @@ This document contains comprehensive flowcharts and system diagrams for the **At
 16. [Phase 28 Teacher Analytics & Classroom Insights Engine](#16-phase-28-teacher-analytics--classroom-insights-engine)
 17. [Phase 29 Admin Intelligence Dashboard & College Control Center Dataflow](#17-phase-29-admin-intelligence-dashboard--college-control-center-dataflow)
 18. [Phase 30 Automated Defaulter Management & Escalation Pipeline](#18-phase-30-automated-defaulter-management--escalation-pipeline)
+19. [Phase 31 Parent/Guardian Portal & Ward Monitoring Lifecycle](#19-phase-31-parentguardian-portal--ward-monitoring-lifecycle)
 
 ---
 
@@ -685,6 +686,60 @@ flowchart TD
         UpsertRecord --> DefaulterConsole["Admin Defaulter Console <br/> • Dynamic Threshold Sliders (75/70/65/60) <br/> • Searchable Roster with Tier Badges <br/> • One-Click Bulk Warning Dispatch <br/> • Timeline Modal with Transition History <br/> • Counselor Resolution & Clearance Modal <br/> • Multi-Column CSV Export"]
         DefaulterConsole --> CounselorAction["Resolution Ledger: <br/> Record Counselor Notes & Mark Resolved"]
         CounselorAction --> UpsertRecord
+    end
+```
+
+---
+
+## 19. Phase 31: Parent/Guardian Portal & Ward Monitoring Lifecycle
+
+The Phase 31 Parent/Guardian Portal provides transparent, real-time academic visibility for family members, governed by a strict server-side read-only security boundary:
+
+```mermaid
+flowchart TD
+    subgraph AuthPortal ["1. Parent Authentication & Multi-Ward Context"]
+        PLogin["Parent Logs In (POST /api/auth/login) <br/> Role: 'parent'"] --> PWards["Fetch Linked Wards (GET /api/parent/wards)"]
+        PWards --> PSelectWard["Parent Selects Active Ward (e.g., CS2024001)"]
+        LinkNew["Link Additional Ward <br/> (POST /api/parent/link-ward with studentRollNo)"] -.-> PWards
+    end
+
+    subgraph DataReadLayer ["2. Read-Only Academic & Attendance Aggregation"]
+        PSelectWard --> ReqOverview["GET /api/parent/overview <br/> • Cumulative Attendance % <br/> • 75% Benchmark Zone <br/> • Total/Attended/Absent/Late Counts"]
+        PSelectWard --> ReqHistory["GET /api/parent/attendance <br/> • Granular Day Logs <br/> • Date / Status Filters"]
+        PSelectWard --> ReqSubjects["GET /api/parent/subjects <br/> • Course Breakdown <br/> • Consecutive Recovery Math <br/> • Safe Miss Allowance"]
+        PSelectWard --> ReqLeaves["GET /api/parent/leaves <br/> • Medical Certificates & Proofs <br/> • Teacher Remarks & Status"]
+        PSelectWard --> ReqWarnings["GET /api/parent/warnings <br/> • 4-Tier Defaulter Status <br/> • Counseling Directory Contacts"]
+        PSelectWard --> ReqNotifs["GET /api/parent/notifications <br/> • Low Attendance Alerts <br/> • University Circulars"]
+    end
+
+    subgraph ReadOnlySecurityGate ["3. Strict Read-Only Security Gate (Server Middleware)"]
+        ParentActor["Parent User Token (role: 'parent')"]
+        
+        ParentActor -.-> TryMark["Attempt: POST /api/attendance <br/> (Mark Student Attendance)"]
+        ParentActor -.-> TryEdit["Attempt: PUT /api/attendance/:id <br/> (Edit Attendance Log)"]
+        ParentActor -.-> TryDelete["Attempt: DELETE /api/attendance/:id <br/> (Delete Attendance Log)"]
+        ParentActor -.-> TryApplyLeave["Attempt: POST /api/leaves <br/> (Submit Leave Request)"]
+        ParentActor -.-> TryApproveLeave["Attempt: PUT /api/leaves/:id/status <br/> (Approve/Reject Leave)"]
+        ParentActor -.-> TryQRScan["Attempt: POST /api/attendance/scan-qr <br/> (Scan QR Attendance)"]
+
+        TryMark --> AuthCheck{"authorize('teacher', 'admin')"}
+        TryEdit --> AuthCheck
+        TryDelete --> AuthCheck
+        TryApplyLeave --> AuthStudentOnly{"authorize('student')"}
+        TryApproveLeave --> AuthCheck
+        TryQRScan --> AuthStudentOnly
+
+        AuthCheck -- "role === 'parent'" --> ForbiddenResponse["⛔ 403 Forbidden: Access Denied <br/> Parents Have Strict Read-Only Access"]
+        AuthStudentOnly -- "role === 'parent'" --> ForbiddenResponse
+    end
+
+    subgraph ParentUI ["4. Parent Portal UI (React 18 SPA)"]
+        ReqOverview --> UIPage1["Parent Dashboard (/parent) <br/> • Overall Gauge & 75% Alert Banner <br/> • Ward Profile Card & Quick Stats"]
+        ReqHistory --> UIPage2["Parent Attendance History (/parent/attendance) <br/> • Interactive Filters & Status Pills"]
+        ReqSubjects --> UIPage3["Parent Subject Hub (/parent/subjects) <br/> • Recovery Deficit & Safe Miss Badges"]
+        ReqLeaves --> UIPage4["Parent Leaves Monitor (/parent/leaves) <br/> • Proof Previews & Official Reasons"]
+        ReqWarnings --> UIPage5["Parent Defaulter Escalation (/parent/warnings) <br/> • Tier Visual Gauge & Counselor Hotline"]
+        ReqNotifs --> UIPage6["Parent Notifications (/parent/notifications) <br/> • Unread Filter & Audio Chime Alerts"]
     end
 ```
 

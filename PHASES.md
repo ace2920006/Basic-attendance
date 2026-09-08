@@ -1,6 +1,6 @@
 # Attendance Management System - Consolidated Phases Specification
 
-This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 28**) of the **Attendance Management System**.
+This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 31**) of the **Attendance Management System**.
 
 ---
 
@@ -35,7 +35,8 @@ This document provides a single, unified reference for all project implementatio
 28. [Phase 28 – Teacher Analytics](#-phase-28--teacher-analytics)
 29. [Phase 29 – Admin Intelligence Dashboard](#-phase-29--admin-intelligence-dashboard-)
 30. [Phase 30 – Automated Defaulter Management](#-phase-30--automated-defaulter-management-)
-31. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+31. [Phase 31 – Parent/Guardian Portal](#-phase-31--parentguardian-portal-)
+32. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -1381,7 +1382,187 @@ Student Check-In / Lecture Conducted
 - **Executive Console**: Dedicated Admin Defaulter Management Console (`/admin/defaulters`) with filtering, search, CSV export, timeline modal, and bulk dispatch.
 
 ---
+
+## 📌 Phase 31: Parent/Guardian Portal 👨‍👩‍👧
+
+### Overview & Read-Only Governance
+Phase 31 introduces a dedicated, high-fidelity **Parent/Guardian Portal** tailored for college and university environments. Parents gain transparent, real-time insight into their ward's academic standing, attendance records, subject breakdowns, leave history, circulars, and institutional attendance warnings.
+
+Critically, the Parent portal operates under a **Strict Read-Only Access Guarantee**: parents have full visibility into attendance and leave data but cannot alter, modify, mark, or override any institutional records.
+
+### Core Capabilities & Features
+1. **Ward Overview & Identity**:
+   - Multi-ward support allowing parents with multiple children to switch between students seamlessly.
+   - Comprehensive profile showing roll number, semester, department, section, and faculty advisor contact details.
+2. **Cumulative Attendance Monitoring**:
+   - Real-time score indicator comparing cumulative attendance against the mandatory 75% university benchmark.
+   - Exam eligibility indicator (Safe Zone $>75\%$ vs Defaulter Shortage $<75\%$).
+   - Quick counters: Total conducted, attended, absent, late arrivals, and sanctioned medical leaves.
+3. **Subject-Wise Attendance Breakdown**:
+   - Course-by-course breakdown displaying total lectures, sessions attended, absences, and attendance percentages.
+   - Threshold status indicator (Safe Zone, Shortage Warning, Critical Defaulter).
+   - Recovery math: Exact consecutive lectures required to reach 75%, or safe misses remaining before dropping below threshold.
+   - Course professor and instructor contact cards.
+4. **Leave Requests & Approval Status**:
+   - History of all student-submitted leave requests (Medical, Emergency, Official Duty).
+   - Date ranges, total day count, submitted medical certificates/attachments, and reviewer remarks.
+   - Clear policy disclaimer that leave requests must be filed directly by the student.
+5. **Defaulter Warnings & Escalation Center**:
+   - Visual 4-tier escalation tracker (Tier 1: Warning $<75\%$, Tier 2: Serious $<70\%$, Tier 3: Admin Alert $<65\%$, Tier 4: Parent Alert $<60\%$).
+   - Mathematical deficit recovery calculator ($x = \lceil \frac{rT - P}{1 - r} \rceil$).
+   - Academic Counseling Cell and Department Head direct contact links.
+6. **Alerts & University Circulars**:
+   - Dedicated notification center categorizing low attendance warnings, leave approvals, and circulars.
+   - Read/unread tracking and audio chimes.
+
+### Strict Read-Only Security Architecture
+To guarantee academic integrity, all state-mutation routes enforce server-side role authorization checks:
+- `POST /api/attendance` &bull; `403 Forbidden` for `parent`
+- `PUT /api/attendance/:id` &bull; `403 Forbidden` for `parent`
+- `DELETE /api/attendance/:id` &bull; `403 Forbidden` for `parent`
+- `POST /api/attendance/bulk` &bull; `403 Forbidden` for `parent`
+- `POST /api/attendance/scan-qr` &bull; `403 Forbidden` for `parent`
+- `POST /api/leaves` &bull; `403 Forbidden` for `parent` (student only)
+- `PUT /api/leaves/:id` &bull; `403 Forbidden` for `parent` (teacher/admin only)
+
+### File Mapping
+- **Backend**:
+  - Model: `server/src/models/User.js` (extended with `role: 'parent'`, `linkedStudents`, `wardRollNo`)
+  - Controller: `server/src/controllers/parentController.js`
+  - Routes: `server/src/routes/parentRoutes.js` (`/api/parent/*`)
+  - Notifications: `server/src/services/notificationService.js` (in-app parent dispatch)
+  - Tests: `server/tests/parentPortal.test.js` (18 unit & security integration tests)
+- **Frontend**:
+  - API Client: `client/src/services/api.js` (`getParentWardsApi`, `getParentOverviewApi`, etc.)
+  - Layout: `client/src/pages/parent/ParentLayout.jsx`
+  - Dashboard: `client/src/pages/parent/ParentDashboard.jsx`
+  - Attendance Log: `client/src/pages/parent/ParentAttendance.jsx`
+  - Subject-Wise: `client/src/pages/parent/ParentSubjects.jsx`
+  - Leaves: `client/src/pages/parent/ParentLeaves.jsx`
+  - Warnings & Defaulter Recovery: `client/src/pages/parent/ParentWarnings.jsx`
+  - Notifications: `client/src/pages/parent/ParentNotifications.jsx`
+  - Route Config: `client/src/App.jsx` (`/parent/*`)
+  - Auth & Switchers: `client/src/pages/auth/LoginPage.jsx`, `client/src/components/layout/Navbar.jsx`, `Sidebar.jsx`, `Header.jsx`, `ProtectedRoute.jsx`
+
+---
+
+## 🔐 Access Control & Feature Matrix Across All Phases
+
+| Feature / Capability | Student | Teacher | Admin | Parent | Implementation Phase |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| **User Authentication & Token Refresh** | ✅ | ✅ | ✅ | ✅ | Phase 1 & 16 |
+| **Role-Based Access Control (RBAC)** | ✅ | ✅ | ✅ | ✅ | Phase 1 & 16 |
+| **Executive Dashboard & Global Analytics** | ❌ | ❌ | ✅ | ❌ | Phase 5 & 15 |
+| **Department, Course & Subject Management** | ❌ | ❌ | ✅ | ❌ | Phase 5 |
+| **Faculty & Student Account Management** | ❌ | ❌ | ✅ | ❌ | Phase 5 & 16 |
+| **Subject Assignment (Teachers & Students)** | ❌ | ❌ | ✅ | ❌ | Phase 5 |
+| **Class Session Creator & Active Roster** | ❌ | ✅ | ✅ | ❌ | Phase 4 & 7 |
+| **Mark & Edit Attendance with Remarks** | ❌ | ✅ | ✅ | ❌ | Phase 4 & 7 |
+| **Export Class Attendance CSV** | ❌ | ✅ | ✅ | ❌ | Phase 4 & 10 |
+| **Student Roster & Low Attendance Alerts** | ❌ | ✅ | ✅ | ❌ | Phase 3, 4 & 12 |
+| **Generate & Display 30s Dynamic QR Code** | ❌ | ✅ | ✅ | ❌ | Phase 8 & 20 |
+| **Scan QR Code & Auto-Record Attendance** | ✅ | ❌ | ❌ | ❌ | Phase 8 & 20 |
+| **GPS Campus Geolocation Radius Verification** | ✅ | ✅ | ✅ | ❌ | Phase 8 & 19 |
+| **Device Fingerprint Anti-Proxy Protection** | ✅ | ✅ | ✅ | ❌ | Phase 8 & 21 |
+| **Student Attendance Dashboard & Graph** | ✅ | ❌ | ❌ | ❌ | Phase 3, 6 & 11 |
+| **Interactive Monthly Attendance Calendar** | ✅ | ❌ | ❌ | ❌ | Phase 6 |
+| **Today's & Upcoming Class Timetable** | ✅ | ✅ | ❌ | ❌ | Phase 3, 6 & 9 |
+| **Create & Manage Weekly Timetable Slots** | ❌ | ✅ | ✅ | ❌ | Phase 9 |
+| **View Tomorrow's Classes Schedule** | ✅ | ✅ | ❌ | ❌ | Phase 9 |
+| **View Full Weekly Timetable Matrix** | ✅ | ✅ | ❌ | ❌ | Phase 9 |
+| **Apply for Medical / Absence Leave** | ✅ | ❌ | ❌ | ❌ | Phase 6 & 13 |
+| **Upload Leave Supporting Proof Document** | ✅ | ❌ | ❌ | ❌ | Phase 13 |
+| **Faculty Approve / Reject Student Leaves & Remarks** | ❌ | ✅ | ✅ | ❌ | Phase 13 |
+| **Maintain Full Leave Authorization History** | ✅ | ✅ | ✅ | ❌ | Phase 13 |
+| **Download Official Attendance Transcript (PDF/Excel/CSV)** | ✅ | ✅ | ✅ | ❌ | Phase 6 & 10 |
+| **View Attendance % Ratio Chart (Doughnut/Pie)** | ✅ | ✅ | ✅ | ❌ | Phase 11 |
+| **View Department Comparison Chart** | ❌ | ✅ | ✅ | ❌ | Phase 11 |
+| **View Monthly Trend & 75% Benchmark Line Chart** | ✅ | ✅ | ✅ | ❌ | Phase 11 |
+| **View Subject-Wise Attendance Chart** | ✅ | ✅ | ✅ | ❌ | Phase 11 |
+| **View Student Ranking & Leaderboard Chart** | ❌ | ✅ | ✅ | ❌ | Phase 11 |
+| **Switch Chart Library Engine (Recharts / Chart.js)** | ✅ | ✅ | ✅ | ❌ | Phase 11 |
+| **Real-Time Socket.io & FCM Push Notifications** | ✅ | ✅ | ✅ | ✅ | Phase 12 |
+| **Attendance Prediction Engine & "What-If" Simulator** | ✅ | ❌ | ❌ | ❌ | Phase 14 |
+| **Natural Language AI Chatbot ("Ask My Attendance")** | ✅ | ✅ | ✅ | ❌ | Phase 14 |
+| **Suspicious Attendance & Proxy Detection Console** | ❌ | ✅ | ✅ | ❌ | Phase 14 & 21 |
+| **Most Absent Students & Deficit Calculator** | ❌ | ❌ | ✅ | ❌ | Phase 15 |
+| **Best Attendance Leaderboard & Perfect Badges** | ❌ | ❌ | ✅ | ❌ | Phase 15 |
+| **Department Attendance Ranking & HOD View** | ❌ | ❌ | ✅ | ❌ | Phase 15 |
+| **Teacher Performance & Marking Metrics** | ❌ | ❌ | ✅ | ❌ | Phase 15 |
+| **Daily Attendance Inspector & Time Slot Breakdown** | ❌ | ❌ | ✅ | ❌ | Phase 15 |
+| **Helmet HTTP Security Headers & Rate Limiting** | ✅ | ✅ | ✅ | ✅ | Phase 16 |
+| **Hardened JWT & Multi-Role RBAC Authorization** | ✅ | ✅ | ✅ | ✅ | Phase 16 |
+| **Password Hashing & Strength Policy** | ✅ | ✅ | ✅ | ✅ | Phase 16 |
+| **Payload Input Validation & Schema Sanitization** | ✅ | ✅ | ✅ | ✅ | Phase 16 |
+| **XSS Payload Injection Sanitization** | ✅ | ✅ | ✅ | ✅ | Phase 16 |
+| **Configurable CORS Domain Management** | ✅ | ✅ | ✅ | ✅ | Phase 16 |
+| **Public Self-Registration Student Role Enforcement** | ✅ | ❌ | ❌ | ❌ | Phase 16 |
+| **Admin-Only Provisioning for Faculty & Admin Accounts** | ❌ | ❌ | ✅ | ❌ | Phase 16 |
+| **Nodemailer Password Reset Email Provider Dispatch** | ✅ | ✅ | ✅ | ✅ | Phase 16 |
+| **SHA-256 Server-Side Hashed Refresh Token Storage** | ✅ | ✅ | ✅ | ✅ | Phase 16 |
+| **HTTP-Only Secure Cookie Refresh Token Transport** | ✅ | ✅ | ✅ | ✅ | Phase 16 |
+| **Academic Year Management & Active Session Toggle** | ❌ | ❌ | ✅ | ❌ | Phase 18 |
+| **Dynamic Semesters Setup (No hardcoded terms)** | ❌ | ❌ | ✅ | ❌ | Phase 18 |
+| **Class Divisions & Sections (IT-A, IT-B, etc.)** | ❌ | ❌ | ✅ | ❌ | Phase 18 |
+| **Visual Academic Hierarchy Tree Console** | ✅ | ✅ | ✅ | ❌ | Phase 18 |
+| **Student Batch Promotion Engine & Audit History** | ❌ | ❌ | ✅ | ❌ | Phase 18 |
+| **Configurable Attendance Rules & Thresholds Engine** | ❌ | ❌ | ✅ | ❌ | Phase 19 |
+| **7-Status Matrix Rules & Attendance Weights** | ❌ | ❌ | ✅ | ❌ | Phase 19 |
+| **Interactive Rules Simulator / Sandbox Console** | ✅ | ✅ | ✅ | ❌ | Phase 19 |
+| **Attendance Session Engine (Session ID, Start/End Timestamps)** | ❌ | ✅ | ✅ | ❌ | Phase 20 |
+| **Session-Linked Attendance Logs & QR/GPS Session Management** | ✅ | ✅ | ✅ | ❌ | Phase 20 |
+| **Anti-Proxy Attendance System (Multi-Signal Risk Engine)** | ✅ | ✅ | ✅ | ❌ | Phase 21 |
+| **Teacher & Admin Suspicious Attendance Review Console** | ✅ | ✅ | ✅ | ❌ | Phase 21 |
+| **Attendance Risk Scoring Engine (0-100 Multi-Signal Scoring)** | ✅ | ✅ | ✅ | ❌ | Phase 22 |
+| **3-Tier Risk Classification (0-30 Normal, 31-60 Review, 61-100 High Risk)** | ✅ | ✅ | ✅ | ❌ | Phase 22 |
+| **Attendance Correction Request Submission & Mandatory Reason** | ✅ | ✅ | ✅ | ❌ | Phase 23 |
+| **Teacher & Admin Attendance Correction Review Consoles** | ❌ | ✅ | ✅ | ❌ | Phase 23 |
+| **Attendance Correction Audit Trail (Original, New, Changed By, Reason, Timestamps)** | ✅ | ✅ | ✅ | ❌ | Phase 23 |
+| **Complete 10-Action Audit Logging (`LOGIN` to `CHANGE_SETTINGS`)** | ✅ | ✅ | ✅ | ❌ | Phase 24 |
+| **State Mutation Diff Tracking (`Absent → Present`) & Reason Verification** | ✅ | ✅ | ✅ | ❌ | Phase 24 |
+| **Admin Audit Ledger UI with 10 Action Pills & CSV Export** | ❌ | ❌ | ✅ | ❌ | Phase 24 |
+| **Multi-Channel Notification Dispatching (In-App, Email, Push)** | ✅ | ✅ | ✅ | ✅ | Phase 25 |
+| **Smart Notification Recovery Advisor ("N lectures needed for 75%")** | ✅ | ❌ | ❌ | ❌ | Phase 25 |
+| **User Notification Preferences & Channel Toggles** | ✅ | ✅ | ✅ | ✅ | Phase 25 |
+| **Automated Multi-Channel Domain Events (7 Event Processors)** | ✅ | ✅ | ✅ | ✅ | Phase 25 |
+| **Interactive Notification Simulator & Smart Summary Sandbox** | ✅ | ✅ | ✅ | ❌ | Phase 25 |
+| **Attendance Forecasting Engine & Safe Miss Allowance** | ✅ | ✅ | ✅ | ❌ | Phase 26 |
+| **Interactive "Can I Skip?" Scenario Simulator & What-If Sandbox** | ✅ | ✅ | ✅ | ❌ | Phase 26 |
+| **Multi-Benchmark Milestone Trajectory Ladder** | ✅ | ✅ | ✅ | ❌ | Phase 26 |
+| **AI Assistant NLP Forecasting Integration (Skip & Recovery Cards)** | ✅ | ✅ | ✅ | ❌ | Phase 26 |
+| **Personal Student Analytics Dashboard (9 Core Metrics & Status Breakdown)** | ✅ | ✅ | ✅ | ❌ | Phase 27 |
+| **Visual Attendance Curve with 75% Minimum Benchmark Line** | ✅ | ✅ | ✅ | ❌ | Phase 27 |
+| **Subject Attendance Safe Buffer & Consecutive Recovery Calculator** | ✅ | ✅ | ✅ | ❌ | Phase 27 |
+| **Weekly & Monthly Attendance Velocity Progression** | ✅ | ✅ | ✅ | ❌ | Phase 27 |
+| **Teacher Analytics & Insights Dashboard (7 Core Dimensions)** | ❌ | ✅ | ✅ | ❌ | Phase 28 |
+| **Weekday Pattern Analysis & Friday Slump Detection (Mon 82% to Fri 69%)** | ❌ | ✅ | ✅ | ❌ | Phase 28 |
+| **Attendance by Lecture Time Slot (Morning vs Post-Lunch Slump)** | ❌ | ✅ | ✅ | ❌ | Phase 28 |
+| **Most Absent & Most Late Faculty Student Directories with Deficit Math** | ❌ | ✅ | ✅ | ❌ | Phase 28 |
+| **Course Subject & Division Comparative Analytics (Sec A vs Sec B vs Sec C)** | ❌ | ✅ | ✅ | ❌ | Phase 28 |
+| **Admin Intelligence Dashboard (College-Level Control Center)** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Top Executive KPI Console (Students: 2,481, Teachers: 143, Today: 87.4%, Defaulters: 312)** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Cross-Department Performance Benchmark & Variance Analysis** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Inter-Division & Section Matrix (Class Size, Mentors, Defaulters)** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **College-Wide 6-Month Trendline & Weekday Slump Analysis** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Defaulter Intelligence & Recovery Roster ($x = \lceil \frac{0.75T - P}{0.25} \rceil$)** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Faculty Teaching Compliance, On-Time Marking & Slot Distribution** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **College Anti-Proxy & Fraud Telemetry Console** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Institutional Leave Analytics & Truancy Impact** | ❌ | ❌ | ✅ | ❌ | Phase 29 |
+| **Automated Defaulter Management & Escalation Engine** | ✅ | ✅ | ✅ | ❌ | Phase 30 |
+| **Configurable Escalation Thresholds (<75%, <70%, <65%, <60%)** | ❌ | ❌ | ✅ | ❌ | Phase 30 |
+| **Automated Parent/Guardian Email Alert Dispatch (<60%)** | ✅ | ✅ | ✅ | ✅ | Phase 30 |
+| **Defaulter Resolution Ledger & Counselor Audit Roster** | ❌ | ✅ | ✅ | ❌ | Phase 30 |
+| **Parent/Guardian Portal Access & Multi-Ward Selector** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Ward Cumulative Attendance & 75% Benchmark Status** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Ward Subject-Wise Breakdown & Recovery Deficit Countdown** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Inspect Ward Leave Records & Sanctioned Medical Proofs** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Ward 4-Tier Attendance Warning Tracker & Counseling Directory** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Parent In-App Notifications & Institutional Circulars** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Strict Read-Only Enforcement (No Attendance or Leave Alteration)** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+
+---
 *Last Updated: September 2026*
+
 
 
 
