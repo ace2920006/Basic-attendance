@@ -27,7 +27,7 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['student', 'teacher', 'admin'],
+      enum: ['student', 'teacher', 'admin', 'parent'],
       default: 'student'
     },
     avatar: {
@@ -96,6 +96,16 @@ const userSchema = new mongoose.Schema(
     guardianRelation: {
       type: String,
       default: 'Parent/Guardian'
+    },
+    linkedStudents: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      }
+    ],
+    wardRollNo: {
+      type: String,
+      default: ''
     },
     refreshToken: {
       type: String,
