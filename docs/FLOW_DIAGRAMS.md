@@ -24,6 +24,7 @@ This document contains comprehensive flowcharts and system diagrams for the **At
 17. [Phase 29 Admin Intelligence Dashboard & College Control Center Dataflow](#17-phase-29-admin-intelligence-dashboard--college-control-center-dataflow)
 18. [Phase 30 Automated Defaulter Management & Escalation Pipeline](#18-phase-30-automated-defaulter-management--escalation-pipeline)
 19. [Phase 31 Parent/Guardian Portal & Ward Monitoring Lifecycle](#19-phase-31-parentguardian-portal--ward-monitoring-lifecycle)
+20. [Phase 31 Document Verification & Security Storage Pipeline](#20-phase-31-document-verification--security-storage-pipeline)
 
 ---
 
@@ -740,6 +741,98 @@ flowchart TD
         ReqLeaves --> UIPage4["Parent Leaves Monitor (/parent/leaves) <br/> • Proof Previews & Official Reasons"]
         ReqWarnings --> UIPage5["Parent Defaulter Escalation (/parent/warnings) <br/> • Tier Visual Gauge & Counselor Hotline"]
         ReqNotifs --> UIPage6["Parent Notifications (/parent/notifications) <br/> • Unread Filter & Audio Chime Alerts"]
+    end
+```
+
+---
+
+## 20. Phase 31: Document Verification & Security Storage Pipeline
+
+### 20A. End-to-End Multi-Tier Document Verification Workflow
+Process flow from student submission through faculty review to final administrative sanction:
+
+```mermaid
+flowchart TD
+    subgraph StudentStage ["1. Student Submission & Upload Stage"]
+        Student["Student (/student/leave)"] --> SelectFile["Select Document File <br/> (PDF, JPG, PNG | &le; 5MB)"]
+        SelectFile --> ClientCheck{"Client Size Check <br/> &le; 5MB?"}
+        ClientCheck -- No --> ClientAlert["❌ Reject: File Exceeds 5MB Limit"]
+        ClientCheck -- Yes --> PostUpload["POST /api/leaves/upload-document <br/> (Multipart Form-Data)"]
+        PostUpload --> ApplyLeave["POST /api/leaves <br/> (Create Leave Record)"]
+        ApplyLeave --> InitStage["Init Leave Record <br/> • verificationStage: 'teacher_review' <br/> • status: 'Pending'"]
+    end
+
+    subgraph SecurityGate ["2. Server Security & Threat Scanning Gate"]
+        PostUpload --> MulterCheck{"Multer Extension Filter <br/> .pdf, .jpg, .jpeg, .png?"}
+        MulterCheck -- No --> ErrExt["❌ 400 Bad Request: Unsupported Extension"]
+        MulterCheck -- Yes --> SaveTmp["Store in server/secure_uploads/documents/ <br/> (Cryptographic Filename)"]
+        
+        SaveTmp --> MagicCheck{"Binary Magic-Byte Check <br/> (%PDF-, \\x89PNG, \\xFF\\xD8\\xFF)"}
+        MagicCheck -- No --> Quarantine1["⚠️ Spoof Detected! Unlink File <br/> 400 Bad Request: Magic Byte Mismatch"]
+        
+        MagicCheck -- Yes --> MalwareScan{"Heuristic Antivirus Scan <br/> • EICAR Signature Check <br/> • Disguised Executable (MZ/ELF) <br/> • Script Tags (<script, eval) <br/> • PDF /Launch Exploits"}
+        MalwareScan -- Threat Detected --> Quarantine2["🚨 Malware Flagged! <br/> • Unlink & Quarantine File <br/> • Log DOCUMENT_MALWARE_FLAGGED <br/> • 400 Bad Request: Threat Blocked"]
+        MalwareScan -- Clean --> ComputeHash["✅ File Validated Clean <br/> • Compute SHA-256 Checksum <br/> • Set scanStatus: 'CLEAN' <br/> • Set scanEngine: 'Antigravity Heuristic Engine'"]
+        ComputeHash --> ApplyLeave
+    end
+
+    subgraph TeacherReviewStage ["3. Teacher / Mentor Review Stage"]
+        InitStage --> TeacherRoster["Teacher Leave Roster (/teacher/leave)"]
+        TeacherRoster --> TeacherInspect["Teacher Inspects Leave & Document <br/> (GET /api/leaves/:id/document-token)"]
+        TeacherInspect --> TeacherModal["Private In-App Preview Modal <br/> (Inline PDF / Image Viewer)"]
+        TeacherModal --> TeacherDecision{"Teacher Review Action"}
+        
+        TeacherDecision -- Approve & Forward --> FwdAdmin["PUT /api/leaves/:id/teacher-review <br/> • Action: 'approve' <br/> • verificationStage: 'admin_verification' <br/> • status: 'Teacher Verified' <br/> • Log TEACHER_VERIFY_LEAVE"]
+        TeacherDecision -- Reject --> TeacherReject["PUT /api/leaves/:id/teacher-review <br/> • Action: 'reject' <br/> • verificationStage: 'rejected' <br/> • status: 'Rejected' <br/> • Teacher Remarks Recorded"]
+    end
+
+    subgraph AdminVerificationStage ["4. Central Admin Verification Console"]
+        FwdAdmin --> AdminConsole["Admin Document Verification (/admin/document-verification)"]
+        AdminConsole --> AdminInspect["Admin Inspects Document Telemetry <br/> (SHA-256 Hash, Scan Status, File Size)"]
+        AdminInspect --> ReScan{"Optional On-Demand Re-Scan <br/> (POST /api/leaves/:id/rescan)"}
+        ReScan --> AdminConsole
+        AdminInspect --> AdminDecision{"Admin Sanction Action"}
+        
+        AdminDecision -- Sanction & Approve --> FinalApprove["PUT /api/leaves/:id/admin-verify <br/> • Action: 'approve' <br/> • verificationStage: 'completed' <br/> • status: 'Approved' <br/> • Attendance Adjustment Authorized <br/> • Log ADMIN_VERIFY_LEAVE"]
+        AdminDecision -- Deny --> FinalReject["PUT /api/leaves/:id/admin-verify <br/> • Action: 'reject' <br/> • verificationStage: 'rejected' <br/> • status: 'Rejected' <br/> • Official Administrative Remarks"]
+    end
+
+    subgraph NotificationBroadcast ["5. Automated Notification Dispatch"]
+        FinalApprove --> NotifyStudent["Notify Student: Leave Approved ✅ <br/> (In-App + Push + Email)"]
+        FinalApprove --> NotifyParent["Notify Parent: Ward Leave Approved <br/> (Read-Only Leaves Monitor)"]
+        TeacherReject --> NotifyReject["Notify Student: Leave Rejected ❌"]
+        FinalReject --> NotifyReject
+    end
+```
+
+### 20B. Document Security, Binary Magic-Byte Inspection & Private Token Streaming Pipeline
+Detailed architecture of the binary inspection, isolated storage, and temporary signed streaming subsystem:
+
+```mermaid
+flowchart LR
+    subgraph ClientReq ["1. Client Request"]
+        UserBrowser["Authenticated User <br/> (Student / Teacher / Admin / Parent)"]
+        UserBrowser --> ReqToken["Request Preview Token <br/> (GET /api/leaves/:id/document-token)"]
+    end
+
+    subgraph AuthTokenServer ["2. Token Signing Engine (Server)"]
+        ReqToken --> VerifyAccess{"Check User Rights: <br/> • Student Owner? <br/> • Teacher of Dept? <br/> • Admin Role? <br/> • Linked Parent of Ward?"}
+        VerifyAccess -- No --> Return403["403 Forbidden"]
+        VerifyAccess -- Yes --> SignJWT["Sign HMAC/JWT Token: <br/> • leaveId, userId, filePath, mimeType <br/> • Expires in 15 Minutes (900s)"]
+        SignJWT --> TokenResp["Return token & secureStreamUrl"]
+    end
+
+    subgraph StreamPipe ["3. Private Secure Stream Engine"]
+        TokenResp --> UserBrowser
+        UserBrowser --> StreamReq["Inline Display Request: <br/> GET /api/leaves/document-stream/:token"]
+        StreamReq --> TokenVerify{"Verify JWT Token <br/> & Expiry Window"}
+        TokenVerify -- Expired / Invalid --> Return401["401 Unauthorized / Token Expired"]
+        TokenVerify -- Valid --> ResolvePath["Resolve Isolated File Path: <br/> server/secure_uploads/documents/doc-*.ext"]
+        ResolvePath --> CheckDisk{"File Exists <br/> on Disk?"}
+        CheckDisk -- No --> Return404["404 Not Found"]
+        CheckDisk -- Yes --> SendHeaders["Set Security Headers: <br/> • Content-Type: application/pdf | image/* <br/> • Content-Disposition: inline <br/> • X-Content-Type-Options: nosniff <br/> • Cache-Control: private, no-store"]
+        SendHeaders --> StreamData["Pipe Binary ReadStream to Response"]
+        StreamData --> RenderPreview["Secure In-App Preview Rendered <br/> (No Auth Headers Leaked in Browser URL)"]
     end
 ```
 

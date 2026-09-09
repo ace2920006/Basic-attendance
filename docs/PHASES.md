@@ -36,7 +36,8 @@ This document provides a single, unified reference for all project implementatio
 29. [Phase 29 – Admin Intelligence Dashboard](#-phase-29--admin-intelligence-dashboard-)
 30. [Phase 30 – Automated Defaulter Management](#-phase-30--automated-defaulter-management-)
 31. [Phase 31 – Parent/Guardian Portal](#-phase-31--parentguardian-portal-)
-32. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+32. [Phase 31: Document Verification](#-phase-31-document-verification)
+33. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -1446,6 +1447,84 @@ To guarantee academic integrity, all state-mutation routes enforce server-side r
 
 ---
 
+## 📌 Phase 31: Document Verification 📄
+
+### Overview & Multi-Stage Architecture
+Phase 31 implements an enterprise-grade, secure **Document Verification System** for student leave applications. When students submit absence requests (medical certificates, event attendance permits, duty orders), the application traverses an end-to-end multi-tier verification pipeline:
+
+```
+        Student Submits Application
+                    ↓
+        Upload Supporting Document
+   (PDF, JPG, PNG | Max 5MB | Antivirus Scan)
+                    ↓
+          Teacher / Mentor Review
+        (Inspect via Private Access)
+                    ↓
+         Admin Final Verification
+   (Central Sanction & Attendance Adjustment)
+```
+
+### Core Security & Document Integrity Features
+1. **Strict File Size Limits**:
+   - Hard limit enforced at Multer middleware layer: **5 MB** (`5 * 1024 * 1024` bytes).
+   - Pre-upload client validation preventing unnecessary upload bandwidth with instant user feedback.
+   - Standardized 400 Bad Request error handler (`LIMIT_FILE_SIZE`).
+2. **Binary Magic-Byte MIME Validation**:
+   - Prevents file spoofing attacks where dangerous executables or HTML scripts are renamed to `.pdf` or `.png`.
+   - Direct inspection of the initial buffer bytes:
+     - **PDF**: `%PDF-` signature (`0x25 0x50 0x44 0x46`)
+     - **PNG**: PNG signature (`0x89 0x50 0x4E 0x47 0x0D 0x0A 0x1A 0x0A`)
+     - **JPEG/JPG**: SOI marker (`0xFF 0xD8 0xFF`)
+   - Rejects any other format or mismatch with immediate security alert.
+3. **Secure, Non-Public Isolated Storage**:
+   - Files are stored in `server/secure_uploads/documents/` — completely excluded from public static routes (`/uploads`).
+   - Cryptographically randomized file naming (`doc-${Date.now()}-${randomHex}${ext}`) preventing path traversal and file enumeration.
+4. **Virus & Malware Scanning Engine**:
+   - Built-in heuristic and signature engine:
+     - Scans for EICAR standard anti-virus test file signature.
+     - Scans for disguised PE/DOS executables (`MZ` header) and ELF binary headers.
+     - Scans for active script payloads (`<script`, `javascript:`, `eval(`, PHP tags).
+     - Scans PDFs for dangerous active process vectors (`/Launch`, `/JavaScript`).
+     - ClamAV integration hook for daemon socket streaming where available.
+   - Computes SHA-256 cryptographic checksum for tamper verification.
+   - Quarantines and immediately unlinks infected files, recording a security violation in audit logs.
+5. **Private Access URLs & Signed Tokens**:
+   - Zero public direct links.
+   - **Authenticated Session Stream**: `GET /api/leaves/:id/document` verifies student ownership, teacher department assignment, admin role, or linked parent relationship.
+   - **Signed Expiring Access Tokens**: `GET /api/leaves/:id/document-token` generates an HMAC/JWT signed token valid for 15 minutes, allowing safe inline streaming (`GET /api/leaves/document-stream/:token`) in iframes or modals without exposing user credentials in URL queries.
+   - Sets secure headers: `Content-Disposition: inline`, `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store`.
+6. **Multi-Tier State Machine**:
+   - `Pending` (`stage: teacher_review`): Initial state upon student upload.
+   - `Teacher Verified` (`stage: admin_verification`): Faculty mentor verifies medical proof and forwards to Admin.
+   - `Approved` (`stage: completed`): Admin officially sanctions the leave, records audit entry, and notifies student and parent.
+   - `Rejected` (`stage: rejected`): Rejection by teacher or admin with mandatory remarks.
+7. **Dedicated Admin Document Verification Console**:
+   - Route: `/admin/document-verification`.
+   - KPI metrics: Total Uploaded Documents, Awaiting Admin Sanction, Sanctioned & Approved, Denied.
+   - Real-time format filters (PDF, JPG, PNG) and status filters.
+   - Document security inspection modal with SHA-256 telemetry and inline preview.
+   - On-demand server re-scan button (`POST /api/leaves/:id/rescan`).
+
+### File Mapping
+- **Backend**:
+  - Security Scanner: `server/src/services/documentScannerService.js`
+  - Upload Middleware: `server/src/middleware/secureUploadMiddleware.js`
+  - Model: `server/src/models/Leave.js` (extended with `document`, `verificationStage`, `teacherReview`, `adminVerification`)
+  - Controller: `server/src/controllers/leaveController.js`
+  - Routes: `server/src/routes/leaveRoutes.js`
+  - Audit Middleware: `server/src/middleware/auditMiddleware.js`
+  - Tests: `server/tests/documentVerification.test.js` (15 comprehensive unit & integration tests)
+- **Frontend**:
+  - API Client: `client/src/services/api.js` (`uploadLeaveDocumentApi`, `teacherReviewLeaveApi`, `adminVerifyLeaveApi`, `rescanLeaveDocumentApi`, `getDocumentTokenApi`, `getPrivateDocumentStreamUrl`)
+  - Student Leave: `client/src/pages/student/StudentLeave.jsx`
+  - Teacher Leave: `client/src/pages/teacher/TeacherLeave.jsx`
+  - Admin Console: `client/src/pages/admin/AdminDocumentVerification.jsx`
+  - Navigation & Routes: `client/src/components/layout/Sidebar.jsx`, `client/src/App.jsx`
+  - Mock Data: `client/src/data/mockData.js`
+
+---
+
 ## 🔐 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Parent | Implementation Phase |
@@ -1559,6 +1638,14 @@ To guarantee academic integrity, all state-mutation routes enforce server-side r
 | **Ward 4-Tier Attendance Warning Tracker & Counseling Directory** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
 | **Parent In-App Notifications & Institutional Circulars** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
 | **Strict Read-Only Enforcement (No Attendance or Leave Alteration)** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Multi-Tier Leave Verification Pipeline (Student ➔ Teacher ➔ Admin)** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Secure Non-Public Document Storage (PDF, JPG, PNG | Max 5MB)** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Binary Magic-Byte File Signature & Spoof Validation** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Heuristic Antivirus & Malware Threat Scanning Engine** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Cryptographic SHA-256 Checksums & Tamper Verification** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Private Expiring Signed Access Tokens & Document Streams** | ✅ | ✅ | ✅ | ✅ | Phase 31 |
+| **Admin Central Document Verification & Sanction Console** | ❌ | ❌ | ✅ | ❌ | Phase 31 |
+| **On-Demand Antivirus & Integrity Re-Scan Engine** | ❌ | ❌ | ✅ | ❌ | Phase 31 |
 
 ---
 *Last Updated: September 2026*

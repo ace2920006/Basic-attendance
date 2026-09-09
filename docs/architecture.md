@@ -41,7 +41,7 @@ Basic-attendance/
 │   │   │   └── teacher/        # Teacher QR Modal, CreateClassModal, CreateTimetableModal
 │   │   ├── context/            # React State Contexts (AuthContext, NotificationContext)
 │   │   ├── pages/              # Role-based Route Pages
-│   │   │   ├── admin/          # Admin Analytics, Academic Engine, Rules Engine, Corrections, Audit Logs (AdminAuditLogs.jsx), Suspicious, AdminIntelligenceDashboard.jsx, AdminDefaulterManagement.jsx
+│   │   │   ├── admin/          # Admin Analytics, Academic Engine, Rules Engine, Corrections, Audit Logs (AdminAuditLogs.jsx), Suspicious, AdminIntelligenceDashboard.jsx, AdminDefaulterManagement.jsx, AdminDocumentVerification.jsx
 │   │   │   ├── analytics/      # Visual Charts Hub (ChartsPage.jsx)
 │   │   │   ├── auth/           # Login, Register, Password Recovery
 │   │   │   ├── parent/         # Parent/Guardian Portal (ParentLayout, ParentDashboard, ParentAttendance, ParentSubjects, ParentLeaves, ParentWarnings, ParentNotifications)
@@ -53,15 +53,16 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                     # Backend REST API Server (Node.js + Express + MongoDB)
-│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (18 Test Suites, 154 Tests)
-│   ├── uploads/                # Static Uploaded File Attachments (Medical Certificates, Avatars)
+│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (19 Test Suites, 169 Tests)
+│   ├── uploads/                # Static Uploaded File Attachments (Avatars)
+│   ├── secure_uploads/         # Non-Public Isolated Document Storage (secure_uploads/documents/)
 │   ├── src/
 │   │   ├── config/             # DB Connection (db.js), WebSockets (socket.js), Firebase FCM (firebase.js)
 │   │   ├── controllers/        # Request Controllers (auth, user, attendance, class, timetable, report, chart, notification, leave, ai, analytics, audit, academic, rules, session, antiProxy, correction, defaulter, parent)
-│   │   ├── middleware/         # Security Stack (Helmet, Rate Limiter, XSS, Input Validation, Audit Logger, JWT Auth, RBAC Authorization)
+│   │   ├── middleware/         # Security Stack (Helmet, Rate Limiter, XSS, Input Validation, Audit Logger, JWT Auth, RBAC Authorization, secureUploadMiddleware.js)
 │   │   ├── models/             # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection, DefaulterRecord)
-│   │   ├── routes/             # Express API Endpoints (including defaulterRoutes.js, parentRoutes.js)
-│   │   ├── services/           # Business Services (notificationService.js, defaulterService.js)
+│   │   ├── routes/             # Express API Endpoints (including defaulterRoutes.js, parentRoutes.js, leaveRoutes.js)
+│   │   ├── services/           # Business Services (notificationService.js, defaulterService.js, documentScannerService.js)
 │   │   ├── utils/              # GeoUtils (Haversine formula), JWT Generator, Async Handler, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, adminIntelligenceEngine.js, sendEmail.js
 │   │   ├── app.js              # Express Application Bootstrap & Security Layer
 │   │   └── server.js           # Node HTTP Server Launcher
@@ -343,6 +344,67 @@ The system enforces a **Zero Mutation Policy** for the `parent` role. All mutati
 
 ---
 
+## 📄 Phase 31: Document Verification & Secure Storage Architecture
+
+### Multi-Stage Verification Pipeline
+Leave applications with supporting proof documents (medical certificates, official event letters, duty orders) traverse an end-to-end multi-tier pipeline:
+
+```
+[ Student Submits Leave Request ]
+               │
+               ▼
+[ Secure Document Upload Middleware ] ── (server/src/middleware/secureUploadMiddleware.js)
+   • Multer Isolated Storage: server/secure_uploads/documents/
+   • Strict 5MB Size Ceiling (5 * 1024 * 1024 bytes)
+   • Allowed Formats: PDF, JPG, PNG
+   • Cryptographically Randomized Filenames
+               │
+               ▼
+[ Document Security Scanner Service ] ── (server/src/services/documentScannerService.js)
+   • Binary Magic-Byte Inspection (%PDF-, \x89PNG, \xFF\xD8\xFF)
+   • Heuristic Antivirus & Threat Analysis (EICAR, PE/ELF executables, scripts, PDF launch exploits)
+   • SHA-256 Checksum Calculation & Tamper-Evident Hashing
+   • ClamAV Daemon Socket Hook (where available)
+               │
+               ▼
+[ Leave Record Created (verificationStage: 'teacher_review') ]
+               │
+               ▼
+[ Faculty Mentor Review Stage ] ── (/teacher/leave)
+   • Private Authenticated Document Streaming
+   • Approve & Forward to Admin OR Reject with Remarks
+   • Verification State ➔ verificationStage: 'admin_verification'
+               │
+               ▼
+[ Admin Final Verification Console ] ── (/admin/document-verification)
+   • Document Security & Integrity Inspector Modal
+   • On-Demand Malware & SHA-256 Re-Scan
+   • Official Institutional Sanctioning ➔ verificationStage: 'completed', status: 'Approved'
+   • Automatic Attendance Adjustment & Audit Log Recording
+```
+
+### Document Security & Threat Prevention Measures
+1. **Isolated Non-Public Storage**:
+   - Stored in `server/secure_uploads/documents/` — isolated from Express public static file routing (`/uploads`).
+   - Files cannot be directly accessed or enumerated via browser paths.
+2. **Binary Magic-Byte Signature Validation**:
+   - PDF: `%PDF-` (`0x25 0x50 0x44 0x46`)
+   - PNG: `\x89PNG\r\n\x1a\n` (`0x89 0x50 0x4E 0x47 0x0D 0x0A 0x1A 0x0A`)
+   - JPEG: SOI marker (`0xFF 0xD8 0xFF`)
+   - Eliminates extension spoofing attacks (e.g. `.exe` or `.html` renamed to `.pdf`).
+3. **Multi-Vector Antivirus & Malware Engine**:
+   - Signature checks for the standard EICAR test string.
+   - Binary heuristic detection of disguised Windows PE/DOS executables (`MZ` header) and Linux ELF binaries.
+   - Polyglot detection for inline HTML/JS tags (`<script`, `javascript:`, `eval(`, `<?php`).
+   - PDF exploit vector scanning for active process launching (`/Launch`, `/EmbeddedFiles`, `/JavaScript`).
+   - Auto-quarantine: Malicious uploads are unlinked immediately and logged with audit event `DOCUMENT_MALWARE_FLAGGED`.
+4. **Private Access Streaming & Expiring Signed Tokens**:
+   - **Direct Authenticated Session Streaming**: `GET /api/leaves/:id/document` checks student ownership, department teacher assignment, admin role, or linked parent authorization.
+   - **15-Minute Signed Tokens**: `GET /api/leaves/:id/document-token` generates an HMAC/JWT signed token for embedded iframe or modal previews via `GET /api/leaves/document-stream/:token`.
+   - Security response headers: `Content-Disposition: inline`, `X-Content-Type-Options: nosniff`, `Cache-Control: private, no-store`.
+
+---
+
 ## 🔌 API Endpoint Hierarchy
 
 - `/api/auth` $\rightarrow$ Register, Login, Logout, Password Recovery, Token Refresh (Logs `LOGIN`, `LOGOUT`)
@@ -356,7 +418,7 @@ The system enforces a **Zero Mutation Policy** for the `parent` role. All mutati
 - `/api/reports` $\rightarrow$ Daily, Weekly, Monthly, Semester report generation & PDF/Excel/CSV exports (Logs `EXPORT_REPORT`)
 - `/api/charts` $\rightarrow$ Ratio charts, Dept comparison, Monthly trends, Subject breakdown, Student rankings
 - `/api/notifications` $\rightarrow$ Notification feed, Unread counters, Preferences (`GET/PUT /preferences`), Multi-channel test simulator (`POST /test-dispatch`), Smart attendance recovery breakdown (`GET /smart-summary`), Web Push tokens, Announcements broadcast
-- `/api/leaves` $\rightarrow$ Leave applications submission, Document attachment upload, Approval/Rejection workflow (Logs `APPROVE_LEAVE`, `REJECT_LEAVE`)
+- `/api/leaves` $\rightarrow$ Secure document upload (`POST /upload-document`), Leave submission (`POST /`), Multi-stage verification (`PUT /:id/teacher-review`, `PUT /:id/admin-verify`), Private document streaming (`GET /:id/document`), 15-min signed tokens (`GET /:id/document-token`, `GET /document-stream/:token`), On-demand malware re-scan (`POST /:id/rescan`) (Logs `TEACHER_VERIFY_LEAVE`, `ADMIN_VERIFY_LEAVE`, `DOCUMENT_UPLOADED`, `DOCUMENT_MALWARE_FLAGGED`)
 - `/api/ai` $\rightarrow$ Attendance Forecasting Engine (`POST /forecast/calculate`, `GET /forecast/me`), Attendance 75% prediction (`GET /predict`), Natural language chatbot (`POST /chat`), Proxy anomaly detection (`GET /suspicious-detection`)
 - `/api/analytics` $\rightarrow$ Admin Intelligence Dashboard (`/admin-intelligence`, `/intelligence`), Teacher classroom analytics (`/teacher/me`, `/teacher/:teacherId`), Student personal analytics dashboard (`/student/me`, `/student/:studentId`), Most absent deficit calculator, Best attendance leaderboard, Dept rankings, Teacher metrics, Daily inspector
 - `/api/academic` $\rightarrow$ Academic hierarchy tree, Academic Years, Dynamic Semesters, Divisions (`IT-A`), Batch Student Promotion Engine

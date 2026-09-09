@@ -6,7 +6,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.3-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-339933.svg?logo=node.js)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248.svg?logo=mongodb)](https://www.mongodb.com/)
-[![Test Suite](https://img.shields.io/badge/Tests-154%2F154%20Passed-brightgreen.svg)](server/tests)
+[![Test Suite](https://img.shields.io/badge/Tests-169%2F169%20Passed-brightgreen.svg)](server/tests)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A modern, full-stack **Multi-Role Attendance Management System** designed for educational institutions. Built using **React 18, Vite, Tailwind CSS, Node.js, Express, and MongoDB**, it features tailored dashboards and workflows for **Students**, **Teachers (Faculty)**, **Administrators**, and **Parents/Guardians**.
@@ -31,7 +31,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 🤖 **AI Features (Phase 14)**: Attendance Prediction Engine ("Can student reach 75%?", max skips allowed, "What-If" simulator slider), Natural Language AI Chatbot ("My attendance?", "Subjects below 75%", "Can I skip tomorrow?", "Attendance report", "Remaining lectures"), and automated Suspicious Attendance & Proxy Detection Console.
 - 📈 **Executive Analytics Dashboard (Phase 15)**: Comprehensive Admin analytics hub featuring 5 specialized sub-modules: Most Absent Students (< 75% attendance with shortage deficit calculator $X = \lceil 3T - 4P \rceil$), Best Attendance Leaderboard (Gold/Silver/Bronze medals & 100% Perfect badges), Department Ranking (CSE, ECE, ME, CE, IT average comparison & HOD view), Teacher Performance Metrics (classes conducted, on-time marking rate %, student attendance average), and Daily Attendance Inspector (date picker, summary metrics, and hourly time-slot session distribution).
 - 🛡️ **Enterprise Security & Hardening (Phase 16)**: Multi-layered security stack including **Helmet HTTP Security Headers** (`Content-Security-Policy`, `X-Frame-Options`, `HSTS`, `X-Powered-By` suppression), **Sliding-Window Rate Limiting** (Global API 200 req/15 min, Auth endpoints 15 req/15 min, Sensitive operations 10 req/15 min), **XSS Payload Sanitizer** (recursive body/query/param HTML tag escaping), **Payload Input Validation**, **Hardened JWT & RBAC**, **CORS Governance**, **SHA-256 Server-Side Hashed Refresh Tokens**, and **HTTP-Only Cookies**.
-- 🧪 **Automated Testing Suite (Phase 17 & Beyond)**: Comprehensive unit and integration test coverage (**18 test suites, 154/154 passing tests**) covering all core modules powered by **Jest**, **Supertest**, and **mongodb-memory-server**.
+- 🧪 **Automated Testing Suite (Phase 17 & Beyond)**: Comprehensive unit and integration test coverage (**19 test suites, 169/169 passing tests**) covering all core modules powered by **Jest**, **Supertest**, and **mongodb-memory-server**.
 - 🏫 **Academic Year & Semester Engine (Phase 18)**: Dynamic institutional hierarchy engine (`Academic Year ➔ Semester ➔ Department ➔ Division ➔ Subjects`). Features custom session dates, active year status singletons, dynamic terms without hardcoding, class section capacity management (`IT-A`, `IT-B`, `IT-C`), interactive visual hierarchy tree, and wizard-driven student batch promotion engine with audit logs.
 - ⚙️ **Advanced Attendance Rules Engine (Phase 19)**: Institution-wide configurable rules engine replacing hardcoded logic. Allows Admins to customize thresholds (Minimum Attendance %, Late Cutoff mins, Grace Period mins, Dynamic QR Validity mins, GPS Geofence Radius meters, Auto-Absent delay mins) and define advanced rules for 7 core statuses (`Present`, `Absent`, `Late`, `Excused`, `On Leave`, `Holiday`, `Cancelled Lecture`) with attendance inclusion weights. Includes an interactive real-time Rule Simulator / Sandbox.
 - ⏱️ **Attendance Session Engine (Phase 20)**: Explicit 4-tier domain hierarchy (`Subject ➔ Scheduled Class ➔ Attendance Session ➔ Student Attendance`) separating static scheduled class definitions from active attendance sessions. Generates unique Session IDs (`SESS-YYYYMMDD-XXXX`), manages start/end timestamps, QR secret tokens, and session-linked attendance tracking.
@@ -45,7 +45,8 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 📊 **Teacher Analytics & Insights (Phase 28)**: Comprehensive faculty analytics command center providing classroom intelligence across 7 core attendance dimensions: Average Class Attendance (weighted %, conducted vs attended, benchmark comparison), Most Absent Students (ranked defaulter directory with shortage deficit math $x = \max(0, \lceil \frac{0.75 T - P}{0.25} \rceil)$), Most Late Students (punctuality ratings & late counts), Attendance by Lecture (time-slot analysis comparing peak 10:15 AM engagement at 89.2% vs post-lunch 1:30 PM drop at 73.8%), Attendance by Weekday (Monday 82%, Tuesday 91%, Wednesday 76%, Thursday 88%, Friday 69% with automated Friday slump detection and actionable pedagogical advice), Subject Attendance (CS401, CS405, CS502), and Division Comparison (Section A vs Section B vs Section C with rankings and variance). Features an embedded insights widget on the Teacher Dashboard (`TeacherDashboard.jsx`) and a dedicated Teacher Analytics Hub (`/teacher/analytics` - `TeacherAnalytics.jsx`) with multi-filter controls and CSV export.
 - 🧠 **Admin Intelligence Dashboard (Phase 29)**: College-level executive control center (`/admin` and `/admin/intelligence`) featuring top KPI summary cards matching institutional telemetry (**Total Students: 2,481**, **Total Teachers: 143**, **Today's Attendance: 87.4%**, **Students <75%: 312**) alongside 7 deep institutional modules: Cross-department benchmarking with variance from college average, Division and section comparison matrix (class sizes, mentors, defaulters), 6-month attendance trajectory with 75% UGC benchmark line, weekly velocity tracking (detecting Friday slump at 73.1% vs Tuesday peak at 90.4%), Defaulter analysis with exact mathematical deficit calculations ($x = \lceil \frac{0.75T - P}{0.25} \rceil$) and simulated bulk warning alerts dispatch, Teacher compliance and class scheduling metrics (97.5% conduction, 94.8% on-time marking, lecture time slots), Suspicious attendance and anti-proxy telemetry (device collisions, geofence breaches >500m, rapid scans), and College leave statistics and truancy impact.
 - 🚨 **Automated Defaulter Management & Escalation Pipeline (Phase 30)**: Automated identification and progressive 4-tier escalation hierarchy (`<75%` Warning $\to$ `<70%` Serious Warning $\to$ `<65%` Admin Alert $\to$ `<60%` Parent/Guardian Alert) with configurable thresholds, deficit recovery mathematics ($x = \lceil \frac{rT - P}{1 - r} \rceil$), direct automated parent email alerts, auto-clearing upon attendance restoration, persistent `DefaulterRecord` tracking with counselor audit ledger, and a dedicated Admin Defaulter Management Console (`/admin/defaulters`).
-- 👨‍👩‍👧 **Parent/Guardian Portal (Phase 31)**: Dedicated portal for parents/guardians with multi-ward switching, cumulative attendance percentage tracking, 75% university benchmark shortage alerts, subject-wise attendance breakdown with consecutive lecture recovery counters and safe skip allowances, student leave request inspection (with medical proof files and instructor remarks), 4-tier attendance warning tracking, counselor directory contacts, and institutional notification feeds. Features **Strict Read-Only Access Enforcement** guaranteeing parents cannot create, edit, mark, or override any attendance or leave records.
+- 👨‍👩‍👧 **Parent/Guardian Portal (Phase 31 Part A)**: Dedicated portal for parents/guardians with multi-ward switching, cumulative attendance percentage tracking, 75% university benchmark shortage alerts, subject-wise attendance breakdown with consecutive lecture recovery counters and safe skip allowances, student leave request inspection (with medical proof files and instructor remarks), 4-tier attendance warning tracking, counselor directory contacts, and institutional notification feeds. Features **Strict Read-Only Access Enforcement** guaranteeing parents cannot create, edit, mark, or override any attendance or leave records.
+- 📄 **Document Verification & Security Engine (Phase 31 Part B)**: Enterprise document verification pipeline for student leave applications (`Student ➔ Upload Document ➔ Antivirus Scan ➔ Teacher Review ➔ Admin Verification`). Features strict 5MB size limits, binary magic-byte MIME signature verification (preventing spoofed executables or HTML masquerading as PDF/JPG/PNG), secure isolated storage in `server/secure_uploads/documents/`, heuristic antivirus and malware scanning engine (detecting EICAR signatures, embedded PE/ELF binaries, active script tags, PDF launch exploits, and ClamAV socket support), SHA-256 tamper-evident integrity hashes, 15-minute signed expiring access tokens, and a central Admin Document Verification Console (`/admin/document-verification`) with on-demand re-scanning and official sanctioning.
 
 ---
 
@@ -162,6 +163,14 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Ward 4-Tier Attendance Warning Tracker & Counseling Directory** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
 | **Parent In-App Notifications & Institutional Circulars** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
 | **Strict Read-Only Enforcement (No Attendance or Leave Alteration)** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Multi-Tier Leave Verification Pipeline (Student ➔ Teacher ➔ Admin)** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Secure Non-Public Document Storage (PDF, JPG, PNG | Max 5MB)** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Binary Magic-Byte File Signature & Spoof Validation** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Heuristic Antivirus & Malware Threat Scanning Engine** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Cryptographic SHA-256 Checksums & Tamper Verification** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Private Expiring Signed Access Tokens & Document Streams** | ✅ | ✅ | ✅ | ✅ | Phase 31 |
+| **Admin Central Document Verification & Sanction Console** | ❌ | ❌ | ✅ | ❌ | Phase 31 |
+| **On-Demand Antivirus & Integrity Re-Scan Engine** | ❌ | ❌ | ✅ | ❌ | Phase 31 |
 
 ---
 
@@ -182,7 +191,7 @@ Basic-attendance/
 │   │   │   └── ui/              # Buttons, Cards, Inputs, Badges, Modals
 │   │   ├── context/             # React State Contexts (AuthContext, NotificationContext)
 │   │   ├── pages/
-│   │   │   ├── admin/           # Admin Intelligence (AdminIntelligenceDashboard.jsx), Defaulters (AdminDefaulterManagement.jsx), Academic Engine, Rules Engine, Corrections, Audit Logs, Suspicious
+│   │   │   ├── admin/           # Admin Intelligence (AdminIntelligenceDashboard.jsx), Defaulters (AdminDefaulterManagement.jsx), Document Verification (AdminDocumentVerification.jsx), Academic Engine, Rules Engine, Corrections, Audit Logs, Suspicious
 │   │   │   ├── analytics/       # Visual Charts Hub (ChartsPage.jsx)
 │   │   │   ├── auth/            # Login, Register, Forgot Password, Reset Password
 │   │   │   ├── landing/         # Public Landing Page
@@ -198,7 +207,7 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                      # Backend REST API (Node.js + Express + MongoDB)
-│   ├── tests/                   # Automated Jest & Supertest Integration Test Suite (18 Test Suites, 154 Tests)
+│   ├── tests/                   # Automated Jest & Supertest Integration Test Suite (19 Test Suites, 169 Tests)
 │   │   ├── setup.js             # Global MongoDB in-memory test environment setup
 │   │   ├── auth.test.js         # Authentication, Login, Register, JWT, RBAC tests
 │   │   ├── attendance.test.js   # Single/Bulk attendance, stats, defaulter threshold tests
@@ -216,15 +225,17 @@ Basic-attendance/
 │   │   ├── teacherAnalytics.test.js # Phase 28 Teacher analytics & insights tests
 │   │   ├── adminIntelligence.test.js # Phase 29 Admin intelligence control center tests
 │   │   ├── defaulterManagement.test.js # Phase 30 Automated defaulter management tests
-│   │   └── parentPortal.test.js # Phase 31 Parent/Guardian portal & read-only guard tests
-│   ├── uploads/                 # Static uploaded files (leave attachments, profile pics)
+│   │   ├── parentPortal.test.js # Phase 31 Parent/Guardian portal & read-only guard tests
+│   │   └── documentVerification.test.js # Phase 31 Document Verification & security tests
+│   ├── uploads/                 # Static uploaded files (avatars)
+│   ├── secure_uploads/          # Non-public isolated storage (secure_uploads/documents/)
 │   ├── src/
 │   │   ├── config/              # Database (db.js), WebSockets (socket.js), Firebase FCM (firebase.js)
 │   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, AI, Analytics, Audit, Academic, Rules, Session, AntiProxy, Correction, Defaulter, Parent)
-│   │   ├── middleware/          # Helmet, Rate Limiter, XSS Sanitizer, Input Validation, Audit Logger, JWT auth, RBAC guards
+│   │   ├── middleware/          # Helmet, Rate Limiter, XSS Sanitizer, Input Validation, Audit Logger, JWT auth, RBAC guards, secureUploadMiddleware.js
 │   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection, DefaulterRecord)
-│   │   ├── routes/              # Express API Route definitions (including defaulterRoutes.js, parentRoutes.js)
-│   │   ├── services/            # Business Services (notificationService.js, defaulterService.js)
+│   │   ├── routes/              # Express API Route definitions (including defaulterRoutes.js, parentRoutes.js, leaveRoutes.js)
+│   │   ├── services/            # Business Services (notificationService.js, defaulterService.js, documentScannerService.js)
 │   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, teacherAnalyticsEngine.js, adminIntelligenceEngine.js, sendEmail.js
 │   │   ├── app.js               # Express application initialization & security stack setup
 │   │   └── server.js            # Node HTTP server launcher
@@ -317,7 +328,7 @@ cd Basic-attendance
 
 ### 4. Running Automated Tests (`server`)
 
-Run the complete backend test suite (**18 test suites, 154 tests**):
+Run the complete backend test suite (**19 test suites, 169 tests**):
 
 ```bash
 cd server
@@ -326,6 +337,7 @@ npm test
 
 To run a specific module test suite:
 ```bash
+npx jest tests/documentVerification.test.js # Phase 31 Document Verification & Security (15 tests)
 npx jest tests/parentPortal.test.js        # Phase 31 Parent/Guardian Portal (18 tests)
 npx jest tests/defaulterManagement.test.js # Phase 30 Automated Defaulter Management
 npx jest tests/adminIntelligence.test.js   # Phase 29 Admin Intelligence Control Center
@@ -407,10 +419,17 @@ npx jest tests/charts.test.js              # Charts & Analytics
 - `GET /api/audit-logs/stats` — Fetch audit overview metrics and 10-action category distribution (Admin only)
 - `GET /api/audit-logs/export` — Download full audit ledger as a CSV file with Actor, Target, Transition, and Reason columns (Admin only, logs `EXPORT_REPORT`)
 
-### 📝 Leave Application Workflow (`/api/leaves`)
-- `POST /api/leaves` — Submit new leave application (Medical, Emergency, Event) with file attachment
-- `GET /api/leaves/student` — View personal leave application history and approval status
-- `PUT /api/leaves/:id/status` — Approve or reject leave application (Teacher / Admin, logs `APPROVE_LEAVE` / `REJECT_LEAVE`)
+### 📝 Leave Application & Document Verification Workflow (`/api/leaves`)
+- `POST /api/leaves/upload-document` — Secure document upload with 5MB limit, binary magic-byte inspection (PDF, JPG, PNG), heuristic antivirus scanning, and SHA-256 integrity hash calculation
+- `POST /api/leaves` — Submit new leave application (Medical, Emergency, Event) linked with verified document metadata
+- `GET /api/leaves/student` — View student's personal leave applications with live multi-stage verification status (`teacher_review` ➔ `admin_verification` ➔ `completed`)
+- `PUT /api/leaves/:id/teacher-review` — Faculty mentor reviews document, adds remarks, and approves/forwards to Admin (Logs `TEACHER_VERIFY_LEAVE`)
+- `PUT /api/leaves/:id/admin-verify` — Admin officially sanctions leave, verifies document, and updates status (Logs `ADMIN_VERIFY_LEAVE`)
+- `PUT /api/leaves/:id/status` — Legacy / direct leave status update endpoint (Teacher / Admin, logs `APPROVE_LEAVE` / `REJECT_LEAVE`)
+- `GET /api/leaves/:id/document` — Authenticated private stream of leave supporting document with role-based ownership validation
+- `GET /api/leaves/:id/document-token` — Generate a 15-minute expiring HMAC/JWT signed access token for secure iframe/modal streaming
+- `GET /api/leaves/document-stream/:token` — Stream document securely via expiring signed token without leaking authorization headers
+- `POST /api/leaves/:id/rescan` — Trigger on-demand malware heuristic re-scan and SHA-256 checksum re-verification on stored file (Admin only)
 
 ### 🗓️ Timetable Management (`/api/timetable`)
 - `GET /api/timetable` — Fetch timetable entries with optional day, section, or search filters

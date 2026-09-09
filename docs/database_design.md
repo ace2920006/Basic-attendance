@@ -349,9 +349,56 @@ Persistent automated defaulter tracking, recovery deficit calculations, escalati
 
 ---
 
+### 15. `Leaves`
+Student absence requests, multi-tier verification lifecycle, and isolated secure document telemetry (Phase 31 Enriched).
+
+| Field | Type | Constraints | Description |
+| :--- | :--- | :--- | :--- |
+| `_id` | ObjectId | PRIMARY KEY | Unique Leave Application ID |
+| `student` | ObjectId | REF `User`, REQUIRED | Applying student user reference |
+| `leaveType` | String | ENUM (`Medical`, `Personal Emergency`, `Official Event`, `Duty Leave`), REQUIRED | Category of leave request |
+| `startDate` | Date | REQUIRED | Inclusive start date |
+| `endDate` | Date | REQUIRED | Inclusive end date |
+| `reason` | String | REQUIRED, TRIMMED | Student's formal reason and context |
+| `documentUrl` | String | DEFAULT '' | Backward-compatible relative document path |
+| `documentName` | String | DEFAULT '' | Backward-compatible original document name |
+| **`document`** | Subdocument | Schema Object | Encapsulated secure file metadata and scanning telemetry |
+| `document.originalName` | String | DEFAULT '' | Original filename uploaded by student |
+| `document.storedName` | String | DEFAULT '' | Cryptographically randomized filename on disk |
+| `document.filePath` | String | DEFAULT '' | Absolute path in non-public isolated storage (`server/secure_uploads/documents/`) |
+| `document.mimeType` | String | DEFAULT '' | Validated MIME type (`application/pdf`, `image/png`, `image/jpeg`) |
+| `document.size` | Number | DEFAULT 0, MAX 5MB | Exact file size in bytes |
+| `document.hash` | String | DEFAULT '' | Cryptographic SHA-256 integrity checksum |
+| `document.scanStatus` | String | ENUM (`CLEAN`, `FLAGGED`, `QUARANTINED`, `PENDING`), DEFAULT `PENDING` | Real-time antivirus threat status |
+| `document.scanEngine` | String | DEFAULT 'Antigravity Heuristic Engine' | Malware engine identifier (Heuristic / ClamAV) |
+| `document.scanDetails` | String | DEFAULT '' | Scan report details or detected threat description |
+| `document.scannedAt` | Date | OPTIONAL | Antivirus scan completion timestamp |
+| `status` | String | ENUM (`Pending`, `Teacher Verified`, `Approved`, `Rejected`), DEFAULT `Pending` | High-level application approval state |
+| `verificationStage` | String | ENUM (`submitted`, `teacher_review`, `admin_verification`, `completed`, `rejected`), DEFAULT `teacher_review` | Fine-grained multi-tier pipeline state |
+| `appliedOn` | Date | DEFAULT Date.now | Submission timestamp |
+| **`teacherReview`** | Subdocument | Schema Object | Faculty mentor review stage record |
+| `teacherReview.status` | String | ENUM (`Pending`, `Approved`, `Rejected`), DEFAULT `Pending` | Mentor recommendation status |
+| `teacherReview.reviewedBy` | ObjectId | REF `User`, OPTIONAL | Faculty instructor user reference |
+| `teacherReview.reviewedAt` | Date | OPTIONAL | Mentor review timestamp |
+| `teacherReview.remarks` | String | DEFAULT '' | Mentor evaluation remarks |
+| **`adminVerification`** | Subdocument | Schema Object | Central administration final sanction record |
+| `adminVerification.status` | String | ENUM (`Pending`, `Verified`, `Rejected`), DEFAULT `Pending` | Administrative verification status |
+| `adminVerification.verifiedBy` | ObjectId | REF `User`, OPTIONAL | Admin user reference |
+| `adminVerification.verifiedAt` | Date | OPTIONAL | Admin verification timestamp |
+| `adminVerification.remarks` | String | DEFAULT '' | Official administration sanction remarks |
+| `timestamps` | Booleans | `createdAt`, `updatedAt` | Automatic Mongoose audit timestamps |
+
+---
+
 ## ⚡ Performance Indexes
 
 ```javascript
+// Phase 31 Leave & Document Verification Indexes
+LeaveSchema.index({ student: 1, status: 1 });
+LeaveSchema.index({ verificationStage: 1, status: 1 });
+LeaveSchema.index({ 'document.scanStatus': 1 });
+LeaveSchema.index({ createdAt: -1 });
+
 // Phase 30 Automated Defaulter Management Indexes
 DefaulterRecordSchema.index({ department: 1, status: 1, tier: 1 });
 DefaulterRecordSchema.index({ student: 1, status: 1 });

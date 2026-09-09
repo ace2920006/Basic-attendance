@@ -26,8 +26,12 @@ This document details the functional specifications, feature requirements, and a
 - **AI Workspace**:
   - **Attendance Predictor**: "Can I reach 75%?" math calculator, $S_{max}$ maximum allowed skips calculator, and interactive "What-If" simulator slider.
   - **Natural Language AI Chatbot**: Natural language query handling ("My attendance?", "Subjects below 75%", "Can I skip tomorrow?").
-- **Leave Requests & Reports**:
-  - Submit leave applications with proof document attachments (`PDF`, `PNG`, `JPG`, `DOCX`).
+- **Leave Requests & Document Verification (Phase 31)**:
+  - Submit absence leave applications (Medical, Personal Emergency, Official Event, Duty Leave) with supporting document upload.
+  - Strict file format restrictions: **PDF**, **JPG**, and **PNG** only (all others rejected).
+  - Client-side size validation enforcing hard **5MB ceiling** with instant user feedback.
+  - Multi-stage verification progress stepper on student leave tracker: `Applied` ➔ `Teacher Review` ➔ `Admin Verification` ➔ `Approved`.
+  - Secure in-app document viewer modal with verified SHA-256 integrity hash and antivirus scan status badge (`CLEAN`, `FLAGGED`, `PENDING`).
   - Download official printable university attendance transcripts (PDF) and raw CSV datasets.
 - **Smart Notifications & Preference Hub (Phase 25)**:
   - **Smart Attendance Recovery Advisor**: Immediate real-time alerts calculating exact consecutive lectures needed to recover attendance back to 75% (e.g. *"Your Database Systems attendance has fallen to 72%. You need 2 consecutive attended lectures to reach 75%."*).
@@ -62,8 +66,11 @@ This document details the functional specifications, feature requirements, and a
 - **Enrolled Roster & Reports**:
   - Enrolled student list displaying student attendance rates and defaulter warning tags.
   - Class attendance report generator with CSV, Excel, and PDF exports.
-- **Leave Approvals & Security Console**:
-  - Review student leave applications, view attached supporting proof documents, and execute Approve/Reject decisions with custom remarks.
+- **Leave Review & Document Verification Console (Phase 31)**:
+  - Multi-stage leave review interface at `/teacher/leave`.
+  - Filter applications by review status (`Pending`, `Approved`, `Rejected`, `All`).
+  - Private document preview with secure 15-minute expiring access tokens, zoom, and download controls.
+  - "Verify & Forward to Admin" workflow: Mentor reviews medical proof, appends optional recommendations/remarks, and advances state to `admin_verification` (or rejects with justification).
 - **Anti-Proxy Attendance Engine & Review Hub (Phase 21 & Phase 22)**:
   - **Multi-Signal Risk Engine**: Evaluates 6 signals (QR Token, GPS Geofencing, Time Window, Device Fingerprint, IP Address Burst, Attendance Pattern) and computes Quantitative 0-100 Risk Score.
   - **3-Tier Risk Classification**: Categorizes check-ins into `0-30 Normal`, `31-60 Review`, and `61-100 High Risk`.
@@ -139,6 +146,13 @@ This document details the functional specifications, feature requirements, and a
   - **Deficit Mathematical Recovery**: Live calculation of exact consecutive lectures required ($x = \lceil \frac{rT - P}{1 - r} \rceil$) to restore standing.
   - **Defaulter Resolution Ledger**: Administrative clearance workflow allowing counselors to clear records with verified medical/counseling justification notes.
   - **Executive Console (`/admin/defaulters`)**: Rich visual pipeline diagram, 4-tier cards, searchable roster, audit timeline modal, and CSV export.
+- **Admin Document Verification Console (Phase 31)**:
+  - **Central Institutional Verification Console**: Accessible at `/admin/document-verification`.
+  - **Executive KPI Summary Cards**: Total Uploaded Documents, Awaiting Admin Sanction, Sanctioned & Approved, and Denied / Rejected.
+  - **Multi-Vector Format & Status Filters**: PDF, JPG, PNG format toggles and status filters (`Pending Admin`, `Approved`, `Rejected`).
+  - **Document Security & Integrity Inspector**: Full technical telemetry inspector modal displaying Stored Name, Original Name, Validated MIME, File Size, Antivirus Engine, Heuristic Scan Details, and SHA-256 Checksum.
+  - **On-Demand Antivirus & Integrity Re-Scan**: Dedicated trigger (`POST /api/leaves/:id/rescan`) allowing administrators to re-evaluate files on disk through heuristic and ClamAV scanners.
+  - **Official Sanctioning Workflow**: Final administrative approval marks `verificationStage = 'completed'`, updates leave status, permits attendance adjustment, and broadcasts notifications to both student and linked parents.
 
 ---
 
@@ -241,6 +255,14 @@ This document details the functional specifications, feature requirements, and a
 | **Ward 4-Tier Attendance Warning Tracker & Counseling Directory** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
 | **Parent In-App Notifications & Institutional Circulars** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
 | **Strict Read-Only Enforcement (No Attendance or Leave Alteration)** | ❌ | ❌ | ❌ | ✅ | Phase 31 |
+| **Multi-Tier Leave Verification Pipeline (Student ➔ Teacher ➔ Admin)** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Secure Non-Public Document Storage (PDF, JPG, PNG | Max 5MB)** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Binary Magic-Byte File Signature & Spoof Validation** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Heuristic Antivirus & Malware Threat Scanning Engine** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Cryptographic SHA-256 Checksums & Tamper Verification** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
+| **Private Expiring Signed Access Tokens & Document Streams** | ✅ | ✅ | ✅ | ✅ | Phase 31 |
+| **Admin Central Document Verification & Sanction Console** | ❌ | ❌ | ✅ | ❌ | Phase 31 |
+| **On-Demand Antivirus & Integrity Re-Scan Engine** | ❌ | ❌ | ✅ | ❌ | Phase 31 |
 
 ---
 
@@ -250,3 +272,4 @@ This document details the functional specifications, feature requirements, and a
 2. **Performance**: Fast REST API response times (< 50ms query latency), real-time WebSockets event broadcasting via Socket.io, and optimized Vite production bundling.
 3. **Data Integrity**: MongoDB Mongoose schema validation constraints, singleton active academic year enforcement, unique index rules, and cascade reference safety.
 4. **Responsiveness**: Modern, glassmorphism dark-mode interface built with React 18 and Tailwind CSS, fully responsive across mobile, tablet, and desktop viewports.
+5. **Document Security & Integrity**: Strict multi-tier MIME validation (file extension, HTTP Content-Type, binary magic-byte inspection for `%PDF-`, `\x89PNG`, `0xFF 0xD8 0xFF`), heuristic malware threat detection (EICAR, disguised PE/ELF binaries, embedded script vectors, PDF process launch exploits), non-public isolated storage (`server/secure_uploads/documents/`), SHA-256 tamper-evident integrity hashes, and 15-minute expiring signed access tokens for zero credential leakage.
