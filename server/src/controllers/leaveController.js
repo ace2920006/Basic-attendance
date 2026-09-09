@@ -48,7 +48,7 @@ const uploadLeaveDocument = asyncHandler(async (req, res) => {
       newValue: 'QUARANTINED',
       transition: 'UPLOAD -> QUARANTINED',
       reason: scanResult.error || 'Malware or signature mismatch detected',
-      status: 'BLOCKED',
+      status: 'FAILED',
       details: {
         filename: originalName,
         threatName: scanResult.threatName,

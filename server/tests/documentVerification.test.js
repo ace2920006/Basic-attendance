@@ -237,12 +237,9 @@ describe('📄 Phase 31: Document Verification for Leave Applications', () => {
       expect(leaveRes.body.data.verificationStage).toBe('teacher_review');
       expect(leaveRes.body.data.document.scanStatus).toBe('CLEAN');
       expect(leaveRes.body.data.document.hash).toBe(docData.hash);
-
-      leaveId = leaveRes.body.data._id;
     });
 
     it('Step 2: Teacher reviews document and recommends/approves to Admin', async () => {
-      // First create a leave to review
       const uploadRes = await request(app)
         .post('/api/leaves/upload-document')
         .set('Authorization', `Bearer ${studentToken}`)
@@ -259,11 +256,11 @@ describe('📄 Phase 31: Document Verification for Leave Applications', () => {
           document: uploadRes.body.data
         });
 
-      leaveId = leaveRes.body.data._id;
+      const currentLeaveId = leaveRes.body.data._id;
 
       // Teacher reviews leave
       const reviewRes = await request(app)
-        .put(`/api/leaves/${leaveId}/teacher-review`)
+        .put(`/api/leaves/${currentLeaveId}/teacher-review`)
         .set('Authorization', `Bearer ${teacherToken}`)
         .send({
           action: 'Approved',
@@ -277,10 +274,38 @@ describe('📄 Phase 31: Document Verification for Leave Applications', () => {
       expect(reviewRes.body.data.teacherReview.reviewedBy.name).toBe('Prof. John Smith');
     });
 
-    it('Step 3: Admin performs final verification and sanctions leave', async () => {
-      // Admin verifies leave
+    it('Step 3: Complete flow: Student -> Teacher Review -> Admin Final Verification', async () => {
+      // 1. Student uploads and applies
+      const uploadRes = await request(app)
+        .post('/api/leaves/upload-document')
+        .set('Authorization', `Bearer ${studentToken}`)
+        .attach('document', validPdfBuffer, { filename: 'sanction_doc.pdf', contentType: 'application/pdf' });
+
+      const leaveRes = await request(app)
+        .post('/api/leaves')
+        .set('Authorization', `Bearer ${studentToken}`)
+        .send({
+          leaveType: 'Medical',
+          startDate: '2026-10-15',
+          endDate: '2026-10-18',
+          reason: 'Fractured ankle rehabilitation',
+          document: uploadRes.body.data
+        });
+
+      const currentLeaveId = leaveRes.body.data._id;
+
+      // 2. Teacher reviews and approves
+      await request(app)
+        .put(`/api/leaves/${currentLeaveId}/teacher-review`)
+        .set('Authorization', `Bearer ${teacherToken}`)
+        .send({
+          action: 'Approved',
+          remarks: 'Valid orthopedic certificate verified by mentor.'
+        });
+
+      // 3. Admin verifies and sanctions leave
       const verifyRes = await request(app)
-        .put(`/api/leaves/${leaveId}/admin-verify`)
+        .put(`/api/leaves/${currentLeaveId}/admin-verify`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           action: 'Verified',
