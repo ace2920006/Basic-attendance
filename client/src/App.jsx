@@ -55,6 +55,7 @@ import AdminAcademicEngine from './pages/admin/AdminAcademicEngine';
 import AdminRulesEngine from './pages/admin/AdminRulesEngine';
 import AdminCorrections from './pages/admin/AdminCorrections';
 import AdminDefaulterManagement from './pages/admin/AdminDefaulterManagement';
+import AdminDocumentVerification from './pages/admin/AdminDocumentVerification';
 
 // Phase 11 Charts
 import ChartsPage from './pages/analytics/ChartsPage';
@@ -149,6 +150,7 @@ export default function App() {
             >
               <Route index element={<AdminIntelligenceDashboard />} />
               <Route path="intelligence" element={<AdminIntelligenceDashboard />} />
+              <Route path="document-verification" element={<AdminDocumentVerification />} />
               <Route path="analytics" element={<AdminAnalytics />} />
               <Route path="corrections" element={<AdminCorrections />} />
               <Route path="audit-logs" element={<AdminAuditLogs />} />

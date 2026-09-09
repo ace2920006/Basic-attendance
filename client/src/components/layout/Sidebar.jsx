@@ -76,6 +76,7 @@ export default function Sidebar({ role, user: userProp }) {
       case 'admin':
         return [
           { to: '/admin', label: 'Intelligence Dashboard 🧠', icon: FiHome, end: true },
+          { to: '/admin/document-verification', label: 'Document Verification 📄', icon: FiFileText },
           { to: '/admin/analytics', label: 'Analytics Sub-Console', icon: FiBarChart2 },
           { to: '/admin/corrections', label: 'Correction Audit Trail', icon: FiEdit3 },
           { to: '/admin/defaulters', label: 'Defaulter Escalation 🚨', icon: FiAlertTriangle },
