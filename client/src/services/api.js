@@ -245,29 +245,34 @@ export const deleteUserApi = async (id) => {
 
 // --- File Upload API ---
 export const uploadFileApi = async (file) => {
+  return uploadLeaveDocumentApi(file);
+};
+
+export const uploadLeaveDocumentApi = async (file) => {
   const token = getStoredToken();
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append('document', file);
 
   const headers = {};
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE_URL}/uploads`, {
+  const response = await fetch(`${API_BASE_URL}/leaves/upload-document`, {
     method: 'POST',
     headers,
-    body: formData
+    body: formData,
+    credentials: 'include'
   });
 
-  const data = await response.json();
+  const data = await response.json().catch(() => ({}));
   if (!response.ok) {
     throw new Error(data.message || 'File upload failed');
   }
   return data;
 };
 
-// --- Leave Management API ---
+// --- Leave Management & Document Verification API ---
 export const applyLeaveApi = async (leaveData) => {
   return apiRequest('/leaves', {
     method: 'POST',
@@ -279,9 +284,34 @@ export const getMyLeavesApi = async () => {
   return apiRequest('/leaves/my', { method: 'GET' });
 };
 
-export const getAllLeavesApi = async (status) => {
-  const query = status ? `?status=${encodeURIComponent(status)}` : '';
-  return apiRequest(`/leaves${query}`, { method: 'GET' });
+export const getAllLeavesApi = async (params = {}) => {
+  if (typeof params === 'string') {
+    const query = params ? `?status=${encodeURIComponent(params)}` : '';
+    return apiRequest(`/leaves${query}`, { method: 'GET' });
+  }
+  const query = new URLSearchParams(params).toString();
+  const endpoint = query ? `/leaves?${query}` : '/leaves';
+  return apiRequest(endpoint, { method: 'GET' });
+};
+
+export const teacherReviewLeaveApi = async (id, data) => {
+  return apiRequest(`/leaves/${id}/teacher-review`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
+
+export const adminVerifyLeaveApi = async (id, data) => {
+  return apiRequest(`/leaves/${id}/admin-verify`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
+
+export const rescanLeaveDocumentApi = async (id) => {
+  return apiRequest(`/leaves/${id}/rescan`, {
+    method: 'POST'
+  });
 };
 
 export const updateLeaveStatusApi = async (id, statusData) => {
@@ -289,6 +319,18 @@ export const updateLeaveStatusApi = async (id, statusData) => {
     method: 'PUT',
     body: JSON.stringify(statusData)
   });
+};
+
+export const getDocumentTokenApi = async (id) => {
+  return apiRequest(`/leaves/${id}/document-token`, { method: 'GET' });
+};
+
+export const getPrivateDocumentStreamUrl = (token) => {
+  return `${API_BASE_URL}/leaves/document-stream/${token}`;
+};
+
+export const getPrivateDocumentDownloadUrl = (id) => {
+  return `${API_BASE_URL}/leaves/${id}/document`;
 };
 
 // --- Class Management API ---
@@ -970,93 +1012,5 @@ export const getParentNotificationsApi = async (studentId = '') => {
   return apiRequest(endpoint, { method: 'GET' });
 };
 
-// ============================================================================
-// --- Phase 31: Document Verification & Leave Applications API ---
-// ============================================================================
-
-export const uploadLeaveDocumentApi = async (file) => {
-  const token = getStoredToken();
-  const formData = new FormData();
-  formData.append('document', file);
-
-  const headers = {};
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(`${API_BASE_URL}/leaves/upload-document`, {
-    method: 'POST',
-    headers,
-    body: formData,
-    credentials: 'include'
-  });
-
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok) {
-    throw new Error(data.message || 'Failed to upload and scan document');
-  }
-  return data;
-};
-
-// Generic file upload alias for backwards compatibility
-export const uploadFileApi = async (file) => {
-  return uploadLeaveDocumentApi(file);
-};
-
-export const applyLeaveApi = async (leaveData) => {
-  return apiRequest('/leaves', {
-    method: 'POST',
-    body: JSON.stringify(leaveData)
-  });
-};
-
-export const getMyLeavesApi = async () => {
-  return apiRequest('/leaves/my', { method: 'GET' });
-};
-
-export const getAllLeavesApi = async (params = {}) => {
-  const query = new URLSearchParams(params).toString();
-  const endpoint = query ? `/leaves?${query}` : '/leaves';
-  return apiRequest(endpoint, { method: 'GET' });
-};
-
-export const teacherReviewLeaveApi = async (id, data) => {
-  return apiRequest(`/leaves/${id}/teacher-review`, {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  });
-};
-
-export const adminVerifyLeaveApi = async (id, data) => {
-  return apiRequest(`/leaves/${id}/admin-verify`, {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  });
-};
-
-export const rescanLeaveDocumentApi = async (id) => {
-  return apiRequest(`/leaves/${id}/rescan`, {
-    method: 'POST'
-  });
-};
-
-export const updateLeaveStatusApi = async (id, data) => {
-  return apiRequest(`/leaves/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  });
-};
-
-export const getDocumentTokenApi = async (id) => {
-  return apiRequest(`/leaves/${id}/document-token`, { method: 'GET' });
-};
-
-export const getPrivateDocumentStreamUrl = (token) => {
-  return `${API_BASE_URL}/leaves/document-stream/${token}`;
-};
-
-export const getPrivateDocumentDownloadUrl = (id) => {
-  return `${API_BASE_URL}/leaves/${id}/document`;
-};
 
 

@@ -96,8 +96,29 @@ export const studentLeaves = [
     reason: 'Severe viral fever and physician recommended bed rest.', 
     documentName: 'medical_certificate_aug20.pdf',
     documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    document: {
+      originalName: 'medical_certificate_aug20.pdf',
+      storedName: 'doc-1724148000-a1b2c3d4.pdf',
+      mimeType: 'application/pdf',
+      size: 245760,
+      hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+      scanStatus: 'CLEAN',
+      scanEngine: 'Antigravity Heuristic Security Engine v2.4',
+      scanDetails: 'Passed virus & malware heuristic check. SHA-256 verified.'
+    },
     status: 'Approved', 
+    verificationStage: 'completed',
     appliedOn: '2026-07-31', 
+    teacherReview: {
+      status: 'Approved',
+      reviewedBy: { name: 'Dr. Sarah Jenkins' },
+      remarks: 'Medical certificate verified. Recommended for administrative sanction.'
+    },
+    adminVerification: {
+      status: 'Verified',
+      verifiedBy: { name: 'Dean of Academics' },
+      remarks: 'Administrative sanction approved. Attendance adjustment permitted.'
+    },
     reviewedBy: 'Dr. Sarah Jenkins', 
     remarks: 'Medical certificate verified. Granted duty leave.' 
   },
@@ -109,10 +130,30 @@ export const studentLeaves = [
     reason: 'Representing university in Inter-College Hackathon Finals.', 
     documentName: 'hackathon_permission_letter.pdf',
     documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    status: 'Pending', 
+    document: {
+      originalName: 'hackathon_permission_letter.pdf',
+      storedName: 'doc-1723284000-b2c3d4e5.pdf',
+      mimeType: 'application/pdf',
+      size: 512000,
+      hash: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+      scanStatus: 'CLEAN',
+      scanEngine: 'Antigravity Heuristic Security Engine v2.4',
+      scanDetails: 'Scan clean. Legitimate PDF document.'
+    },
+    status: 'Teacher Verified', 
+    verificationStage: 'admin_verification',
     appliedOn: '2026-08-10', 
-    reviewedBy: 'Pending Review', 
-    remarks: 'Awaiting department head authorization.' 
+    teacherReview: {
+      status: 'Approved',
+      reviewedBy: { name: 'Dr. John Smith' },
+      remarks: 'Official invitation letter verified by mentor.'
+    },
+    adminVerification: {
+      status: 'Pending',
+      remarks: ''
+    },
+    reviewedBy: 'Dr. John Smith', 
+    remarks: 'Awaiting administrative final sanction.' 
   },
   { 
     id: 'LV-103', 
@@ -122,8 +163,20 @@ export const studentLeaves = [
     reason: 'Family emergency, traveling out of state.', 
     documentName: '',
     documentUrl: '',
+    document: null,
     status: 'Approved', 
+    verificationStage: 'completed',
     appliedOn: '2026-07-11', 
+    teacherReview: {
+      status: 'Approved',
+      reviewedBy: { name: 'Marcus Vance' },
+      remarks: 'Approved per department guidelines.'
+    },
+    adminVerification: {
+      status: 'Verified',
+      reviewedBy: { name: 'Marcus Vance' },
+      remarks: 'Sanctioned.'
+    },
     reviewedBy: 'Marcus Vance', 
     remarks: 'Approved per department guidelines.' 
   }
@@ -190,77 +243,6 @@ export const adminAnalyticsData = {
     { month: 'Jun', rate: 84.4 }
   ]
 };
-
-
-
-export const studentLeaves = [
-  {
-    id: 'LV-2026-101',
-    leaveType: 'Medical',
-    startDate: '2026-08-20',
-    endDate: '2026-08-22',
-    reason: 'Viral fever with medical rest recommendation',
-    documentName: 'medical_certificate_aug20.pdf',
-    documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    document: {
-      originalName: 'medical_certificate_aug20.pdf',
-      storedName: 'doc-1724148000-a1b2c3d4.pdf',
-      mimeType: 'application/pdf',
-      size: 245760,
-      hash: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-      scanStatus: 'CLEAN',
-      scanEngine: 'Antigravity Heuristic Security Engine v2.4',
-      scanDetails: 'Passed virus & malware heuristic check. SHA-256 verified.'
-    },
-    status: 'Pending',
-    verificationStage: 'teacher_review',
-    appliedOn: '2026-08-19',
-    teacherReview: {
-      status: 'Pending',
-      remarks: 'Pending mentor inspection'
-    },
-    adminVerification: {
-      status: 'Pending',
-      remarks: ''
-    },
-    reviewedBy: null,
-    remarks: 'Awaiting faculty review'
-  },
-  {
-    id: 'LV-2026-102',
-    leaveType: 'Official Event',
-    startDate: '2026-08-10',
-    endDate: '2026-08-11',
-    reason: 'Participated in National University Hackathon 2026',
-    documentName: 'hackathon_selection_letter.pdf',
-    documentUrl: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    document: {
-      originalName: 'hackathon_selection_letter.pdf',
-      storedName: 'doc-1723284000-b2c3d4e5.pdf',
-      mimeType: 'application/pdf',
-      size: 512000,
-      hash: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
-      scanStatus: 'CLEAN',
-      scanEngine: 'Antigravity Heuristic Security Engine v2.4',
-      scanDetails: 'Scan clean. Legitimate PDF document.'
-    },
-    status: 'Approved',
-    verificationStage: 'completed',
-    appliedOn: '2026-08-08',
-    teacherReview: {
-      status: 'Approved',
-      reviewedBy: { name: 'Dr. John Smith' },
-      remarks: 'Duty leave recommended by Department Head.'
-    },
-    adminVerification: {
-      status: 'Verified',
-      verifiedBy: { name: 'Dean of Academics' },
-      remarks: 'Official institutional attendance sanction approved.'
-    },
-    reviewedBy: { name: 'Dr. John Smith' },
-    remarks: 'Attendance adjustment sanctioned'
-  }
-];
 
 export const mockTeacherLeavesList = [
   {
