@@ -14,6 +14,8 @@ build/
 # Uploads & Temp files
 uploads/*
 !uploads/.gitkeep
+secure_uploads/*
+!secure_uploads/**/.gitkeep
 
 # Logs
 *.log
