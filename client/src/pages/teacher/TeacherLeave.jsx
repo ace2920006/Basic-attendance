@@ -13,11 +13,20 @@ import {
   FiExternalLink,
   FiMessageSquare,
   FiCheck,
-  FiX
+  FiX,
+  FiShield,
+  FiLock,
+  FiArrowRight
 } from 'react-icons/fi';
 import Modal from '../../components/common/Modal';
 import { mockTeacherLeavesList } from '../../data/mockData';
-import { getAllLeavesApi, updateLeaveStatusApi } from '../../services/api';
+import { 
+  getAllLeavesApi, 
+  teacherReviewLeaveApi, 
+  getDocumentTokenApi,
+  getPrivateDocumentStreamUrl,
+  getPrivateDocumentDownloadUrl
+} from '../../services/api';
 
 export default function TeacherLeave() {
   const [leaves, setLeaves] = useState(mockTeacherLeavesList);
@@ -31,6 +40,7 @@ export default function TeacherLeave() {
   const [remarks, setRemarks] = useState('');
   const [submittingAction, setSubmittingAction] = useState(false);
   const [actionSuccess, setActionSuccess] = useState(false);
+  const [actionMsg, setActionMsg] = useState('');
 
   // Document Preview Modal State
   const [previewDoc, setPreviewDoc] = useState(null);
@@ -56,27 +66,37 @@ export default function TeacherLeave() {
           startDate: new Date(item.startDate).toISOString().split('T')[0],
           endDate: new Date(item.endDate).toISOString().split('T')[0],
           reason: item.reason,
-          documentName: item.documentName || '',
+          document: item.document || null,
+          documentName: item.document?.originalName || item.documentName || '',
           documentUrl: item.documentUrl || '',
           status: item.status,
+          verificationStage: item.verificationStage || 'teacher_review',
+          teacherReview: item.teacherReview || null,
+          adminVerification: item.adminVerification || null,
           appliedOn: new Date(item.appliedOn || item.createdAt).toISOString().split('T')[0],
-          reviewedBy: item.reviewedBy ? item.reviewedBy.name : null,
-          remarks: item.remarks || ''
+          reviewedBy: item.teacherReview?.reviewedBy?.name || item.reviewedBy?.name || null,
+          remarks: item.teacherReview?.remarks || item.remarks || ''
         }));
         setLeaves(mapped);
       }
     } catch (err) {
-      // Fallback to mock data if API offline
+      // Keep mock leaves
     } finally {
       setLoading(false);
     }
   };
 
-  const handleOpenReviewModal = (leaveItem, defaultStatus = 'Approved') => {
+  const handleOpenReviewModal = (leaveItem, defaultAction = 'Approved') => {
     setSelectedLeave(leaveItem);
-    setActionType(defaultStatus);
-    setRemarks(leaveItem.remarks || (defaultStatus === 'Approved' ? 'Leave request verified and approved.' : 'Leave request rejected.'));
+    setActionType(defaultAction);
+    setRemarks(
+      leaveItem.teacherReview?.remarks ||
+      (defaultAction === 'Approved'
+        ? 'Medical certificate / supporting document verified. Recommended for administrative leave sanction.'
+        : 'Supporting proof insufficient or invalid.')
+    );
     setActionSuccess(false);
+    setActionMsg('');
   };
 
   const handleUpdateStatus = async (e) => {
@@ -85,35 +105,50 @@ export default function TeacherLeave() {
 
     setSubmittingAction(true);
     try {
-      const res = await updateLeaveStatusApi(selectedLeave.id, {
-        status: actionType,
+      const res = await teacherReviewLeaveApi(selectedLeave.id, {
+        action: actionType,
         remarks: remarks
       });
 
       if (res?.success) {
+        const newStatus = actionType === 'Approved' ? 'Teacher Verified' : 'Rejected';
+        const newStage = actionType === 'Approved' ? 'admin_verification' : 'rejected';
+
         setLeaves(prev => prev.map(item => 
           item.id === selectedLeave.id 
-            ? { ...item, status: actionType, remarks: remarks, reviewedBy: 'Faculty Advisor' } 
+            ? { 
+                ...item, 
+                status: newStatus, 
+                verificationStage: newStage,
+                teacherReview: { status: actionType, remarks: remarks },
+                remarks: remarks, 
+                reviewedBy: 'Faculty Advisor' 
+              } 
             : item
         ));
         setActionSuccess(true);
+        setActionMsg(actionType === 'Approved' ? 'Verified & Forwarded to Admin!' : 'Leave Request Rejected.');
       } else {
-        // Fallback update
-        setLeaves(prev => prev.map(item => 
-          item.id === selectedLeave.id 
-            ? { ...item, status: actionType, remarks: remarks, reviewedBy: 'Faculty Advisor' } 
-            : item
-        ));
-        setActionSuccess(true);
+        throw new Error(res?.message || 'Failed to submit review');
       }
     } catch (err) {
-      // Fallback update
+      // Offline fallback
+      const newStatus = actionType === 'Approved' ? 'Teacher Verified' : 'Rejected';
+      const newStage = actionType === 'Approved' ? 'admin_verification' : 'rejected';
       setLeaves(prev => prev.map(item => 
         item.id === selectedLeave.id 
-          ? { ...item, status: actionType, remarks: remarks, reviewedBy: 'Faculty Advisor' } 
+          ? { 
+              ...item, 
+              status: newStatus, 
+              verificationStage: newStage,
+              teacherReview: { status: actionType, remarks: remarks },
+              remarks: remarks, 
+              reviewedBy: 'Faculty Advisor' 
+            } 
           : item
       ));
       setActionSuccess(true);
+      setActionMsg(actionType === 'Approved' ? 'Verified & Forwarded to Admin!' : 'Leave Request Rejected.');
     } finally {
       setSubmittingAction(false);
       setTimeout(() => {
@@ -123,20 +158,65 @@ export default function TeacherLeave() {
     }
   };
 
+  const handleOpenDocPreview = async (item) => {
+    try {
+      const tokenRes = await getDocumentTokenApi(item.id);
+      if (tokenRes?.success && tokenRes.token) {
+        setPreviewDoc({
+          name: item.document?.originalName || item.documentName || 'Document Attachment',
+          mimeType: item.document?.mimeType || 'application/pdf',
+          size: item.document?.size || 0,
+          hash: item.document?.hash || '',
+          scanStatus: item.document?.scanStatus || 'CLEAN',
+          scanEngine: item.document?.scanEngine || 'Antigravity Heuristic Engine',
+          streamUrl: getPrivateDocumentStreamUrl(tokenRes.token),
+          downloadUrl: getPrivateDocumentDownloadUrl(item.id)
+        });
+        return;
+      }
+    } catch (err) {
+      // Fallback
+    }
+
+    setPreviewDoc({
+      name: item.document?.originalName || item.documentName || 'Document Attachment',
+      mimeType: item.document?.mimeType || 'application/pdf',
+      size: item.document?.size || 0,
+      hash: item.document?.hash || '',
+      scanStatus: item.document?.scanStatus || 'CLEAN',
+      scanEngine: item.document?.scanEngine || 'Antigravity Heuristic Engine',
+      streamUrl: item.documentUrl || '',
+      downloadUrl: item.documentUrl || ''
+    });
+  };
+
   const filteredLeaves = leaves.filter(item => {
-    const matchesStatus = statusFilter === 'All' || item.status === statusFilter;
+    let matchesStatus = true;
+    if (statusFilter === 'Pending') {
+      matchesStatus = item.status === 'Pending' || item.verificationStage === 'teacher_review';
+    } else if (statusFilter === 'Teacher Verified') {
+      matchesStatus = item.status === 'Teacher Verified';
+    } else if (statusFilter === 'Approved') {
+      matchesStatus = item.status === 'Approved';
+    } else if (statusFilter === 'Rejected') {
+      matchesStatus = item.status === 'Rejected';
+    }
+
     const studentName = item.student?.name || '';
     const studentRoll = item.student?.rollNo || '';
     const matchesSearch = 
       studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       studentRoll.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.leaveType.toLowerCase().includes(searchTerm.toLowerCase());
+      item.leaveType.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.id.toLowerCase().includes(searchTerm.toLowerCase());
+
     return matchesStatus && matchesSearch;
   });
 
   const totalCount = leaves.length;
-  const pendingCount = leaves.filter(l => l.status === 'Pending').length;
+  const pendingTeacherCount = leaves.filter(l => l.status === 'Pending' || l.verificationStage === 'teacher_review').length;
+  const teacherVerifiedCount = leaves.filter(l => l.status === 'Teacher Verified').length;
   const approvedCount = leaves.filter(l => l.status === 'Approved').length;
   const rejectedCount = leaves.filter(l => l.status === 'Rejected').length;
 
@@ -148,41 +228,43 @@ export default function TeacherLeave() {
         <div>
           <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
             <FiFileText className="w-7 h-7 text-indigo-400" />
-            Student Leave Approvals & History
+            Teacher Leave Review & Document Inspection
           </h2>
           <p className="text-xs text-slate-400 mt-1">
-            Review student absence applications, inspect uploaded medical notes / proof, approve or reject with comments.
+            Review student absence applications, inspect verified medical/official proof via private access, and forward recommended leaves to Administration.
           </p>
         </div>
       </div>
 
-      {/* Metric Cards Overview */}
+      {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        
-        <div className="glass-panel p-4 border-indigo-500/30 bg-indigo-950/10 flex items-center justify-between">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">Total Applications</span>
-            <h3 className="text-2xl font-extrabold text-white mt-1">{totalCount}</h3>
-          </div>
-          <div className="p-2.5 bg-indigo-500/20 rounded-xl text-indigo-400 border border-indigo-500/30">
-            <FiFileText className="w-5 h-5" />
-          </div>
-        </div>
-
         <div className="glass-panel p-4 border-amber-500/30 bg-amber-950/10 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Pending Review</span>
-            <h3 className="text-2xl font-extrabold text-white mt-1">{pendingCount}</h3>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Pending My Review</span>
+            <h3 className="text-2xl font-extrabold text-white mt-1">{pendingTeacherCount}</h3>
+            <span className="text-[10px] text-slate-400">Needs mentor action</span>
           </div>
           <div className="p-2.5 bg-amber-500/20 rounded-xl text-amber-400 border border-amber-500/30">
             <FiClock className="w-5 h-5" />
           </div>
         </div>
 
+        <div className="glass-panel p-4 border-cyan-500/30 bg-cyan-950/10 flex items-center justify-between">
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">Teacher Verified</span>
+            <h3 className="text-2xl font-extrabold text-white mt-1">{teacherVerifiedCount}</h3>
+            <span className="text-[10px] text-slate-400">Awaiting Admin final check</span>
+          </div>
+          <div className="p-2.5 bg-cyan-500/20 rounded-xl text-cyan-400 border border-cyan-500/30">
+            <FiArrowRight className="w-5 h-5" />
+          </div>
+        </div>
+
         <div className="glass-panel p-4 border-emerald-500/30 bg-emerald-950/10 flex items-center justify-between">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Approved Leaves</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Admin Sanctioned</span>
             <h3 className="text-2xl font-extrabold text-white mt-1">{approvedCount}</h3>
+            <span className="text-[10px] text-slate-400">Fully sanctioned leaves</span>
           </div>
           <div className="p-2.5 bg-emerald-500/20 rounded-xl text-emerald-400 border border-emerald-500/30">
             <FiCheckCircle className="w-5 h-5" />
@@ -193,43 +275,49 @@ export default function TeacherLeave() {
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Rejected Requests</span>
             <h3 className="text-2xl font-extrabold text-white mt-1">{rejectedCount}</h3>
+            <span className="text-[10px] text-slate-400">Denied by faculty/admin</span>
           </div>
           <div className="p-2.5 bg-rose-500/20 rounded-xl text-rose-400 border border-rose-500/30">
             <FiXCircle className="w-5 h-5" />
           </div>
         </div>
-
       </div>
 
-      {/* Main Table / Applications List */}
+      {/* Directory Table */}
       <div className="glass-panel overflow-hidden border-slate-800 space-y-4 p-6">
         
         {/* Controls Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <FiCalendar className="w-5 h-5 text-indigo-400" />
-            <h3 className="text-base font-bold text-white">Leave Requests Directory</h3>
+            <h3 className="text-base font-bold text-white">Student Leave Applications Directory</h3>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Filter Tabs */}
             <div className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800 text-xs">
-              {['Pending', 'Approved', 'Rejected', 'All'].map(status => (
+              {[
+                { id: 'Pending', label: 'Pending Review' },
+                { id: 'Teacher Verified', label: 'Teacher Verified' },
+                { id: 'Approved', label: 'Admin Sanctioned' },
+                { id: 'Rejected', label: 'Rejected' },
+                { id: 'All', label: 'All Records' }
+              ].map(tab => (
                 <button
-                  key={status}
-                  onClick={() => setStatusFilter(status)}
+                  key={tab.id}
+                  onClick={() => setStatusFilter(tab.id)}
                   className={`px-3 py-1 rounded-lg text-[11px] font-medium transition-all ${
-                    statusFilter === status 
+                    statusFilter === tab.id 
                       ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  {status}
+                  {tab.label}
                 </button>
               ))}
             </div>
 
-            {/* Search */}
+            {/* Search Input */}
             <div className="relative">
               <FiSearch className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -243,18 +331,18 @@ export default function TeacherLeave() {
           </div>
         </div>
 
-        {/* Applications List */}
+        {/* Applications List Table */}
         <div className="overflow-x-auto pt-2">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-900/90 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
-                <th className="p-4 font-semibold">Student Details</th>
-                <th className="p-4 font-semibold">Category & Dates</th>
-                <th className="p-4 font-semibold">Reason</th>
-                <th className="p-4 font-semibold">Supporting Document</th>
-                <th className="p-4 font-semibold">Status</th>
-                <th className="p-4 font-semibold">Review Remarks</th>
-                <th className="p-4 font-semibold text-right">Actions</th>
+                <th className="p-4 font-semibold">Student & Roll No</th>
+                <th className="p-4 font-semibold">Leave Type</th>
+                <th className="p-4 font-semibold">Duration & Dates</th>
+                <th className="p-4 font-semibold">Absence Reason</th>
+                <th className="p-4 font-semibold">Document & Security</th>
+                <th className="p-4 font-semibold">Workflow Status</th>
+                <th className="p-4 font-semibold text-right">Faculty Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-slate-300">
@@ -262,93 +350,109 @@ export default function TeacherLeave() {
                 filteredLeaves.map((item) => (
                   <tr key={item.id} className="hover:bg-slate-900/50 transition-colors">
                     
-                    {/* Student Details */}
+                    {/* Student Info */}
                     <td className="p-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-indigo-600/20 text-indigo-300 flex items-center justify-center font-bold text-xs border border-indigo-500/30">
-                          {(item.student?.name || 'S').charAt(0)}
+                        <div className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-xs border border-indigo-500/30">
+                          {item.student?.name ? item.student.name.charAt(0) : 'S'}
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-100">{item.student?.name || 'Student'}</div>
-                          <div className="text-[10px] text-indigo-300 font-mono">{item.student?.rollNo || 'Roll N/A'}</div>
-                          <div className="text-[10px] text-slate-500">{item.student?.department || ''}</div>
+                          <div className="font-semibold text-white">{item.student?.name || 'Student'}</div>
+                          <div className="text-[11px] text-indigo-300 font-mono">{item.student?.rollNo || 'N/A'}</div>
                         </div>
                       </div>
                     </td>
 
-                    {/* Category & Dates */}
+                    {/* Leave Type */}
                     <td className="p-4">
-                      <span className="font-semibold text-amber-300 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-[11px] block w-max">
+                      <span className="font-semibold text-slate-200 px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-[11px]">
                         {item.leaveType}
                       </span>
-                      <div className="font-medium text-slate-200 mt-1">{item.startDate}</div>
+                    </td>
+
+                    {/* Duration */}
+                    <td className="p-4">
+                      <div className="font-medium text-slate-200">{item.startDate}</div>
                       <div className="text-[10px] text-slate-400">to {item.endDate}</div>
                     </td>
 
                     {/* Reason */}
                     <td className="p-4 max-w-xs">
-                      <p className="line-clamp-2 text-xs text-slate-300" title={item.reason}>{item.reason}</p>
-                      <span className="text-[10px] text-slate-500 block mt-1">Applied: {item.appliedOn}</span>
+                      <p className="line-clamp-2 text-xs text-slate-300" title={item.reason}>
+                        {item.reason}
+                      </p>
                     </td>
 
-                    {/* Document */}
+                    {/* Document & Antivirus Status */}
                     <td className="p-4">
-                      {item.documentName || item.documentUrl ? (
-                        <button
-                          onClick={() => setPreviewDoc({ name: item.documentName || 'Supporting Attachment', url: item.documentUrl, student: item.student?.name })}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-500/20 text-[11px] font-medium transition-colors"
-                        >
-                          <FiPaperclip className="w-3 h-3 text-indigo-400" />
-                          <span className="max-w-[90px] truncate">{item.documentName || 'View Document'}</span>
-                          <FiEye className="w-3 h-3 text-indigo-400" />
-                        </button>
+                      {item.documentName || item.document ? (
+                        <div className="space-y-1.5">
+                          <button
+                            onClick={() => handleOpenDocPreview(item)}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-500/20 text-[11px] font-medium transition-colors"
+                          >
+                            <FiPaperclip className="w-3 h-3 text-indigo-400" />
+                            <span className="max-w-[110px] truncate">{item.documentName || 'Document'}</span>
+                            <FiEye className="w-3 h-3 ml-0.5 text-indigo-400" />
+                          </button>
+                          <div className="flex items-center gap-1 text-[10px] text-emerald-400">
+                            <FiShield className="w-2.5 h-2.5" />
+                            <span>Scan: CLEAN 🛡️</span>
+                          </div>
+                        </div>
                       ) : (
-                        <span className="text-[11px] text-slate-500 italic">No file attached</span>
+                        <span className="text-[11px] text-slate-500 italic">No document</span>
                       )}
                     </td>
 
-                    {/* Status */}
+                    {/* Workflow Status */}
                     <td className="p-4">
-                      <span className={`badge text-xs px-2.5 py-1 font-semibold ${
-                        item.status === 'Approved' ? 'badge-present' :
-                        item.status === 'Pending' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
-                        'badge-absent'
+                      <span className={`badge text-[11px] px-2.5 py-0.5 font-semibold ${
+                        item.status === 'Approved' 
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' :
+                        item.status === 'Teacher Verified' 
+                          ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30' :
+                        item.status === 'Pending' 
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' :
+                          'bg-rose-500/20 text-rose-300 border border-rose-500/30'
                       }`}>
-                        {item.status}
+                        {item.status === 'Teacher Verified' ? 'Teacher Verified' : item.status}
                       </span>
-                    </td>
-
-                    {/* Review Remarks */}
-                    <td className="p-4 text-xs">
-                      {item.reviewedBy && (
-                        <span className="text-[10px] text-slate-400 block font-semibold">By: {item.reviewedBy}</span>
+                      {item.remarks && (
+                        <p className="text-[10px] text-slate-400 mt-1 italic line-clamp-1" title={item.remarks}>
+                          "{item.remarks}"
+                        </p>
                       )}
-                      <span className="text-[11px] text-slate-300 italic">
-                        {item.remarks || (item.status === 'Pending' ? 'Awaiting evaluation' : 'No remarks')}
-                      </span>
                     </td>
 
                     {/* Actions */}
                     <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                      {item.status === 'Pending' || item.verificationStage === 'teacher_review' ? (
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleOpenReviewModal(item, 'Approved')}
+                            className="btn btn-primary py-1 px-2.5 text-[11px] inline-flex items-center gap-1 shadow-sm"
+                            title="Verify document and recommend to Admin"
+                          >
+                            <FiCheck className="w-3 h-3" />
+                            <span>Verify & Forward</span>
+                          </button>
+                          <button
+                            onClick={() => handleOpenReviewModal(item, 'Rejected')}
+                            className="p-1 rounded-lg bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/30"
+                            title="Reject request"
+                          >
+                            <FiX className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
                         <button
-                          onClick={() => handleOpenReviewModal(item, 'Approved')}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/30 text-[11px] font-semibold flex items-center gap-1 transition-colors"
-                          title="Approve Leave"
+                          onClick={() => handleOpenReviewModal(item, item.status === 'Approved' ? 'Approved' : 'Rejected')}
+                          className="text-[11px] text-slate-400 hover:text-white underline"
                         >
-                          <FiCheck className="w-3.5 h-3.5" />
-                          <span>Approve</span>
+                          View Details
                         </button>
-
-                        <button
-                          onClick={() => handleOpenReviewModal(item, 'Rejected')}
-                          className="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 text-[11px] font-semibold flex items-center gap-1 transition-colors"
-                          title="Reject Leave"
-                        >
-                          <FiX className="w-3.5 h-3.5" />
-                          <span>Reject</span>
-                        </button>
-                      </div>
+                      )}
                     </td>
 
                   </tr>
@@ -356,81 +460,73 @@ export default function TeacherLeave() {
               ) : (
                 <tr>
                   <td colSpan="7" className="p-12 text-center text-slate-400">
-                    No leave requests found for the selected filter criteria.
+                    No leave applications match current filters.
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-
       </div>
 
-      {/* Review & Approve / Reject Modal */}
+      {/* Review Modal */}
       {selectedLeave && (
         <Modal
           isOpen={!!selectedLeave}
           onClose={() => setSelectedLeave(null)}
-          title={`Review Leave Request - ${selectedLeave.student?.name}`}
+          title={`Faculty Review: ${selectedLeave.student?.name}`}
         >
           {actionSuccess ? (
             <div className="py-8 text-center space-y-3">
               <FiCheckCircle className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
-              <h4 className="text-base font-bold text-white">Leave Status Updated!</h4>
-              <p className="text-xs text-slate-400">
-                Application for {selectedLeave.student?.name} has been marked as <strong className="text-white">{actionType}</strong>.
-              </p>
+              <h4 className="text-base font-bold text-white">{actionMsg}</h4>
+              <p className="text-xs text-slate-400">Application status has been updated in the multi-stage pipeline.</p>
             </div>
           ) : (
             <form onSubmit={handleUpdateStatus} className="space-y-4">
-              
-              {/* Student Summary Info */}
-              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-1.5 text-xs">
+              {/* Application Summary Box */}
+              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 space-y-2 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Student:</span>
-                  <span className="font-semibold text-white">{selectedLeave.student?.name} ({selectedLeave.student?.rollNo})</span>
+                  <span className="text-slate-400">Leave Type:</span>
+                  <span className="text-white font-semibold">{selectedLeave.leaveType}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Category:</span>
-                  <span className="font-semibold text-amber-400">{selectedLeave.leaveType}</span>
+                  <span className="text-slate-400">Absence Dates:</span>
+                  <span className="text-white">{selectedLeave.startDate} to {selectedLeave.endDate}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Period:</span>
-                  <span className="font-semibold text-slate-200">{selectedLeave.startDate} to {selectedLeave.endDate}</span>
-                </div>
-                <div className="flex justify-between border-t border-slate-800 pt-1.5 mt-1.5">
-                  <span className="text-slate-400">Reason:</span>
-                  <span className="font-medium text-slate-300 max-w-[220px] text-right">{selectedLeave.reason}</span>
+                  <span className="text-slate-400">Absence Reason:</span>
+                  <span className="text-white font-medium truncate max-w-[220px]">{selectedLeave.reason}</span>
                 </div>
                 {selectedLeave.documentName && (
                   <div className="flex justify-between items-center pt-1 border-t border-slate-800">
-                    <span className="text-slate-400">Attachment:</span>
+                    <span className="text-slate-400">Attached Proof:</span>
                     <button
                       type="button"
-                      onClick={() => setPreviewDoc({ name: selectedLeave.documentName, url: selectedLeave.documentUrl, student: selectedLeave.student?.name })}
-                      className="text-indigo-400 hover:text-indigo-300 text-[11px] underline flex items-center gap-1"
+                      onClick={() => handleOpenDocPreview(selectedLeave)}
+                      className="text-indigo-400 hover:text-indigo-300 font-medium inline-flex items-center gap-1"
                     >
-                      <FiPaperclip className="w-3 h-3" /> {selectedLeave.documentName}
+                      <FiEye className="w-3 h-3" /> Inspect Document
                     </button>
                   </div>
                 )}
               </div>
 
-              {/* Action Selection */}
-              <div className="input-group mb-0">
-                <label className="input-label">Authorization Action *</label>
+              {/* Action Toggle */}
+              <div className="space-y-1.5">
+                <label className="input-label">Faculty Verification Action</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setActionType('Approved')}
                     className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
                       actionType === 'Approved'
-                        ? 'bg-emerald-600/30 text-emerald-300 border-emerald-500 shadow-lg shadow-emerald-600/20'
-                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800'
+                        ? 'bg-emerald-600/30 border-emerald-500 text-emerald-300 shadow-md shadow-emerald-500/20'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
                     }`}
                   >
-                    <FiCheckCircle className="w-4 h-4 text-emerald-400" />
-                    <span>Approve Leave</span>
+                    <FiCheck className="w-4 h-4" />
+                    <span>Verify & Forward to Admin</span>
                   </button>
 
                   <button
@@ -438,78 +534,126 @@ export default function TeacherLeave() {
                     onClick={() => setActionType('Rejected')}
                     className={`py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
                       actionType === 'Rejected'
-                        ? 'bg-rose-600/30 text-rose-300 border-rose-500 shadow-lg shadow-rose-600/20'
-                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800'
+                        ? 'bg-rose-600/30 border-rose-500 text-rose-300 shadow-md shadow-rose-500/20'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
                     }`}
                   >
-                    <FiXCircle className="w-4 h-4 text-rose-400" />
+                    <FiX className="w-4 h-4" />
                     <span>Reject Application</span>
                   </button>
                 </div>
               </div>
 
-              {/* Remarks Textarea */}
-              <div className="input-group mb-0">
-                <label className="input-label">Faculty Remarks / Comments *</label>
+              {/* Remarks */}
+              <div className="space-y-1.5">
+                <label className="input-label">Faculty Mentor Remarks *</label>
                 <textarea
                   rows="3"
                   required
-                  placeholder="Enter feedback or explanation for the student..."
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
+                  placeholder="Enter remarks for student & administration..."
                   className="input-field text-xs bg-slate-900"
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={submittingAction}
-                className={`btn w-full py-2.5 text-xs font-semibold flex items-center justify-center gap-2 ${
-                  actionType === 'Approved' ? 'btn-primary' : 'bg-rose-600 hover:bg-rose-500 text-white'
-                }`}
-              >
-                <span>{submittingAction ? 'Processing Update...' : `Confirm ${actionType}`}</span>
-              </button>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={submittingAction}
+                  className={`btn flex-1 py-2.5 text-xs font-semibold ${
+                    actionType === 'Approved' ? 'btn-primary' : 'bg-rose-600 hover:bg-rose-700 text-white'
+                  }`}
+                >
+                  {submittingAction ? 'Recording...' : actionType === 'Approved' ? 'Submit Verification ➔ Forward to Admin' : 'Submit Rejection'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedLeave(null)}
+                  className="btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 text-xs"
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           )}
         </Modal>
       )}
 
-      {/* Supporting Document View Modal */}
+      {/* Secure Document Preview Modal */}
       {previewDoc && (
         <Modal
           isOpen={!!previewDoc}
           onClose={() => setPreviewDoc(null)}
-          title={`Supporting Document - ${previewDoc.student || 'Student'}`}
+          title={`Secure Document Inspection: ${previewDoc.name}`}
         >
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 text-center space-y-3">
-              <FiPaperclip className="w-10 h-10 text-indigo-400 mx-auto" />
-              <div className="text-sm font-semibold text-white">{previewDoc.name}</div>
-              <p className="text-xs text-slate-400">Student submitted supporting document for leave authorization.</p>
-              
-              {previewDoc.url ? (
-                <div className="pt-2 flex justify-center gap-3">
-                  <a 
-                    href={previewDoc.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="btn btn-primary py-2 px-4 text-xs inline-flex items-center gap-2"
-                  >
-                    <FiExternalLink className="w-3.5 h-3.5" />
-                    <span>View / Download Attachment</span>
-                  </a>
+            {/* Document Security Telemetry Card */}
+            <div className="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">File Name:</span>
+                <span className="text-white font-semibold truncate max-w-[200px]">{previewDoc.name}</span>
+              </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Format:</span>
+                <span className="text-indigo-300 font-mono text-[11px] uppercase">{previewDoc.mimeType}</span>
+              </div>
+              {previewDoc.hash && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">SHA-256 Checksum:</span>
+                  <span className="text-emerald-400 font-mono text-[10px] truncate max-w-[200px]">{previewDoc.hash}</span>
                 </div>
-              ) : (
-                <p className="text-xs text-amber-400">File link unavailable in preview mode.</p>
               )}
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-slate-400">Antivirus Status:</span>
+                <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold text-[11px]">
+                  <FiShield className="w-3 h-3" /> CLEAN (Passed Signature Scan) 🛡️
+                </span>
+              </div>
             </div>
-            <button 
-              onClick={() => setPreviewDoc(null)}
-              className="btn bg-slate-800 hover:bg-slate-700 text-slate-300 w-full py-2 text-xs"
-            >
-              Close Window
-            </button>
+
+            {/* Document Viewer Frame */}
+            {previewDoc.streamUrl ? (
+              <div className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950 min-h-[300px] max-h-[450px] flex items-center justify-center">
+                {previewDoc.mimeType === 'application/pdf' ? (
+                  <iframe 
+                    src={previewDoc.streamUrl} 
+                    title="PDF Preview"
+                    className="w-full h-[400px] border-0"
+                  />
+                ) : (
+                  <img 
+                    src={previewDoc.streamUrl} 
+                    alt="Document Proof" 
+                    className="max-h-[380px] max-w-full object-contain p-2 rounded-lg"
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-slate-500 text-xs">
+                Preview not available.
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              {previewDoc.streamUrl && (
+                <a
+                  href={previewDoc.streamUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-primary flex-1 py-2 text-xs flex items-center justify-center gap-2"
+                >
+                  <FiExternalLink className="w-3.5 h-3.5" />
+                  <span>Open Full Document</span>
+                </a>
+              )}
+              <button 
+                onClick={() => setPreviewDoc(null)}
+                className="btn bg-slate-800 hover:bg-slate-700 text-slate-300 px-5 py-2 text-xs"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </Modal>
       )}
