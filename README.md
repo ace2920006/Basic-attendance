@@ -250,31 +250,61 @@ Basic-attendance/
 │   ├── FLOW_DIAGRAMS.md         # Mermaid Flowcharts & System Lifecycle Diagrams
 │   └── PHASES.md                # Consolidated Phases Specification (Phases 1-31)
 │
+├── .env.example                 # Root Environment Variables Template
+├── package.json                 # Root Orchestration Scripts (install:all, dev, test)
 ├── PHASES.md                    # Root Consolidated Phases Specification (Phases 1-31)
 └── README.md                    # Master Project Documentation (This document)
 ```
-
 
 ---
 
 ## 🛠️ Installation & Setup Guide
 
-### Prerequisites
-- **Node.js**: v18.x or higher
-- **npm**: v9.x or higher
-- **MongoDB**: Local MongoDB instance (`mongodb://127.0.0.1:27017`) or MongoDB Atlas URI
+### 📋 Prerequisites
+- **Node.js**: **22+** (`v22.x` or higher required)
+- **MongoDB**: Community Server / Local instance (`mongodb://127.0.0.1:27017`) or MongoDB Atlas URI
+- **npm**: `v10.x` or higher (bundled with Node.js 22+)
 
 ---
 
-### 1. Clone the Repository
+### ⚡ Quick Start (Root Orchestration Scripts)
+
+The repository root includes convenient cross-platform orchestration scripts in [`package.json`](file:///d:/MY%20projects/FULL%20PROJECTS/attendance_app_starter/Basic-attendance/package.json):
+
+```json
+{
+  "scripts": {
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "dev": "npx -y concurrently -k -p \"[{name}]\" -n \"SERVER,CLIENT\" -c \"cyan.bold,magenta.bold\" \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "test": "npm test --prefix server"
+  }
+}
+```
+
 ```bash
+# 1. Clone repository
 git clone <repository-url>
 cd Basic-attendance
+
+# 2. Install all dependencies across both server and client with one command:
+npm run install:all
+
+# 3. Create your environment configuration from the template:
+cp .env.example .env
+cp .env.example server/.env
+
+# 4. Launch both Backend REST API (:5000) and Frontend Vite App (:3000) concurrently:
+npm run dev
+
+# 5. Run the complete automated test suite (19 test suites, 169 tests):
+npm test
 ```
 
 ---
 
-### 2. Backend Setup (`server`)
+### 📦 Manual Step-by-Step Setup
+
+#### 1. Backend Setup (`server`)
 
 1. Navigate to the server directory:
    ```bash
@@ -289,13 +319,27 @@ cd Basic-attendance
 3. Create environment configuration:
    Create a `.env` file in the `server` directory (or copy from `.env.example`):
    ```env
+   # Database Configuration (Required)
+   MONGODB_URI=mongodb://127.0.0.1:27017/attendance_db
+
+   # Authentication & Security Secrets (Required)
+   JWT_SECRET=your_jwt_access_token_secret_key_here
+   JWT_EXPIRE=1h
+   JWT_REFRESH_SECRET=your_jwt_refresh_token_secret_key_here
+   JWT_REFRESH_EXPIRE=7d
+
+   # Server & Client Connectivity
    PORT=5000
    NODE_ENV=development
-   MONGODB_URI=mongodb://127.0.0.1:27017/attendance_db
-   JWT_SECRET=your_jwt_secret_key_here
-   JWT_EXPIRE=30d
-   CLIENT_URL=http://localhost:3000
+   CLIENT_URL=http://localhost:5173
+
+   # Firebase Cloud Messaging (Optional)
+   FIREBASE_PROJECT_ID=your_firebase_project_id
+   FIREBASE_SERVICE_ACCOUNT_JSON=
+
+   # Storage Path
    UPLOAD_PATH=uploads
+   SECURE_UPLOAD_PATH=secure_uploads/documents
    ```
 
 4. Start the backend development server:
@@ -306,7 +350,7 @@ cd Basic-attendance
 
 ---
 
-### 3. Frontend Setup (`client`)
+#### 2. Frontend Setup (`client`)
 
 1. Open a new terminal window and navigate to the client directory:
    ```bash

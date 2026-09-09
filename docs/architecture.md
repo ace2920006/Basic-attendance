@@ -68,12 +68,17 @@ Basic-attendance/
 │   │   └── server.js           # Node HTTP Server Launcher
 │   └── package.json
 │
-└── docs/                       # Project Documentation Suite
-    ├── requirements.md         # Requirements Specifications & Matrix (Phases 1-31)
-    ├── architecture.md         # System Architecture & Technical Specs (This document)
-    ├── database_design.md      # Database ERD & Schema Specs
-    ├── FLOW_DIAGRAMS.md        # Comprehensive System Flow Diagrams (Mermaid)
-    └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-31)
+├── docs/                       # Project Documentation Suite
+│   ├── requirements.md         # Requirements Specifications & Matrix (Phases 1-31)
+│   ├── architecture.md         # System Architecture & Technical Specs (This document)
+│   ├── database_design.md      # Database ERD & Schema Specs
+│   ├── FLOW_DIAGRAMS.md        # Comprehensive System Flow Diagrams (Mermaid)
+│   └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-31)
+│
+├── .env.example                # Root Environment Variables Template
+├── package.json                # Root Orchestration Scripts (install:all, dev, test)
+├── PHASES.md                   # Master Consolidated Phase Implementations Specs (Phases 1-31)
+└── README.md                   # Master Project Documentation
 ```
 
 ---
