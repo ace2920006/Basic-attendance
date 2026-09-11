@@ -19,6 +19,8 @@ export default function ParentLayout() {
   const [linkMsg, setLinkMsg] = useState('');
   const [linkError, setLinkError] = useState('');
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     getParentWardsApi()
       .then((res) => {
@@ -83,13 +85,19 @@ export default function ParentLayout() {
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100 font-sans">
-      <Sidebar role="parent" user={user} />
+      <Sidebar 
+        role="parent" 
+        user={user} 
+        isOpenMobile={mobileMenuOpen}
+        onCloseMobile={() => setMobileMenuOpen(false)}
+      />
       
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
         <Header 
           title="Parent / Guardian Portal" 
           subtitle="Real-time academic monitoring, subject attendance & warning advisories" 
           user={user} 
+          onToggleMobileMenu={() => setMobileMenuOpen((prev) => !prev)}
         />
 
         {/* Top Ward Selection & Read-Only Notice Bar */}
