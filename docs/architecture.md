@@ -410,6 +410,59 @@ Leave applications with supporting proof documents (medical certificates, offici
 
 ---
 
+## 📱 Phase 33: Progressive Web App (PWA) & Mobile Subsystem Architecture
+
+### Mobile Experience & Offline Shell Architecture
+Phase 33 implements an installable, mobile-optimized architecture supporting offline shell execution, native-like mobile navigation, and device camera hardware integration:
+
+```
+                               Mobile / Desktop Browser
+                                          │
+                  ┌───────────────────────┴───────────────────────┐
+                  ▼                                               ▼
+     [ Web App Manifest Subsystem ]                   [ Service Worker Subsystem ]
+     • manifest.webmanifest / manifest.json           • sw.js Cache Controller
+     • Standalone Display Mode                        • Cache-First Static Assets (campusattend-v1)
+     • #4f46e5 Theme / #020617 Slate Canvas           • Network-First Navigation Strategy
+     • 6 Responsive Vector & Raster Icons             • Offline Fallback Shell (offline.html)
+     • Application Shortcuts (Scan, Classes, Stats)   • Web Push Push & NotificationClick
+                  │                                               │
+                  └───────────────────────┬───────────────────────┘
+                                          ▼
+                         [ Client Mobile UX Container ]
+          ┌───────────────────────────────┼───────────────────────────────┐
+          ▼                               ▼                               ▼
+ [ Thumb Bottom Navigation ]    [ Device Hardware QR Scanner ]    [ Install Promotion Engine ]
+ • MobileBottomNav.jsx          • StudentQRScannerModal.jsx       • PwaInstallContext.jsx
+ • 4-Role Aware Touch Tabs      • MediaDevices getUserMedia       • beforeinstallprompt Listener
+ • Floating 1-Tap QR Button     • Rear/Front Camera Lens Flip     • Slide-Up Mobile Banner
+ • Safe-Area Inset Support      • Hardware Torch Flashlight       • iOS Safari Add-to-Home Modal
+ • Responsive Drawer Sidebar    • Dual BarcodeDetector + jsQR     • Header Desktop/Tablet Pill
+```
+
+### Core PWA Engineering Components
+1. **Multi-Strategy Service Worker (`client/public/sw.js`)**:
+   - **Pre-cache Core Shell**: Pre-caches HTML, icons, and `offline.html` on `install`.
+   - **Cache-First for Static Assets**: JavaScript, CSS, Google Fonts, and static PNG/SVG images are served from cache first for instantaneous page load.
+   - **Network-First for Documents & HTML**: Page navigation requests attempt live network first, falling back to cached shell or styled `offline.html` during disconnects.
+   - **API Offline Guard**: Mutation requests (`POST`, `PUT`, `DELETE`) intercepted during disconnects return `{ offline: true, message: 'You are currently offline...' }`.
+2. **Device Camera Hardware QR Scanner Pipeline**:
+   - Captures video stream using `navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })`.
+   - Allows switching between back and front cameras dynamically.
+   - Applies hardware torch constraints where available (`torch` track property).
+   - Dual-engine parsing: Native `window.BarcodeDetector` (Chromium/Android) + canvas frame extraction with pure-JS `jsqr` fallback (iOS Safari / Firefox).
+   - Audio feedback using HTML5 Web Audio API oscillator synthesis (`playScanBeep()`).
+   - Automatically bundles scanned payload with GPS coordinates (`navigator.geolocation`) and device fingerprint into `POST /api/attendance/scan-qr`.
+3. **PWA Install Promotion Lifecycle**:
+   - Intercepts and holds `beforeinstallprompt` event in `PwaInstallContext`.
+   - Evaluates standalone display mode via `window.matchMedia('(display-mode: standalone)').matches` or `navigator.standalone`.
+   - Renders responsive slide-up banner on mobile web and provides step-by-step visual guide for iOS Safari users.
+4. **Future React Native Bridge via Stitch MCP**:
+   - Reusable domain logic: API client methods, WebSocket listeners, GPS calculations, and risk models.
+   - Using **Stitch MCP** server to generate native React Native screens and design systems matching CampusAttend's design tokens.
+
+---
+
 ## 🔌 API Endpoint Hierarchy
 
 - `/api/auth` $\rightarrow$ Register, Login, Logout, Password Recovery, Token Refresh (Logs `LOGIN`, `LOGOUT`)

@@ -836,6 +836,114 @@ flowchart LR
     end
 ```
 
+---
+
+## 21. Phase 33: Progressive Web App (PWA) & Mobile Architecture
+
+### 21A. Service Worker Caching, Offline Shell & Network Lifecycle
+Architecture of the Service Worker caching layer, navigation fallback, and reactive online/offline detection:
+
+```mermaid
+flowchart TD
+    subgraph ClientInit ["1. Client Launch & Registration"]
+        BrowserWindow["Mobile / Desktop Browser"] --> MainJSX["main.jsx Bootloader"]
+        MainJSX --> RegSW{"'serviceWorker' in navigator?"}
+        RegSW -- Yes --> Register["navigator.serviceWorker.register('/sw.js')"]
+        Register --> InstallEvent["SW 'install' Event Triggered"]
+        InstallEvent --> PreCache["Pre-cache Static App Shell: <br/> • '/', '/index.html' <br/> • '/offline.html' <br/> • '/manifest.webmanifest' <br/> • Vector & Raster Icons (/icons/*)"]
+        PreCache --> ActivateEvent["SW 'activate' Event Triggered"]
+        ActivateEvent --> CleanOld["Purge Stale Cache Versions <br/> Activate 'campusattend-v1'"]
+    end
+
+    subgraph FetchPipeline ["2. Intelligent Multi-Strategy Fetch Interceptor"]
+        BrowserWindow --> UserRequest["HTTP Request (Fetch Event)"]
+        UserRequest --> ReqType{"Request Classification"}
+        
+        ReqType -- "Static Asset (JS, CSS, Font, Img)" --> CacheFirst["Cache-First Strategy <br/> (caches.match(event.request))"]
+        CacheFirst --> AssetInCache{"Found in Cache?"}
+        AssetInCache -- Yes --> ReturnCachedAsset["Return Cached Asset (0ms Latency)"]
+        AssetInCache -- No --> FetchNetAsset["Fetch from Network & Save to Cache"]
+        FetchNetAsset --> ReturnNetAsset["Return Asset to Client"]
+
+        ReqType -- "Navigation (mode === 'navigate')" --> NetFirst["Network-First Strategy <br/> (fetch(event.request))"]
+        NetFirst --> NetAlive{"Network Online?"}
+        NetAlive -- Yes --> ReturnHTML["Return Fresh Page HTML <br/> Update Cache Copy"]
+        NetAlive -- No --> MatchShell{"Cached Shell <br/> Available?"}
+        MatchShell -- Yes --> ReturnShell["Return Pre-cached Page Shell"]
+        MatchShell -- No --> ReturnOfflineHTML["Serve Glassmorphic offline.html <br/> (Offline Fallback Page)"]
+
+        ReqType -- "API Mutation (POST/PUT/DELETE)" --> ApiGuard["API Request Interceptor"]
+        ApiGuard --> ApiOnline{"Network Online?"}
+        ApiOnline -- Yes --> PassApi["Forward to Backend REST API"]
+        ApiOnline -- No --> OfflineJSON["Return 503 JSON: <br/> { offline: true, message: 'Currently offline...' }"]
+    end
+
+    subgraph ConnectivityTelemetry ["3. Reactive Network State Machine"]
+        WindowEvents["window.addEventListener('online' / 'offline')"] --> NetHook["useNetworkStatus() Hook"]
+        NetHook --> OfflineToast["OfflineBanner.jsx Component <br/> • Floating Glassmorphic Alert <br/> • Auto-hides on Reconnection"]
+        NetHook --> RetryTrigger["User Clicks 'Retry Connection'"]
+        RetryTrigger --> NetFirst
+    end
+```
+
+### 21B. Device Camera Hardware QR Scanner & Dual Detection Pipeline
+Complete process flow from user interaction to hardware video streaming, dual barcode analysis, sensor telemetry, and attendance submission:
+
+```mermaid
+flowchart TD
+    subgraph TriggerStage ["1. Scanner Launch & Hardware Permissions"]
+        UserAction["Student Taps 'Scan QR' <br/> (MobileBottomNav / Dashboard)"] --> OpenModal["Open StudentQRScannerModal.jsx"]
+        OpenModal --> ReqMedia["Request Device Camera: <br/> navigator.mediaDevices.getUserMedia <br/> { video: { facingMode: 'environment' } }"]
+        ReqMedia --> PermGranted{"Camera Permission Granted?"}
+        PermGranted -- Denied --> FallbackTab["Switch to Manual Token Tab <br/> (Direct String Input)"]
+        PermGranted -- Granted --> VideoStream["Bind HTML5 &lt;video&gt; Stream"]
+    end
+
+    subgraph HardwareControls ["2. Real-Time Camera Hardware Controls"]
+        VideoStream --> LensToggle{"User Taps Lens Switcher"}
+        LensToggle --> SwitchFacing["Toggle facingMode: <br/> 'environment' &harr; 'user'"]
+        SwitchFacing --> ReqMedia
+
+        VideoStream --> TorchToggle{"User Taps Flashlight"}
+        TorchToggle --> ApplyTorch["track.applyConstraints <br/> { advanced: [{ torch: true/false }] }"]
+    end
+
+    subgraph DualDetectionEngine ["3. Dual-Engine Barcode Analysis Pipeline"]
+        VideoStream --> FrameLoop["RequestAnimationFrame Scan Loop <br/> (Render Frame to Hidden &lt;canvas&gt;)"]
+        FrameLoop --> CheckNative{"window.BarcodeDetector <br/> Supported?"}
+        
+        CheckNative -- Yes (Chromium/Android) --> NativeScan["Native BarcodeDetector Engine <br/> (Hardware Accelerated)"]
+        NativeScan --> NativeResult{"QR Code Detected?"}
+        
+        CheckNative -- No (Safari/iOS/Firefox) --> JsQRScan["Pure-JS jsQR Engine <br/> (Analyze Canvas ImageData)"]
+        JsQRScan --> JsResult{"QR Code Detected?"}
+
+        NativeResult -- No --> FrameLoop
+        JsResult -- No --> FrameLoop
+
+        NativeResult -- Yes --> ExtractToken["Extract Decoded Token String"]
+        JsResult -- Yes --> ExtractToken
+    end
+
+    subgraph SensoryFeedback ["4. Sensory Confirmation & Payload Packaging"]
+        ExtractToken --> AudioFeedback["HTML5 Web Audio API: playScanBeep() <br/> (880Hz Sine Wave Acoustic Chime)"]
+        ExtractToken --> VisualLaser["Animate Laser Sweep & Lock Reticle <br/> (.animate-scan-laser)"]
+        ExtractToken --> GetLocation["Query Geolocation: <br/> navigator.geolocation.getCurrentPosition()"]
+        ExtractToken --> GetFingerprint["Query Device Fingerprint & IP Cluster"]
+        
+        GetLocation --> PackagePayload["Package Attendance Submission Payload: <br/> { qrToken, latitude, longitude, deviceFingerprint }"]
+        GetFingerprint --> PackagePayload
+    end
+
+    subgraph ServerSubmission ["5. Backend Verification & Attendance Marking"]
+        PackagePayload --> PostApi["POST /api/attendance/scan-qr"]
+        PostApi --> ServerVerify{"Backend Anti-Proxy Engine: <br/> • 30s Dynamic Secret Valid? <br/> • Within 500m Campus Geofence? <br/> • Active Attendance Session? <br/> • Device Collision Free?"}
+        ServerVerify -- Valid --> SuccessUI["Display Emerald Checkmark Confirmed <br/> • Auto-close modal after 2.4s <br/> • Update Attendance Score %"]
+        ServerVerify -- Invalid --> ErrorUI["Display Risk Warning / Error Banner <br/> Allow Rescan after 3.0s"]
+    end
+```
+
+
 
 
 

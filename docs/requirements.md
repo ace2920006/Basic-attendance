@@ -261,8 +261,15 @@ This document details the functional specifications, feature requirements, and a
 | **Heuristic Antivirus & Malware Threat Scanning Engine** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
 | **Cryptographic SHA-256 Checksums & Tamper Verification** | ✅ | ✅ | ✅ | ❌ | Phase 31 |
 | **Private Expiring Signed Access Tokens & Document Streams** | ✅ | ✅ | ✅ | ✅ | Phase 31 |
-| **Admin Central Document Verification & Sanction Console** | ❌ | ❌ | ✅ | ❌ | Phase 31 |
-| **On-Demand Antivirus & Integrity Re-Scan Engine** | ❌ | ❌ | ✅ | ❌ | Phase 31 |
+| **Admin Central Document Verification & Sanction Console** | ❌ | ❌ | ✅ | ❌ | Phase 32 |
+| **On-Demand Antivirus & Integrity Re-Scan Engine** | ❌ | ❌ | ✅ | ❌ | Phase 32 |
+| **Installable PWA Web App Manifest & App Icons** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Offline Shell & Service Worker Caching (`sw.js`)** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Real-Time Network Status Banner (`useNetworkStatus`)** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Mobile Bottom Navigation Bar (`MobileBottomNav`)** | ✅ | ✅ | ❌ | ❌ | Phase 33 |
+| **Device Camera Hardware QR Scanner (Dual BarcodeDetector + jsQR)** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
+| **Lens Flip (Back/Front) & Torch Light Controls** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
+| **PWA Install Promotion Banner & iOS Add-to-Home Modal** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
 
 ---
 
@@ -274,3 +281,4 @@ This document details the functional specifications, feature requirements, and a
 4. **Responsiveness**: Modern, glassmorphism dark-mode interface built with React 18 and Tailwind CSS, fully responsive across mobile, tablet, and desktop viewports.
 5. **Document Security & Integrity**: Strict multi-tier MIME validation (file extension, HTTP Content-Type, binary magic-byte inspection for `%PDF-`, `\x89PNG`, `0xFF 0xD8 0xFF`), heuristic malware threat detection (EICAR, disguised PE/ELF binaries, embedded script vectors, PDF process launch exploits), non-public isolated storage (`server/secure_uploads/documents/`), SHA-256 tamper-evident integrity hashes, and 15-minute expiring signed access tokens for zero credential leakage.
 6. **Runtime Environment & Engine Support**: Supported on **Node.js 22+** (`v22.x` or higher), **MongoDB** (Local instance or MongoDB Atlas), and **npm** (`v10.x` or higher bundled with Node.js 22+). Includes root orchestration scripts (`install:all`, `dev`, `test`).
+7. **PWA & Offline Mobile Resilience (Phase 33)**: Progressive Web App compliance with W3C Web App Manifest (`standalone` display mode, dark canvas `#020617`, theme color `#4f46e5`), Service Worker caching architecture (`sw.js`) supporting offline shell execution and network-first navigation with graceful fallback (`offline.html`), hardware device camera streaming (`navigator.mediaDevices.getUserMedia`) with dual-engine barcode parsing (native `BarcodeDetector` + pure-JS `jsqr`), and thumb-zone navigation adhering to device safe-area insets (`env(safe-area-inset-bottom)`).
