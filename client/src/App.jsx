@@ -75,14 +75,22 @@ import ParentLeaves from './pages/parent/ParentLeaves';
 import ParentWarnings from './pages/parent/ParentWarnings';
 import ParentNotifications from './pages/parent/ParentNotifications';
 
+// Phase 33 PWA & Mobile Components
+import { PwaInstallProvider } from './context/PwaInstallContext';
+import OfflineBanner from './components/common/OfflineBanner';
+import PwaInstallBanner from './components/pwa/PwaInstallBanner';
+
 export default function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
-        <Router>
-          <ToastContainer />
-          <AiChatWidget />
-          <Routes>
+        <PwaInstallProvider>
+          <Router>
+            <OfflineBanner />
+            <ToastContainer />
+            <PwaInstallBanner />
+            <AiChatWidget />
+            <Routes>
             {/* Public & Authentication */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -190,6 +198,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
+        </PwaInstallProvider>
       </NotificationProvider>
     </AuthProvider>
   );

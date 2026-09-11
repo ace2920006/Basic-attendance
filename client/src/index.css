@@ -229,3 +229,32 @@ h1, h2, h3, h4 {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-glow);
 }
+
+/* Phase 33 PWA & Mobile Styles */
+@keyframes scanLaser {
+  0% {
+    top: 2%;
+    opacity: 0.8;
+  }
+  50% {
+    top: 96%;
+    opacity: 1;
+  }
+  100% {
+    top: 2%;
+    opacity: 0.8;
+  }
+}
+
+.animate-scan-laser {
+  animation: scanLaser 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Safe Area Insets for Mobile Gestures */
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 4rem);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
