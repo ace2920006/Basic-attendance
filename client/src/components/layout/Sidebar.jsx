@@ -111,12 +111,11 @@ export default function Sidebar({ role, user: userProp, isOpenMobile, onCloseMob
 
   const navLinks = getNavLinks();
 
-  return (
-    <aside className="w-64 bg-slate-900/90 backdrop-blur-xl border-r border-slate-800 flex flex-col h-screen sticky top-0 z-40">
-      
+  const renderSidebarContent = (isMobileView = false) => (
+    <>
       {/* Top Header */}
-      <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-3">
+      <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-3" onClick={isMobileView ? onCloseMobile : undefined}>
           <div className="bg-gradient-to-tr from-indigo-600 to-cyan-500 p-2 rounded-xl shadow-lg">
             <HiOutlineAcademicCap className="w-5 h-5 text-white" />
           </div>
@@ -127,9 +126,15 @@ export default function Sidebar({ role, user: userProp, isOpenMobile, onCloseMob
             </span>
           </div>
         </Link>
-        <Link to="/" title="Back to Home" className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg">
-          <FiChevronLeft className="w-4 h-4" />
-        </Link>
+        {isMobileView ? (
+          <button onClick={onCloseMobile} className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg">
+            <FiChevronLeft className="w-5 h-5" />
+          </button>
+        ) : (
+          <Link to="/" title="Back to Home" className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg">
+            <FiChevronLeft className="w-4 h-4" />
+          </Link>
+        )}
       </div>
 
       {/* User Info Quick Badge */}
@@ -159,6 +164,7 @@ export default function Sidebar({ role, user: userProp, isOpenMobile, onCloseMob
               key={link.to}
               to={link.to}
               end={link.end}
+              onClick={isMobileView ? onCloseMobile : undefined}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all duration-200 ${
                   isActive
@@ -180,9 +186,9 @@ export default function Sidebar({ role, user: userProp, isOpenMobile, onCloseMob
           Role Switcher
         </div>
         <div className="grid grid-cols-3 gap-1 px-1">
-          <Link to="/student" className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${activeRole === 'student' ? 'bg-indigo-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Student</Link>
-          <Link to="/teacher" className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${activeRole === 'teacher' ? 'bg-cyan-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Teacher</Link>
-          <Link to="/admin" className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${activeRole === 'admin' ? 'bg-emerald-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Admin</Link>
+          <Link to="/student" onClick={isMobileView ? onCloseMobile : undefined} className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${activeRole === 'student' ? 'bg-indigo-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Student</Link>
+          <Link to="/teacher" onClick={isMobileView ? onCloseMobile : undefined} className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${activeRole === 'teacher' ? 'bg-cyan-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Teacher</Link>
+          <Link to="/admin" onClick={isMobileView ? onCloseMobile : undefined} className={`px-2 py-1 rounded text-center text-[10px] font-medium transition-colors ${activeRole === 'admin' ? 'bg-emerald-600 text-white' : 'bg-slate-800/80 text-slate-400 hover:text-white'}`}>Admin</Link>
         </div>
         <button
           onClick={handleSignOut}
@@ -192,7 +198,25 @@ export default function Sidebar({ role, user: userProp, isOpenMobile, onCloseMob
           <span>Sign Out</span>
         </button>
       </div>
+    </>
+  );
 
-    </aside>
+  return (
+    <>
+      {/* Desktop Persistent Sidebar */}
+      <aside className="hidden md:flex w-64 bg-slate-900/90 backdrop-blur-xl border-r border-slate-800 flex-col h-screen sticky top-0 z-40">
+        {renderSidebarContent(false)}
+      </aside>
+
+      {/* Mobile Off-Canvas Drawer */}
+      {isOpenMobile && (
+        <div className="md:hidden fixed inset-0 z-50 flex animate-fade-in">
+          <div className="fixed inset-0 bg-black/75 backdrop-blur-sm" onClick={onCloseMobile} />
+          <aside className="relative w-72 max-w-[85vw] bg-slate-900 border-r border-slate-800 flex flex-col h-full z-10 shadow-2xl">
+            {renderSidebarContent(true)}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

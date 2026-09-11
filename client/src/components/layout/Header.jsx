@@ -12,16 +12,20 @@ import {
   FiSmartphone,
   FiRadio,
   FiX,
-  FiArrowRight
+  FiArrowRight,
+  FiMenu,
+  FiDownload
 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { usePwaInstall } from '../../context/PwaInstallContext';
 import CreateAnnouncementModal from '../common/CreateAnnouncementModal';
 
-export default function Header({ title, subtitle, user: userProp }) {
+export default function Header({ title, subtitle, user: userProp, onToggleMobileMenu }) {
   const { user: authUser } = useAuth();
   const activeUser = authUser || userProp;
+  const { isInstallable, isInstalled, promptInstall } = usePwaInstall();
   const {
     notifications,
     unreadCount,
@@ -80,14 +84,39 @@ export default function Header({ title, subtitle, user: userProp }) {
 
   return (
     <header className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800 px-6 py-4 flex items-center justify-between">
-      {/* Title & Subtitle */}
-      <div>
-        <h1 className="text-xl font-bold text-white tracking-tight">{title}</h1>
-        {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
+      {/* Title & Subtitle + Mobile Hamburger */}
+      <div className="flex items-center gap-3">
+        {onToggleMobileMenu && (
+          <button
+            type="button"
+            onClick={onToggleMobileMenu}
+            className="md:hidden p-2 rounded-xl bg-slate-950/50 hover:bg-slate-800 border border-slate-800 text-slate-300 hover:text-white transition-colors"
+            aria-label="Open navigation menu"
+          >
+            <FiMenu className="w-5 h-5" />
+          </button>
+        )}
+        <div>
+          <h1 className="text-xl font-bold text-white tracking-tight">{title}</h1>
+          {subtitle && <p className="text-xs text-slate-400 mt-0.5">{subtitle}</p>}
+        </div>
       </div>
 
       {/* Right Controls */}
       <div className="flex items-center gap-4">
+        {/* PWA Install Button */}
+        {isInstallable && !isInstalled && (
+          <button
+            type="button"
+            onClick={promptInstall}
+            className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 text-xs font-semibold transition-all shadow-sm shadow-indigo-950/40"
+            title="Install CampusAttend as an App"
+          >
+            <FiDownload className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Install App</span>
+          </button>
+        )}
+
         {/* Search Input */}
         <div className="relative hidden md:block w-64">
           <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
