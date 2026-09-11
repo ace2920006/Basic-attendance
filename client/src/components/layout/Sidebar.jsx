@@ -28,7 +28,7 @@ import {
 import { HiOutlineAcademicCap } from 'react-icons/hi2';
 import { useAuth } from '../../context/AuthContext';
 
-export default function Sidebar({ role, user: userProp }) {
+export default function Sidebar({ role, user: userProp, isOpenMobile, onCloseMobile }) {
   const { user: authUser, logout } = useAuth();
   const navigate = useNavigate();
 
