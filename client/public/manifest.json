@@ -1,0 +1,61 @@
+{
+  "name": "CampusAttend - Smart Attendance System",
+  "short_name": "CampusAttend",
+  "description": "Enterprise university attendance system with dynamic QR verification, mobile camera scanning, offline schedules, and real-time analytics.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#020617",
+  "theme_color": "#4f46e5",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Scan QR Attendance",
+      "short_name": "Scan QR",
+      "description": "Open camera scanner for attendance check-in",
+      "url": "/student?action=scan",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Today's Classes",
+      "short_name": "Classes",
+      "description": "View today's lecture schedule and timetable",
+      "url": "/student/classes",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Attendance Analytics",
+      "short_name": "Analytics",
+      "description": "Check 75% benchmark and recovery targets",
+      "url": "/student/analytics",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
