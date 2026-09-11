@@ -1,6 +1,6 @@
 # Attendance Management System - Consolidated Phases Specification
 
-This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 32**) of the **Attendance Management System**.
+This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 33**) of the **Attendance Management System**.
 
 ---
 
@@ -37,7 +37,8 @@ This document provides a single, unified reference for all project implementatio
 30. [Phase 30 – Automated Defaulter Management](#-phase-30--automated-defaulter-management-)
 31. [Phase 31 – Parent/Guardian Portal](#-phase-31--parentguardian-portal-)
 32. [Phase 32 – Document Verification](#-phase-32-document-verification-)
-33. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+33. [Phase 33 – PWA / Mobile Experience](#-phase-33-pwa--mobile-experience-)
+34. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -1525,6 +1526,122 @@ Phase 32 (also designated as Phase 31 Part B in architectural specifications) im
 
 ---
 
+## 📌 Phase 33: PWA / Mobile Experience 📱
+
+### Overview & Architecture
+Phase 33 transforms CampusAttend into an installable, high-performance Progressive Web App (PWA) prior to future native mobile client expansion. The application delivers an app-like experience directly from modern mobile and desktop browsers: students and teachers can install CampusAttend to their home screens, navigate with an ergonomic thumb-zone bottom navigation bar, maintain access during connectivity interruptions with an offline shell and network status detector, receive push notification updates, and perform instant attendance check-ins using real-time device camera hardware QR scanning with automated GPS and device telemetry.
+
+```
+       Desktop / Mobile Web Browser
+                     ↓
+         PWA Manifest & Service Worker
+     (App Icons, Standalone Mode, Offline Shell)
+                     ↓
+          Mobile-First Navigation Bar
+   (Thumb-Zone Navigation + 1-Tap Center QR Button)
+                     ↓
+        Device Camera Hardware Scanner
+    (Dual BarcodeDetector + jsQR Fallback Engine)
+                     ↓
+       Push Notifications & Home Install
+  (beforeinstallprompt Banner + iOS Safari Guide)
+                     ↓
+ [Future Roadmap]: React Native App + Stitch MCP
+```
+
+### Core PWA & Mobile Capabilities
+
+1. **Web App Manifest & Application Identity**:
+   - Manifest specifications located at `client/public/manifest.webmanifest` and `client/public/manifest.json`.
+   - Application Name: **CampusAttend** (Short: *CampusAttend*).
+   - Display Mode: `standalone` with `portrait-primary` orientation.
+   - Theme Color: `#4f46e5` (Indigo-600) with `#020617` (Slate-950) slate canvas background.
+   - Quick Application Shortcuts:
+     - **Scan QR Code** (`/student` with scanner shortcut)
+     - **My Classes** (`/student/attendance` or `/teacher/dashboard`)
+     - **Analytics** (`/student/analytics` or `/teacher/analytics`)
+   - Full suite of high-resolution icons generated in `client/public/icons/`:
+     - Master Vector: `icon.svg` (Dark slate canvas with indigo/violet shield, academic cap, and check badge).
+     - Standard PWA Icons: `icon-192.png` (192x192), `icon-512.png` (512x512).
+     - Android Adaptive Icon: `icon-maskable.png` (512x512 with safe-zone compliance).
+     - Apple Touch Icon: `apple-touch-icon.png` (180x180 for iOS Home Screen).
+     - Notification Badge: `badge-96.png` (96x96 monochrome badge).
+
+2. **Service Worker (`sw.js`) & Offline Shell Resilience**:
+   - Automated registration in `client/src/main.jsx` with lifecycle update checking.
+   - Multi-tier caching architecture:
+     - **Pre-cached Shell**: Core HTML shell, favicon, offline fallback page, and manifest pre-cached on install.
+     - **Cache-First Static Assets**: Fast local retrieval of JavaScript bundles, CSS stylesheets, web fonts, and public icons (`campusattend-v1`).
+     - **Network-First Navigation**: Navigation requests prioritize real-time network responses with graceful fallback to cached shell.
+     - **Offline Fallback Page (`offline.html`)**: Rich dark-mode glassmorphic interface informing users when connectivity is lost, with instant retry functionality.
+     - **API Offline Safeguard**: Non-GET mutations return a standardized `{ offline: true, message: 'You are currently offline...' }` payload during network drops.
+   - **Reactive Network Detection**:
+     - Custom hook `useNetworkStatus.js` listening to `window.online` and `window.offline` events.
+     - Floating `OfflineBanner.jsx` component providing non-intrusive toast notification when connection is severed and auto-dismissing when back online.
+   - **Web Push Notifications (`push` & `notificationclick`)**:
+     - Background push event handler displaying notifications with custom actions (*Open Portal*, *Dismiss*).
+     - Deep-linking click handler routing students directly into attendance logs or notifications console.
+
+3. **Mobile-First Responsive Layout & Thumb-Zone Navigation**:
+   - `MobileBottomNav.jsx` fixed at the viewport bottom with safe area inset support (`pb-safe` using `env(safe-area-inset-bottom)`).
+   - Ergonomic 4-tab thumb-reachable navigation for Student and Teacher roles:
+     - **Student**: Dashboard, Schedule, Attendance, Alerts.
+     - **Teacher**: Dashboard, Classes, Roster/Reports, Alerts.
+   - **Center Action Button**: Prominent glowing circular button for students providing instant 1-tap access to the camera QR scanner from any screen.
+   - **Mobile Drawer Sidebar**: Desktop sidebar collapses cleanly on mobile (`hidden md:flex`), and expands into an animated slide-over navigation drawer accessible via header hamburger menu.
+
+4. **Device Camera Hardware Integration & Live QR Scanner**:
+   - Replaced manual token input modal with full camera hardware integration in `StudentQRScannerModal.jsx`.
+   - Real-time video stream via `navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })`.
+   - Controls:
+     - **Lens Switcher**: 1-tap toggling between rear camera (`environment`) and front camera (`user`).
+     - **Flashlight / Torch**: Hardware torch toggle for low-light lecture halls on supported devices (`track.applyConstraints({ advanced: [{ torch: true }] })`).
+     - **Manual Fallback Tab**: Instant switch to manual token paste if camera permissions are denied or unavailable.
+   - **Dual-Engine QR Decoding**:
+     - *Primary*: High-speed native `window.BarcodeDetector` API for hardware-accelerated detection in Chromium browsers.
+     - *Fallback*: Pure JavaScript `jsqr` analyzer processing hidden canvas frame snapshots for universal Safari and older browser compatibility.
+   - **Interactive User Feedback**:
+     - Animated cyber-green scanning laser beam (`.animate-scan-laser`).
+     - High-contrast corner targeting brackets with pulse indicators.
+     - Synthetic Web Audio API beep sound (`playScanBeep()`) triggered instantaneously upon successful detection.
+     - Automatic submission pipeline: attaches scanned token, real-time GPS coordinates (`getCurrentPosition`), and device telemetry to `POST /api/attendance/scan-qr`.
+
+5. **Install Promotion Experience (`beforeinstallprompt` & iOS Modal)**:
+   - `PwaInstallContext.jsx` tracking installation state, dismissal preferences, and standalone launch mode.
+   - Responsive `PwaInstallBanner.jsx` sliding up on mobile web to guide students to install CampusAttend to their home screen with 1 tap.
+   - iOS Safari detection presenting step-by-step guidance modal showing the Apple Share sheet and "Add to Home Screen" action.
+   - Header "Install App" pill button on desktop and tablet browsers when installation is available.
+
+6. **Future Architecture Bridge: React Native & MCP Stitch**:
+   - The PWA implementation acts as the immediate mobile solution while laying the foundation for a future native React Native application.
+   - Reusable shared layers:
+     - API endpoints, payload validation, and token authentication contracts.
+     - WebSocket event listeners and push notification schemas.
+     - Geolocation and device fingerprinting logic.
+   - MCP Server Integration: Future generation of native React Native mobile screens, navigation stacks, and design systems can be orchestrated using tools such as **Stitch MCP** (`generate_screen_from_text`, `create_design_system`, `generate_variants`).
+
+### File Mapping
+- **PWA Manifest & Assets**:
+  - `client/public/manifest.webmanifest` & `client/public/manifest.json`
+  - `client/public/sw.js` (Service Worker)
+  - `client/public/offline.html` (Offline fallback page)
+  - `client/public/icons/` (`icon.svg`, `icon-192.png`, `icon-512.png`, `icon-maskable.png`, `apple-touch-icon.png`, `badge-96.png`)
+  - `client/index.html` (Manifest link, apple-touch-icon, theme-color meta tags)
+- **Frontend Components & Contexts**:
+  - PWA Install Context: `client/src/context/PwaInstallContext.jsx`
+  - Install Banner & iOS Modal: `client/src/components/pwa/PwaInstallBanner.jsx`
+  - Network Status Hook: `client/src/hooks/useNetworkStatus.js`
+  - Offline Banner: `client/src/components/common/OfflineBanner.jsx`
+  - Mobile Bottom Navigation: `client/src/components/layout/MobileBottomNav.jsx`
+  - Camera QR Scanner: `client/src/components/student/StudentQRScannerModal.jsx`
+  - Layouts: `client/src/pages/student/StudentLayout.jsx`, `client/src/pages/teacher/TeacherLayout.jsx`, `client/src/pages/admin/AdminLayout.jsx`, `client/src/pages/parent/ParentLayout.jsx`
+  - Header: `client/src/components/layout/Header.jsx`
+  - Sidebar: `client/src/components/layout/Sidebar.jsx`
+  - Main & App: `client/src/main.jsx`, `client/src/App.jsx`
+  - Styles: `client/src/index.css`
+
+---
+
 ## 🔐 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Parent | Implementation Phase |
@@ -1646,6 +1763,13 @@ Phase 32 (also designated as Phase 31 Part B in architectural specifications) im
 | **Private Expiring Signed Access Tokens & Document Streams** | ✅ | ✅ | ✅ | ✅ | Phase 32 |
 | **Admin Central Document Verification & Sanction Console** | ❌ | ❌ | ✅ | ❌ | Phase 32 |
 | **On-Demand Antivirus & Integrity Re-Scan Engine** | ❌ | ❌ | ✅ | ❌ | Phase 32 |
+| **Installable PWA Web App Manifest & App Icons** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Offline Shell & Service Worker Caching (`sw.js`)** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Real-Time Network Status Banner (`useNetworkStatus`)** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Mobile Bottom Navigation Bar (`MobileBottomNav`)** | ✅ | ✅ | ❌ | ❌ | Phase 33 |
+| **Device Camera Hardware QR Scanner (Dual BarcodeDetector + jsQR)** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
+| **Lens Flip (Back/Front) & Torch Light Controls** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
+| **PWA Install Promotion Banner & iOS Add-to-Home Modal** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
 
 ---
 *Last Updated: September 2026*

@@ -47,6 +47,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 🚨 **Automated Defaulter Management & Escalation Pipeline (Phase 30)**: Automated identification and progressive 4-tier escalation hierarchy (`<75%` Warning $\to$ `<70%` Serious Warning $\to$ `<65%` Admin Alert $\to$ `<60%` Parent/Guardian Alert) with configurable thresholds, deficit recovery mathematics ($x = \lceil \frac{rT - P}{1 - r} \rceil$), direct automated parent email alerts, auto-clearing upon attendance restoration, persistent `DefaulterRecord` tracking with counselor audit ledger, and a dedicated Admin Defaulter Management Console (`/admin/defaulters`).
 - 👨‍👩‍👧 **Parent/Guardian Portal (Phase 31 Part A)**: Dedicated portal for parents/guardians with multi-ward switching, cumulative attendance percentage tracking, 75% university benchmark shortage alerts, subject-wise attendance breakdown with consecutive lecture recovery counters and safe skip allowances, student leave request inspection (with medical proof files and instructor remarks), 4-tier attendance warning tracking, counselor directory contacts, and institutional notification feeds. Features **Strict Read-Only Access Enforcement** guaranteeing parents cannot create, edit, mark, or override any attendance or leave records.
 - 📄 **Document Verification & Security Engine (Phase 31 Part B)**: Enterprise document verification pipeline for student leave applications (`Student ➔ Upload Document ➔ Antivirus Scan ➔ Teacher Review ➔ Admin Verification`). Features strict 5MB size limits, binary magic-byte MIME signature verification (preventing spoofed executables or HTML masquerading as PDF/JPG/PNG), secure isolated storage in `server/secure_uploads/documents/`, heuristic antivirus and malware scanning engine (detecting EICAR signatures, embedded PE/ELF binaries, active script tags, PDF launch exploits, and ClamAV socket support), SHA-256 tamper-evident integrity hashes, 15-minute signed expiring access tokens, and a central Admin Document Verification Console (`/admin/document-verification`) with on-demand re-scanning and official sanctioning.
+- 📱 **Progressive Web App (PWA) & Mobile Experience (Phase 33)**: Transforms CampusAttend into an installable mobile application with modern Web App Manifest, offline shell caching via Service Worker (`sw.js`), network status detector (`useNetworkStatus`), real-time device camera hardware QR scanning (dual native `BarcodeDetector` + pure-JS `jsqr` engine with lens flip & torch controls), thumb-zone mobile bottom navigation (`MobileBottomNav`), and automated install prompt banner (`beforeinstallprompt` & iOS Safari guide).
 
 ---
 
@@ -171,6 +172,13 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Private Expiring Signed Access Tokens & Document Streams** | ✅ | ✅ | ✅ | ✅ | Phase 31 |
 | **Admin Central Document Verification & Sanction Console** | ❌ | ❌ | ✅ | ❌ | Phase 31 |
 | **On-Demand Antivirus & Integrity Re-Scan Engine** | ❌ | ❌ | ✅ | ❌ | Phase 31 |
+| **Installable PWA Web App Manifest & App Icons** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Offline Shell & Service Worker Caching (`sw.js`)** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Real-Time Network Status Banner (`useNetworkStatus`)** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Mobile Bottom Navigation Bar (`MobileBottomNav`)** | ✅ | ✅ | ❌ | ❌ | Phase 33 |
+| **Device Camera Hardware QR Scanner (Dual BarcodeDetector + jsQR)** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
+| **Lens Flip (Back/Front) & Torch Light Controls** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
+| **PWA Install Promotion Banner & iOS Add-to-Home Modal** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
 
 ---
 
@@ -178,20 +186,27 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 
 ```
 Basic-attendance/
-├── client/                      # Frontend Application (React 18 + Vite + Tailwind CSS)
+├── client/                      # Frontend Application (React 18 + Vite + Tailwind CSS + PWA)
+│   ├── public/                  # PWA Assets & Service Worker
+│   │   ├── icons/               # PWA App Icons (192, 512, maskable, apple-touch, badge, svg)
+│   │   ├── manifest.webmanifest # Progressive Web App Manifest
+│   │   ├── sw.js                # Service Worker (offline caching, navigation fallback, push)
+│   │   └── offline.html         # Offline fallback page
 │   ├── src/
 │   │   ├── components/          # Reusable UI Components & Role Modals
 │   │   │   ├── ai/              # Floating AI Chat Widget (AiChatWidget.jsx)
 │   │   │   ├── analytics/       # Analytics Sub-Components (MostAbsent, BestAttendance, DeptRanking, etc.)
 │   │   │   ├── charts/          # Modular Recharts & Chart.js components (Pie, Dept, Monthly, Subject, Ranking)
-│   │   │   ├── common/          # ToastContainer, CreateAnnouncementModal, ProtectedRoute
-│   │   │   ├── layout/          # Navbar, Sidebar, Header layout wrappers
-│   │   │   ├── student/         # Student-specific components (StudentQRScannerModal.jsx)
+│   │   │   ├── common/          # ToastContainer, OfflineBanner, CreateAnnouncementModal, ProtectedRoute
+│   │   │   ├── layout/          # Navbar, Sidebar, Header, MobileBottomNav layout wrappers
+│   │   │   ├── pwa/             # PwaInstallBanner.jsx & iOS install guides
+│   │   │   ├── student/         # Student-specific components (StudentQRScannerModal.jsx with camera)
 │   │   │   ├── teacher/         # Teacher class creator modal & CreateTimetableModal
 │   │   │   └── ui/              # Buttons, Cards, Inputs, Badges, Modals
-│   │   ├── context/             # React State Contexts (AuthContext, NotificationContext)
+│   │   ├── context/             # React State Contexts (AuthContext, NotificationContext, PwaInstallContext)
+│   │   ├── hooks/               # Custom hooks (useNetworkStatus.js)
 │   │   ├── pages/
-│   │   │   ├── admin/           # Admin Intelligence (AdminIntelligenceDashboard.jsx), Defaulters (AdminDefaulterManagement.jsx), Document Verification (AdminDocumentVerification.jsx), Academic Engine, Rules Engine, Corrections, Audit Logs, Suspicious
+│   │   │   ├── admin/           # Admin Intelligence, Defaulters, Document Verification, Academic Engine, Rules Engine
 │   │   │   ├── analytics/       # Visual Charts Hub (ChartsPage.jsx)
 │   │   │   ├── auth/            # Login, Register, Forgot Password, Reset Password
 │   │   │   ├── landing/         # Public Landing Page
@@ -199,10 +214,10 @@ Basic-attendance/
 │   │   │   ├── student/         # Student Dashboard, Calendar, History, Leave, Profile, Timetable, Prediction, AiChatPage, StudentAnalytics.jsx
 │   │   │   └── teacher/         # Teacher Dashboard, Take Attendance, History, Reports, Leave, Timetable, Corrections, TeacherAnalytics.jsx
 │   │   ├── services/            # API client modules (api.js, socket.js, deviceFingerprint.js)
-│   │   ├── App.jsx              # React Router route configurations
-│   │   ├── index.css            # Global CSS & Tailwind imports
-│   │   └── main.jsx             # React DOM entry point
-│   ├── index.html
+│   │   ├── App.jsx              # React Router route configurations & PWA providers
+│   │   ├── index.css            # Global CSS, laser scan animations & safe-area insets
+│   │   └── main.jsx             # React DOM entry point & Service Worker registration
+│   ├── index.html               # Enhanced with PWA meta tags, theme-color & touch icons
 │   ├── vite.config.js           # Vite server configuration & API proxy setup
 │   └── package.json
 │
