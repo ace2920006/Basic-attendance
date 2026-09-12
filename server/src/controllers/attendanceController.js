@@ -1,6 +1,7 @@
 const asyncHandler = require('../utils/asyncHandler');
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
+const Leave = require('../models/Leave');
 const {
   notifyAttendanceMarked,
   notifyLowAttendance
@@ -587,6 +588,501 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Synchronize offline attendance batch with conflict detection & multi-strategy resolution
+// @route   POST /api/attendance/offline-sync
+// @access  Private (Teacher/Admin)
+const syncOfflineAttendance = asyncHandler(async (req, res) => {
+  const {
+    batchId,
+    subject,
+    subjectCode = '',
+    date,
+    classId = null,
+    sessionId = null,
+    clientTimestamp,
+    conflictStrategy = 'detect_only',
+    records,
+    resolvedConflicts = []
+  } = req.body;
+
+  if (!records || !Array.isArray(records) || records.length === 0) {
+    res.status(400);
+    throw new Error('Please provide an array of offline attendance records');
+  }
+
+  if (!subject) {
+    res.status(400);
+    throw new Error('Subject is required for offline sync');
+  }
+
+  const syncDate = date ? new Date(date) : (clientTimestamp ? new Date(clientTimestamp) : new Date());
+  const startOfDay = new Date(syncDate);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(syncDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const studentIds = records.map((r) => r.studentId).filter(Boolean);
+
+  // Fetch student details
+  const studentDocs = await User.find({ _id: { $in: studentIds } }).select('name rollNo email department');
+  const studentMap = new Map();
+  studentDocs.forEach((s) => studentMap.set(s._id.toString(), s));
+
+  // Fetch existing attendance records on the same day for this subject
+  const existingAttendanceQuery = {
+    student: { $in: studentIds },
+    subject,
+    date: { $gte: startOfDay, $lte: endOfDay }
+  };
+  if (sessionId) {
+    existingAttendanceQuery.$or = [
+      { sessionId },
+      { date: { $gte: startOfDay, $lte: endOfDay } }
+    ];
+    delete existingAttendanceQuery.date;
+  }
+
+  const existingRecords = await Attendance.find(existingAttendanceQuery).populate('markedBy', 'name email role');
+  const existingMap = new Map();
+  existingRecords.forEach((att) => existingMap.set(att.student.toString(), att));
+
+  // Fetch approved leaves on this date
+  const approvedLeaves = await Leave.find({
+    student: { $in: studentIds },
+    status: 'Approved',
+    startDate: { $lte: endOfDay },
+    endDate: { $gte: startOfDay }
+  }).select('student leaveType startDate endDate reason');
+  const leaveMap = new Map();
+  approvedLeaves.forEach((l) => leaveMap.set(l.student.toString(), l));
+
+  // Custom resolutions map if provided
+  const customResolutionMap = new Map();
+  if (Array.isArray(resolvedConflicts)) {
+    resolvedConflicts.forEach((r) => {
+      if (r.studentId) {
+        customResolutionMap.set(r.studentId.toString(), r);
+      }
+    });
+  }
+
+  // Detect conflicts
+  const conflicts = [];
+  const cleanItems = [];
+  const conflictedItems = [];
+
+  for (const item of records) {
+    const sId = item.studentId.toString();
+    const student = studentMap.get(sId);
+    const existing = existingMap.get(sId);
+    const leave = leaveMap.get(sId);
+    const localStatus = item.status || 'Present';
+    const localMarkedTime = item.clientMarkedAt || clientTimestamp || new Date().toISOString();
+
+    let conflict = null;
+
+    // Check institutional approved leave conflict
+    if (leave && localStatus !== 'On Leave' && localStatus !== 'Excused') {
+      conflict = {
+        studentId: sId,
+        studentName: student?.name || 'Student',
+        rollNo: student?.rollNo || 'N/A',
+        department: student?.department || '',
+        localStatus,
+        localTimestamp: localMarkedTime,
+        localNotes: item.notes || '',
+        serverStatus: 'On Leave',
+        serverTimestamp: leave.startDate,
+        serverSource: `Approved ${leave.leaveType} Leave`,
+        reason: `Student has an official approved ${leave.leaveType} leave on server (${leave.reason || 'Sanctioned'})`,
+        existingAttendanceId: existing?._id || null
+      };
+    } else if (existing && existing.status !== localStatus) {
+      // Existing server attendance with differing status
+      conflict = {
+        studentId: sId,
+        studentName: student?.name || 'Student',
+        rollNo: student?.rollNo || 'N/A',
+        department: student?.department || '',
+        localStatus,
+        localTimestamp: localMarkedTime,
+        localNotes: item.notes || '',
+        serverStatus: existing.status,
+        serverTimestamp: existing.date || existing.createdAt,
+        serverSource: existing.verificationMethod === 'QR' ? 'Anti-Proxy QR Scan' : (existing.verificationMethod || 'Server Record'),
+        serverMarkedBy: existing.markedBy?.name || 'Faculty / System',
+        reason: `Server record exists with status '${existing.status}' verified via ${existing.verificationMethod || 'Manual'}`,
+        existingAttendanceId: existing._id
+      };
+    }
+
+    if (conflict) {
+      conflicts.push(conflict);
+      conflictedItems.push({ item, conflict, existing, leave });
+    } else {
+      cleanItems.push({ item, existing, leave });
+    }
+  }
+
+  // If strategy is 'detect_only' and conflicts exist:
+  // Staging / committing clean items first, return conflicts for manual review
+  if (conflictStrategy === 'detect_only' && conflicts.length > 0) {
+    const cleanSaved = [];
+    for (const { item, existing } of cleanItems) {
+      const rec = await saveOrUpdateAttendance({
+        item,
+        existing,
+        status: item.status || 'Present',
+        notes: item.notes || '',
+        conflictResolution: 'NONE',
+        batchId,
+        subject,
+        subjectCode,
+        syncDate,
+        clientTimestamp,
+        classId,
+        sessionId,
+        userId: req.user._id
+      });
+      cleanSaved.push(rec);
+    }
+
+    return res.status(200).json({
+      success: true,
+      hasConflicts: true,
+      conflictsCount: conflicts.length,
+      conflicts,
+      syncedCount: cleanSaved.length,
+      pendingConflictsCount: conflicts.length,
+      batchId: batchId || `offline_${Date.now()}`,
+      message: `Sync partially completed: ${cleanSaved.length} clean records saved. ${conflicts.length} conflicts detected requiring resolution.`
+    });
+  }
+
+  // Execute Synchronization & Resolution for all records based on strategy
+  const savedRecords = [];
+  const resolutionDetails = [];
+
+  // 1. Process clean items
+  for (const { item, existing } of cleanItems) {
+    const rec = await saveOrUpdateAttendance({
+      item,
+      existing,
+      status: item.status || 'Present',
+      notes: item.notes || '',
+      conflictResolution: 'NONE',
+      batchId,
+      subject,
+      subjectCode,
+      syncDate,
+      clientTimestamp,
+      classId,
+      sessionId,
+      userId: req.user._id
+    });
+    savedRecords.push(rec);
+  }
+
+  // 2. Process conflicted items according to strategy
+  for (const { item, conflict, existing, leave } of conflictedItems) {
+    const sId = item.studentId.toString();
+    let finalStatus = item.status || 'Present';
+    let finalNotes = item.notes || '';
+    let resolutionType = 'NONE';
+    let chosenReason = '';
+
+    if (conflictStrategy === 'local_wins') {
+      // Teacher authority wins (Physical classroom attendance override)
+      finalStatus = item.status || 'Present';
+      finalNotes = item.notes ? `${item.notes} [Teacher Authority Override]` : '[Teacher Authority Override]';
+      resolutionType = 'LOCAL_OVERRIDE';
+      chosenReason = 'Overridden by teacher physical classroom roster';
+    } else if (conflictStrategy === 'server_wins') {
+      // Preserve verified server record or approved leave
+      if (leave && !existing) {
+        finalStatus = 'On Leave';
+        finalNotes = `Approved ${leave.leaveType} Leave: ${leave.reason || ''}`;
+      } else if (existing) {
+        finalStatus = existing.status;
+        finalNotes = existing.notes || '';
+      }
+      resolutionType = 'SERVER_PRESERVED';
+      chosenReason = 'Preserved verified server record';
+    } else if (conflictStrategy === 'smart_merge') {
+      // Smart Precedence Rules:
+      // Rule 1: Approved institutional leave ALWAYS takes precedence over Absent/Present/Late
+      if (leave) {
+        finalStatus = 'On Leave';
+        finalNotes = `Institutional ${leave.leaveType} Leave takes precedence. Teacher noted: ${item.notes || 'None'}`;
+        resolutionType = 'SMART_MERGED';
+        chosenReason = 'Approved institutional leave precedence applied';
+      } else if (existing && existing.verificationMethod === 'QR' && existing.status === 'Present' && item.status === 'Absent') {
+        // Rule 2: Anti-Proxy QR vs Teacher Absent
+        // If teacher left an explicit remark indicating proxy/truancy, teacher wins
+        const proxyKeywords = ['proxy', 'not present', 'fake', 'truant', 'absent', 'impersonat'];
+        const teacherIndicatesProxy = proxyKeywords.some((kw) => (item.notes || '').toLowerCase().includes(kw));
+
+        if (teacherIndicatesProxy) {
+          finalStatus = 'Absent';
+          finalNotes = `${item.notes || 'Instructor verified student was absent despite QR scan'} [Anti-Proxy Teacher Override]`;
+          resolutionType = 'SMART_MERGED';
+          chosenReason = 'Teacher confirmed absence despite QR scan (suspected proxy)';
+        } else {
+          // Otherwise preserve verified QR scan
+          finalStatus = 'Present';
+          finalNotes = 'Verified QR code attendance takes precedence over offline absent mark';
+          resolutionType = 'SMART_MERGED';
+          chosenReason = 'Verified Anti-Proxy QR Scan precedence applied';
+        }
+      } else {
+        // Rule 3: Latest timestamp wins
+        const localTime = new Date(item.clientMarkedAt || clientTimestamp || Date.now()).getTime();
+        const serverTime = new Date(existing?.date || existing?.createdAt || 0).getTime();
+
+        if (localTime >= serverTime) {
+          finalStatus = item.status || 'Present';
+          finalNotes = item.notes || '';
+          resolutionType = 'SMART_MERGED';
+          chosenReason = 'Local record timestamp was newer than server record';
+        } else {
+          finalStatus = existing?.status || item.status || 'Present';
+          finalNotes = existing?.notes || item.notes || '';
+          resolutionType = 'SMART_MERGED';
+          chosenReason = 'Server record timestamp was newer than offline record';
+        }
+      }
+    } else if (conflictStrategy === 'custom_resolved') {
+      // Explicit resolution chosen by teacher in UI
+      const userChoice = customResolutionMap.get(sId);
+      if (userChoice) {
+        finalStatus = userChoice.chosenStatus || item.status || 'Present';
+        finalNotes = userChoice.chosenReason ? `${item.notes || ''} [Resolution: ${userChoice.chosenReason}]`.trim() : (item.notes || '');
+        resolutionType = 'MANUAL_RESOLVED';
+        chosenReason = userChoice.chosenReason || 'Manual teacher resolution';
+      } else {
+        // Default to teacher local
+        finalStatus = item.status || 'Present';
+        resolutionType = 'LOCAL_OVERRIDE';
+        chosenReason = 'Defaulted to teacher offline record';
+      }
+    }
+
+    const rec = await saveOrUpdateAttendance({
+      item,
+      existing,
+      status: finalStatus,
+      notes: finalNotes,
+      conflictResolution: resolutionType,
+      batchId,
+      subject,
+      subjectCode,
+      syncDate,
+      clientTimestamp,
+      classId,
+      sessionId,
+      userId: req.user._id
+    });
+
+    savedRecords.push(rec);
+    resolutionDetails.push({
+      studentId: sId,
+      studentName: conflict.studentName,
+      rollNo: conflict.rollNo,
+      localStatus: conflict.localStatus,
+      serverStatus: conflict.serverStatus,
+      resolvedStatus: finalStatus,
+      resolutionType,
+      chosenReason
+    });
+  }
+
+  // Record Audit Log for Offline Synchronization
+  await recordAuditLog({
+    req,
+    user: req.user,
+    action: AUDIT_ACTIONS.OFFLINE_ATTENDANCE_SYNC,
+    resource: 'Attendance',
+    status: 'SUCCESS',
+    details: {
+      batchId: batchId || `offline_${Date.now()}`,
+      subject,
+      subjectCode,
+      date: syncDate,
+      totalRecords: records.length,
+      syncedCount: savedRecords.length,
+      conflictsCount: conflicts.length,
+      conflictStrategy,
+      teacherName: req.user?.name,
+      resolutions: resolutionDetails
+    }
+  });
+
+  // Trigger alerts for students
+  savedRecords.forEach((rec) => {
+    checkAndSendAttendanceAlerts(rec.student, rec.subject, rec.status, {
+      subjectCode: rec.subjectCode,
+      date: rec.date
+    });
+  });
+
+  res.status(200).json({
+    success: true,
+    hasConflicts: false,
+    syncedCount: savedRecords.length,
+    conflictsResolved: resolutionDetails.length,
+    conflictStrategy,
+    resolutions: resolutionDetails,
+    batchId: batchId || `offline_${Date.now()}`,
+    message: `Offline attendance synchronized successfully (${savedRecords.length} records processed, ${resolutionDetails.length} conflicts resolved).`
+  });
+});
+
+// Helper for offline sync: save or update attendance record
+async function saveOrUpdateAttendance({
+  item,
+  existing,
+  status,
+  notes,
+  conflictResolution,
+  batchId,
+  subject,
+  subjectCode,
+  syncDate,
+  clientTimestamp,
+  classId,
+  sessionId,
+  userId
+}) {
+  const localClientDate = item.clientMarkedAt ? new Date(item.clientMarkedAt) : (clientTimestamp ? new Date(clientTimestamp) : syncDate);
+
+  if (existing) {
+    existing.status = status;
+    if (notes) existing.notes = notes;
+    existing.isOfflineSynced = true;
+    existing.offlineSyncTimestamp = new Date();
+    existing.offlineClientTimestamp = localClientDate;
+    existing.offlineBatchId = batchId || '';
+    existing.conflictResolution = conflictResolution;
+    existing.markedBy = userId;
+    await existing.save();
+    return existing;
+  }
+
+  const created = await Attendance.create({
+    student: item.studentId,
+    subject,
+    subjectCode: subjectCode || item.subjectCode || '',
+    status,
+    date: syncDate,
+    notes: notes || item.notes || '',
+    classId: classId || item.classId || null,
+    sessionId: sessionId || item.sessionId || null,
+    markedBy: userId,
+    verificationMethod: 'Manual',
+    isOfflineSynced: true,
+    offlineSyncTimestamp: new Date(),
+    offlineClientTimestamp: localClientDate,
+    offlineBatchId: batchId || '',
+    conflictResolution
+  });
+
+  return created;
+}
+
+// @desc    Explicitly resolve attendance conflicts from teacher modal
+// @route   POST /api/attendance/resolve-conflicts
+// @access  Private (Teacher/Admin)
+const resolveAttendanceConflicts = asyncHandler(async (req, res) => {
+  const {
+    batchId,
+    subject,
+    subjectCode = '',
+    date,
+    classId = null,
+    sessionId = null,
+    resolvedConflicts
+  } = req.body;
+
+  if (!resolvedConflicts || !Array.isArray(resolvedConflicts) || resolvedConflicts.length === 0) {
+    res.status(400);
+    throw new Error('Please provide an array of resolved conflict items');
+  }
+
+  const syncDate = date ? new Date(date) : new Date();
+  const startOfDay = new Date(syncDate);
+  startOfDay.setHours(0, 0, 0, 0);
+  const endOfDay = new Date(syncDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  const updatedRecords = [];
+
+  for (const resolution of resolvedConflicts) {
+    const { studentId, chosenStatus, chosenReason = '', originalLocalStatus, originalServerStatus } = resolution;
+    if (!studentId || !chosenStatus) continue;
+
+    let attendanceDoc = await Attendance.findOne({
+      student: studentId,
+      subject,
+      date: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    if (attendanceDoc) {
+      attendanceDoc.status = chosenStatus;
+      attendanceDoc.notes = chosenReason
+        ? `${attendanceDoc.notes ? attendanceDoc.notes + ' | ' : ''}Conflict Resolved: ${chosenReason}`
+        : attendanceDoc.notes;
+      attendanceDoc.isOfflineSynced = true;
+      attendanceDoc.offlineSyncTimestamp = new Date();
+      attendanceDoc.conflictResolution = 'MANUAL_RESOLVED';
+      attendanceDoc.markedBy = req.user._id;
+      await attendanceDoc.save();
+      updatedRecords.push(attendanceDoc);
+    } else {
+      attendanceDoc = await Attendance.create({
+        student: studentId,
+        subject,
+        subjectCode,
+        status: chosenStatus,
+        date: syncDate,
+        notes: chosenReason ? `Conflict Resolved: ${chosenReason}` : '',
+        classId,
+        sessionId,
+        markedBy: req.user._id,
+        verificationMethod: 'Manual',
+        isOfflineSynced: true,
+        offlineSyncTimestamp: new Date(),
+        conflictResolution: 'MANUAL_RESOLVED'
+      });
+      updatedRecords.push(attendanceDoc);
+    }
+
+    checkAndSendAttendanceAlerts(studentId, subject, chosenStatus, { subjectCode, date: syncDate });
+  }
+
+  await recordAuditLog({
+    req,
+    user: req.user,
+    action: AUDIT_ACTIONS.OFFLINE_ATTENDANCE_SYNC,
+    resource: 'Attendance',
+    status: 'SUCCESS',
+    details: {
+      batchId: batchId || `resolved_${Date.now()}`,
+      subject,
+      resolvedCount: updatedRecords.length,
+      mode: 'MANUAL_RESOLVED',
+      teacherName: req.user?.name
+    }
+  });
+
+  res.status(200).json({
+    success: true,
+    resolvedCount: updatedRecords.length,
+    batchId: batchId || `resolved_${Date.now()}`,
+    data: updatedRecords,
+    message: `Successfully resolved and synced ${updatedRecords.length} conflicting records.`
+  });
+});
+
 module.exports = {
   markAttendance,
   markBulkAttendance,
@@ -595,6 +1091,8 @@ module.exports = {
   getDashboardAnalytics,
   updateAttendance,
   deleteAttendance,
-  scanQRAttendance
+  scanQRAttendance,
+  syncOfflineAttendance,
+  resolveAttendanceConflicts
 };
 

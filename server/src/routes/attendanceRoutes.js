@@ -8,7 +8,9 @@ const {
   getDashboardAnalytics,
   updateAttendance,
   deleteAttendance,
-  scanQRAttendance
+  scanQRAttendance,
+  syncOfflineAttendance,
+  resolveAttendanceConflicts
 } = require('../controllers/attendanceController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -20,6 +22,8 @@ router
   .get(getAttendanceRecords);
 
 router.post('/bulk', authorize('teacher', 'admin'), markBulkAttendance);
+router.post('/offline-sync', authorize('teacher', 'admin'), syncOfflineAttendance);
+router.post('/resolve-conflicts', authorize('teacher', 'admin'), resolveAttendanceConflicts);
 router.post('/scan-qr', authorize('student'), scanQRAttendance);
 router.get('/stats/:studentId', getStudentStats);
 router.get('/analytics', authorize('admin', 'teacher'), getDashboardAnalytics);
