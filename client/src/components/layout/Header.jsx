@@ -21,6 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
 import { usePwaInstall } from '../../context/PwaInstallContext';
 import CreateAnnouncementModal from '../common/CreateAnnouncementModal';
+import OfflineSyncBadge from '../common/OfflineSyncBadge';
 
 export default function Header({ title, subtitle, user: userProp, onToggleMobileMenu }) {
   const { user: authUser } = useAuth();
@@ -132,6 +133,9 @@ export default function Header({ title, subtitle, user: userProp, onToggleMobile
           <FiCalendar className="w-3.5 h-3.5 text-indigo-400" />
           <span>{currentDate}</span>
         </div>
+
+        {/* Phase 34: Offline Attendance Sync Status Badge */}
+        <OfflineSyncBadge />
 
         {/* Notifications Bell Dropdown */}
         <div className="relative" ref={dropdownRef}>
