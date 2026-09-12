@@ -6,7 +6,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.3-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-339933.svg?logo=node.js)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248.svg?logo=mongodb)](https://www.mongodb.com/)
-[![Test Suite](https://img.shields.io/badge/Tests-169%2F169%20Passed-brightgreen.svg)](server/tests)
+[![Test Suite](https://img.shields.io/badge/Tests-174%2F174%20Passed-brightgreen.svg)](server/tests)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A modern, full-stack **Multi-Role Attendance Management System** designed for educational institutions. Built using **React 18, Vite, Tailwind CSS, Node.js, Express, and MongoDB**, it features tailored dashboards and workflows for **Students**, **Teachers (Faculty)**, **Administrators**, and **Parents/Guardians**.
@@ -31,7 +31,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 🤖 **AI Features (Phase 14)**: Attendance Prediction Engine ("Can student reach 75%?", max skips allowed, "What-If" simulator slider), Natural Language AI Chatbot ("My attendance?", "Subjects below 75%", "Can I skip tomorrow?", "Attendance report", "Remaining lectures"), and automated Suspicious Attendance & Proxy Detection Console.
 - 📈 **Executive Analytics Dashboard (Phase 15)**: Comprehensive Admin analytics hub featuring 5 specialized sub-modules: Most Absent Students (< 75% attendance with shortage deficit calculator $X = \lceil 3T - 4P \rceil$), Best Attendance Leaderboard (Gold/Silver/Bronze medals & 100% Perfect badges), Department Ranking (CSE, ECE, ME, CE, IT average comparison & HOD view), Teacher Performance Metrics (classes conducted, on-time marking rate %, student attendance average), and Daily Attendance Inspector (date picker, summary metrics, and hourly time-slot session distribution).
 - 🛡️ **Enterprise Security & Hardening (Phase 16)**: Multi-layered security stack including **Helmet HTTP Security Headers** (`Content-Security-Policy`, `X-Frame-Options`, `HSTS`, `X-Powered-By` suppression), **Sliding-Window Rate Limiting** (Global API 200 req/15 min, Auth endpoints 15 req/15 min, Sensitive operations 10 req/15 min), **XSS Payload Sanitizer** (recursive body/query/param HTML tag escaping), **Payload Input Validation**, **Hardened JWT & RBAC**, **CORS Governance**, **SHA-256 Server-Side Hashed Refresh Tokens**, and **HTTP-Only Cookies**.
-- 🧪 **Automated Testing Suite (Phase 17 & Beyond)**: Comprehensive unit and integration test coverage (**19 test suites, 169/169 passing tests**) covering all core modules powered by **Jest**, **Supertest**, and **mongodb-memory-server**.
+- 🧪 **Automated Testing Suite (Phase 17 & Beyond)**: Comprehensive unit and integration test coverage (**20 test suites, 174/174 passing tests**) covering all core modules powered by **Jest**, **Supertest**, and **mongodb-memory-server**.
 - 🏫 **Academic Year & Semester Engine (Phase 18)**: Dynamic institutional hierarchy engine (`Academic Year ➔ Semester ➔ Department ➔ Division ➔ Subjects`). Features custom session dates, active year status singletons, dynamic terms without hardcoding, class section capacity management (`IT-A`, `IT-B`, `IT-C`), interactive visual hierarchy tree, and wizard-driven student batch promotion engine with audit logs.
 - ⚙️ **Advanced Attendance Rules Engine (Phase 19)**: Institution-wide configurable rules engine replacing hardcoded logic. Allows Admins to customize thresholds (Minimum Attendance %, Late Cutoff mins, Grace Period mins, Dynamic QR Validity mins, GPS Geofence Radius meters, Auto-Absent delay mins) and define advanced rules for 7 core statuses (`Present`, `Absent`, `Late`, `Excused`, `On Leave`, `Holiday`, `Cancelled Lecture`) with attendance inclusion weights. Includes an interactive real-time Rule Simulator / Sandbox.
 - ⏱️ **Attendance Session Engine (Phase 20)**: Explicit 4-tier domain hierarchy (`Subject ➔ Scheduled Class ➔ Attendance Session ➔ Student Attendance`) separating static scheduled class definitions from active attendance sessions. Generates unique Session IDs (`SESS-YYYYMMDD-XXXX`), manages start/end timestamps, QR secret tokens, and session-linked attendance tracking.
@@ -48,6 +48,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 👨‍👩‍👧 **Parent/Guardian Portal (Phase 31 Part A)**: Dedicated portal for parents/guardians with multi-ward switching, cumulative attendance percentage tracking, 75% university benchmark shortage alerts, subject-wise attendance breakdown with consecutive lecture recovery counters and safe skip allowances, student leave request inspection (with medical proof files and instructor remarks), 4-tier attendance warning tracking, counselor directory contacts, and institutional notification feeds. Features **Strict Read-Only Access Enforcement** guaranteeing parents cannot create, edit, mark, or override any attendance or leave records.
 - 📄 **Document Verification & Security Engine (Phase 31 Part B)**: Enterprise document verification pipeline for student leave applications (`Student ➔ Upload Document ➔ Antivirus Scan ➔ Teacher Review ➔ Admin Verification`). Features strict 5MB size limits, binary magic-byte MIME signature verification (preventing spoofed executables or HTML masquerading as PDF/JPG/PNG), secure isolated storage in `server/secure_uploads/documents/`, heuristic antivirus and malware scanning engine (detecting EICAR signatures, embedded PE/ELF binaries, active script tags, PDF launch exploits, and ClamAV socket support), SHA-256 tamper-evident integrity hashes, 15-minute signed expiring access tokens, and a central Admin Document Verification Console (`/admin/document-verification`) with on-demand re-scanning and official sanctioning.
 - 📱 **Progressive Web App (PWA) & Mobile Experience (Phase 33)**: Transforms CampusAttend into an installable mobile application with modern Web App Manifest, offline shell caching via Service Worker (`sw.js`), network status detector (`useNetworkStatus`), real-time device camera hardware QR scanning (dual native `BarcodeDetector` + pure-JS `jsqr` engine with lens flip & torch controls), thumb-zone mobile bottom navigation (`MobileBottomNav`), and automated install prompt banner (`beforeinstallprompt` & iOS Safari guide).
+- ⚡ **Offline Attendance Sync & Conflict Resolution (Phase 34)**: Enterprise offline-first attendance recording engine for classrooms and campus dead zones. Teachers can take attendance completely offline; records are stored in browser **IndexedDB** (`CampusAttendOfflineDB`) with pre-cached rosters and fallback to `localStorage`. When connectivity returns, attendance auto-syncs via `POST /api/attendance/offline-sync`. Features a comprehensive **Multi-Strategy Conflict Resolution Engine** (Smart Precedence: Institutional Leaves > Anti-Proxy QR > Timestamp; Teacher Classroom Authority Override; Server Preserved; and Interactive Side-by-Side Resolver Modal), an Offline Sync Center (`OfflineSyncCenterModal.jsx`), and real-time header status badge (`OfflineSyncBadge.jsx`).
 
 ---
 
@@ -179,6 +180,12 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Device Camera Hardware QR Scanner (Dual BarcodeDetector + jsQR)** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
 | **Lens Flip (Back/Front) & Torch Light Controls** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
 | **PWA Install Promotion Banner & iOS Add-to-Home Modal** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Offline Classroom Attendance Taking (IndexedDB Local Queue)** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Local Roster Pre-Caching & Zero-Network Class Session** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Automatic Internet Return Syncing & Exponential Backoff** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Multi-Strategy Attendance Conflict Resolver (4 Strategies)** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Interactive Side-by-Side Conflict Resolution Console Modal** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Offline Sync Center, Diagnostics & Telemetry Ledger** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
 
 ---
 
@@ -197,14 +204,15 @@ Basic-attendance/
 │   │   │   ├── ai/              # Floating AI Chat Widget (AiChatWidget.jsx)
 │   │   │   ├── analytics/       # Analytics Sub-Components (MostAbsent, BestAttendance, DeptRanking, etc.)
 │   │   │   ├── charts/          # Modular Recharts & Chart.js components (Pie, Dept, Monthly, Subject, Ranking)
-│   │   │   ├── common/          # ToastContainer, OfflineBanner, CreateAnnouncementModal, ProtectedRoute
+│   │   │   ├── common/          # ToastContainer, OfflineBanner, OfflineSyncBadge, CreateAnnouncementModal, ProtectedRoute
 │   │   │   ├── layout/          # Navbar, Sidebar, Header, MobileBottomNav layout wrappers
 │   │   │   ├── pwa/             # PwaInstallBanner.jsx & iOS install guides
 │   │   │   ├── student/         # Student-specific components (StudentQRScannerModal.jsx with camera)
-│   │   │   ├── teacher/         # Teacher class creator modal & CreateTimetableModal
+│   │   │   ├── teacher/         # ConflictResolutionModal, OfflineSyncCenterModal, QRAttendanceModal, CreateTimetableModal
 │   │   │   └── ui/              # Buttons, Cards, Inputs, Badges, Modals
-│   │   ├── context/             # React State Contexts (AuthContext, NotificationContext, PwaInstallContext)
+│   │   ├── context/             # React State Contexts (AuthContext, NotificationContext, PwaInstallContext, OfflineSyncContext)
 │   │   ├── hooks/               # Custom hooks (useNetworkStatus.js)
+│   │   ├── utils/               # Offline IndexedDB Manager (offlineAttendanceDB.js)
 │   │   ├── pages/
 │   │   │   ├── admin/           # Admin Intelligence, Defaulters, Document Verification, Academic Engine, Rules Engine
 │   │   │   ├── analytics/       # Visual Charts Hub (ChartsPage.jsx)
@@ -212,9 +220,9 @@ Basic-attendance/
 │   │   │   ├── landing/         # Public Landing Page
 │   │   │   ├── parent/          # Parent/Guardian Portal (ParentLayout, ParentDashboard, ParentAttendance, ParentSubjects, ParentLeaves, ParentWarnings, ParentNotifications)
 │   │   │   ├── student/         # Student Dashboard, Calendar, History, Leave, Profile, Timetable, Prediction, AiChatPage, StudentAnalytics.jsx
-│   │   │   └── teacher/         # Teacher Dashboard, Take Attendance, History, Reports, Leave, Timetable, Corrections, TeacherAnalytics.jsx
+│   │   │   └── teacher/         # Teacher Dashboard, Take Attendance (Offline-aware), History, Reports, Leave, Timetable, Corrections, TeacherAnalytics.jsx
 │   │   ├── services/            # API client modules (api.js, socket.js, deviceFingerprint.js)
-│   │   ├── App.jsx              # React Router route configurations & PWA providers
+│   │   ├── App.jsx              # React Router route configurations & PWA/Offline providers
 │   │   ├── index.css            # Global CSS, laser scan animations & safe-area insets
 │   │   └── main.jsx             # React DOM entry point & Service Worker registration
 │   ├── index.html               # Enhanced with PWA meta tags, theme-color & touch icons
@@ -222,10 +230,11 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                      # Backend REST API (Node.js + Express + MongoDB)
-│   ├── tests/                   # Automated Jest & Supertest Integration Test Suite (19 Test Suites, 169 Tests)
+│   ├── tests/                   # Automated Jest & Supertest Integration Test Suite (20 Test Suites, 174 Tests)
 │   │   ├── setup.js             # Global MongoDB in-memory test environment setup
 │   │   ├── auth.test.js         # Authentication, Login, Register, JWT, RBAC tests
 │   │   ├── attendance.test.js   # Single/Bulk attendance, stats, defaulter threshold tests
+│   │   ├── offlineSync.test.js  # Phase 34 Offline Attendance Sync & Conflict Resolution tests
 │   │   ├── qr.test.js           # 30s dynamic QR verification & anti-proxy guard tests
 │   │   ├── gps.test.js          # Haversine formula & campus 500m geofence tests
 │   │   ├── reports.test.js      # Daily/Weekly/Monthly/Semester report generator tests
@@ -447,6 +456,8 @@ npx jest tests/charts.test.js              # Charts & Analytics
 - `POST /api/classes/:id/stop-qr` — Stop active QR attendance session
 - `POST /api/attendance/scan-qr` — Student scans QR code with GPS coordinates & device fingerprint
 - `POST /api/attendance/mark` — Record manual session attendance for students (Logs `MARK_ATTENDANCE`)
+- `POST /api/attendance/offline-sync` — Synchronize queued offline attendance batch with multi-strategy conflict resolution (`detect_only`, `local_wins`, `server_wins`, `smart_merge`, `custom_resolved`, logs `OFFLINE_ATTENDANCE_SYNC`)
+- `POST /api/attendance/resolve-conflicts` — Commit explicit per-student conflict resolutions with audit logging (`OFFLINE_ATTENDANCE_SYNC`)
 - `GET /api/attendance/history` — Fetch attendance records with date, subject, and status filters
 - `PUT /api/attendance/:id` — Edit past attendance record (Logs `EDIT_ATTENDANCE` with `Absent → Present` diff and reason)
 - `GET /api/attendance/export` — Download class attendance report as CSV (Logs `EXPORT_REPORT`)

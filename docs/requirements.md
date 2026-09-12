@@ -1,6 +1,6 @@
 # Multi-Role Attendance System - Requirements & Features Specification
 
-This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 31**) for the **Attendance Management System**.
+This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 34**) for the **Attendance Management System**.
 
 ---
 
@@ -85,6 +85,15 @@ This document details the functional specifications, feature requirements, and a
   - **Dedicated Teacher Analytics Hub (`TeacherAnalytics.jsx`)**: Full console at `/teacher/analytics` with Subject, Division, and Timeframe filters, Recharts bar charts, student shortage tables, and CSV export.
 - **Multi-Channel Notification Triggers (Phase 25)**:
   - Automated dispatch to enrolled students upon marking roster, creating timetable slots, or cancelling lectures.
+- **Offline Attendance Recording & Sync Engine (Phase 34)**:
+  - **Local-First Classroom Attendance**: Faculty can take attendance in classrooms with zero internet access or campus dead zones.
+  - **Browser IndexedDB Storage**: Roster state, remarks, and student statuses persist in `CampusAttendOfflineDB` (`attendanceQueue`) with ISO client timestamps and automated `localStorage` fallback.
+  - **Roster Pre-Caching**: Enrolled student directories and subjects are cached in `rosterCache` for seamless offline lookups.
+  - **Reactive Auto-Synchronization**: Automatically detects restored connectivity via `window.addEventListener('online')` (with 1.5s stability debounce) and flushes the queue to `POST /api/attendance/offline-sync`.
+  - **Multi-Strategy Conflict Resolution Engine**: Resolves discrepancies between offline marks and server records (e.g. verified anti-proxy QR scans, sanctioned medical leaves).
+  - **Interactive Conflict Resolver Modal (`ConflictResolutionModal.jsx`)**: Side-by-side diff table comparing teacher offline marks against server records with quick bulk resolvers (*Teacher Authority*, *Server Preserved*, *Smart Precedence*) and per-student custom adjustments.
+  - **Offline Sync Center (`OfflineSyncCenterModal.jsx`)**: Comprehensive queue inspector, retry controls, and local storage diagnostics.
+  - **Real-Time Status Badge (`OfflineSyncBadge.jsx`)**: Header status pill showing online/offline status, pending batch counts, and pulsing conflict alerts.
 
 ---
 
@@ -270,6 +279,12 @@ This document details the functional specifications, feature requirements, and a
 | **Device Camera Hardware QR Scanner (Dual BarcodeDetector + jsQR)** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
 | **Lens Flip (Back/Front) & Torch Light Controls** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
 | **PWA Install Promotion Banner & iOS Add-to-Home Modal** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Offline Classroom Attendance Taking (IndexedDB Local Queue)** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Local Roster Pre-Caching & Zero-Network Class Session** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Automatic Internet Return Syncing & Exponential Backoff** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Multi-Strategy Attendance Conflict Resolver (4 Strategies)** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Interactive Side-by-Side Conflict Resolution Console Modal** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Offline Sync Center, Diagnostics & Telemetry Ledger** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
 
 ---
 

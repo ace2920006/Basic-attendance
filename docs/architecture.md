@@ -463,6 +463,28 @@ Phase 33 implements an installable, mobile-optimized architecture supporting off
 
 ---
 
+## ⚡ Phase 34: Offline Attendance Sync & Conflict Resolution Architecture
+
+### 1. Client-Side Offline-First Storage Layer
+- **IndexedDB Instance**: `CampusAttendOfflineDB` (v1) managed by `offlineAttendanceDB.js`.
+- **Object Stores**:
+  - `attendanceQueue`: Keyed by `id`. Persists offline attendance batches with client timestamps, class ID, session ID, student records, retry counters, and conflict metadata.
+  - `rosterCache`: Keyed by `${subject}_${section}`. Caches student rosters and course metadata so instructors can take attendance in campus dead zones without an active internet connection.
+  - `syncHistory`: Local transparent audit ledger of synchronized batches and resolution outcomes.
+- **Universal LocalStorage Fallback**: Automated fallback to `localStorage` with JSON serialization if IndexedDB is blocked or unsupported in restricted browser modes.
+
+### 2. Synchronization & Reconnection Pipeline
+- **Auto-Sync Listener**: `useOfflineSync` hook listens to `window.addEventListener('online')` with a 1.5s connection stability debounce.
+- **Background Synchronization**: Pending batches are streamed to `POST /api/attendance/offline-sync` sequentially.
+- **Conflict Handling Engine**:
+  - `detect_only`: Staged clean records are committed; records with differing statuses on the server are flagged as conflicts and returned for instructor review.
+  - `smart_merge`: Institutional leaves (`On Leave`, `Excused`) take precedence over absent/present marks; verified Anti-Proxy QR scans take priority over unmarked absences unless instructor flags proxying; timestamps resolve ties.
+  - `local_wins`: Physical classroom instructor authority cleanly overrides server records.
+  - `server_wins`: Verified server records are preserved.
+  - `custom_resolved`: Applies explicit per-student decisions from `ConflictResolutionModal.jsx` via `POST /api/attendance/resolve-conflicts`.
+
+---
+
 ## 🔌 API Endpoint Hierarchy
 
 - `/api/auth` $\rightarrow$ Register, Login, Logout, Password Recovery, Token Refresh (Logs `LOGIN`, `LOGOUT`)
@@ -471,7 +493,7 @@ Phase 33 implements an installable, mobile-optimized architecture supporting off
 - `/api/courses` $\rightarrow$ Degree program courses CRUD operations
 - `/api/subjects` $\rightarrow$ Subject CRUD & course allocations
 - `/api/classes` $\rightarrow$ Active class creation, 30s Dynamic QR token generation & rotation
-- `/api/attendance` $\rightarrow$ Manual marking, 30s QR scanning, GPS campus boundary verification, History (Logs `MARK_ATTENDANCE`, `EDIT_ATTENDANCE`, `EXPORT_REPORT`)
+- `/api/attendance` $\rightarrow$ Manual marking, 30s QR scanning, GPS campus boundary verification, Offline Batch Sync (`POST /offline-sync`), Conflict Resolution (`POST /resolve-conflicts`), History (Logs `MARK_ATTENDANCE`, `EDIT_ATTENDANCE`, `OFFLINE_ATTENDANCE_SYNC`, `EXPORT_REPORT`)
 - `/api/timetable` $\rightarrow$ Today's schedule, Tomorrow's schedule, Master weekly schedule matrix
 - `/api/reports` $\rightarrow$ Daily, Weekly, Monthly, Semester report generation & PDF/Excel/CSV exports (Logs `EXPORT_REPORT`)
 - `/api/charts` $\rightarrow$ Ratio charts, Dept comparison, Monthly trends, Subject breakdown, Student rankings

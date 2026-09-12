@@ -1,6 +1,6 @@
 # Attendance Management System - Consolidated Phases Specification
 
-This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 33**) of the **Attendance Management System**.
+This document provides a single, unified reference for all project implementation phases (**Phase 1 through Phase 34**) of the **Attendance Management System**.
 
 ---
 
@@ -38,7 +38,8 @@ This document provides a single, unified reference for all project implementatio
 31. [Phase 31 – Parent/Guardian Portal](#-phase-31--parentguardian-portal-)
 32. [Phase 32 – Document Verification](#-phase-32-document-verification-)
 33. [Phase 33 – PWA / Mobile Experience](#-phase-33-pwa--mobile-experience-)
-34. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+34. [Phase 34 – Offline Attendance Sync](#-phase-34--offline-attendance-sync)
+35. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -1642,6 +1643,100 @@ Phase 33 transforms CampusAttend into an installable, high-performance Progressi
 
 ---
 
+## 📌 Phase 34 – Offline Attendance Sync
+
+### Overview & Architecture
+Phase 34 delivers an enterprise-grade **Offline Attendance Synchronization System** designed for high-density university classrooms, campus basements, lecture halls, and dead zones where Wi-Fi or cellular connections are degraded or lost. When a teacher loses internet connectivity, attendance marking continues locally on the teacher's device without disruption or latency.
+
+```
+Teacher Device (Offline)
+       ↓
+Browser Storage (IndexedDB: CampusAttendOfflineDB)
+       ↓
+Local Attendance Queue (Pending Batches with Telemetry)
+       ↓
+Internet Returns (Auto-Detected via window.online / Manual Trigger)
+       ↓
+Server Sync Engine (POST /api/attendance/offline-sync)
+       ↓
+Conflict Handling:
+[Local Record] + [Server Record / Approved Institutional Leave]
+       ↓
+Conflict Resolver:
+  ├─ Smart Precedence (Approved Leave > Anti-Proxy QR > Timestamp)
+  ├─ Teacher Authority (Classroom Physical Override)
+  ├─ Server Preserved (Verified Cloud Record)
+  └─ Interactive Side-by-Side Resolution Console
+       ↓
+Database Persistence (Attendance & AuditLog with Telemetry)
+```
+
+### Core Requirements & Features
+
+1. **Local-First Architecture & IndexedDB Layer**:
+   - **Database**: `CampusAttendOfflineDB` (Version 1).
+   - **Object Stores**:
+     - `attendanceQueue`: Persists offline attendance batches with client timestamps, subject, section, class ID, session ID, records array, retry counters, and conflict metadata. KeyPath: `id`.
+     - `rosterCache`: Pre-caches student rosters and active class details so instructors can open classes and view student directories while completely disconnected from the network. KeyPath: `key` (`subject_section`).
+     - `syncHistory`: Maintains a client-side transparent audit ledger of synchronized batches, conflict outcomes, and timestamps.
+   - **Universal Storage Fallback**: Graceful automated fallback to `localStorage` with JSON serialization in environments where IndexedDB is restricted or unavailable.
+
+2. **Attendance Queue & Auto-Sync Engine**:
+   - As instructors mark individual attendance statuses (`Present`, `Absent`, `Late`, remarks) in offline mode, batches are stamped with an ISO client timestamp and queued locally.
+   - **Reactive Reconnection**: Automatically registers `window.addEventListener('online')` and triggers background synchronization with exponential backoff and connection stability debouncing (1.5s).
+   - **Manual Sync Controls**: Immediate "Sync All" and per-batch "Sync Now" triggers available in both the roster sheet and the dedicated Offline Sync Center modal.
+
+3. **Multi-Strategy Conflict Resolution Engine**:
+   When offline attendance arrives on the server, existing records created during the disconnect period (e.g. anti-proxy QR scans by students, approved medical leaves, or administrative changes) are evaluated:
+   - **Smart Precedence (Institutional Default)**:
+     - *Rule 1*: Institutional approved leaves (`On Leave`, `Excused`) always take precedence over offline absent/present marks to guarantee sanctioned student leave rights.
+     - *Rule 2*: Verified Anti-Proxy QR scans take priority over unmarked absent logs, unless the instructor entered an explicit proxy/truancy note ("suspected proxy", "not in seat"), in which case teacher authority wins.
+     - *Rule 3*: If both records are manual, latest timestamp wins.
+   - **Teacher Authority (`local_wins`)**:
+     - The physical classroom instructor's offline mark is treated as the final authority, cleanly overwriting prior server records.
+   - **Server Preserved (`server_wins`)**:
+     - Verified cloud records are locked and local discrepancies are discarded or flagged.
+   - **Interactive Conflict Resolver Modal (`ConflictResolutionModal.jsx`)**:
+     - Activated when discrepancies are detected under `detect_only` mode.
+     - Displays a side-by-side comparison for each conflicted student: Local Record (Status, Recorded At, Remarks) vs Server Record (Status, Source, Reason).
+     - Provides one-click bulk resolvers (*"Teacher Override All"*, *"Preserve Server All"*, *"Smart Precedence"*) and per-student granular status toggles with custom justification notes.
+
+4. **Offline Sync Center & UI Consoles**:
+   - **Offline Sync Center Modal (`OfflineSyncCenterModal.jsx`)**: Central console for monitoring queue health, retry attempts, storage quota estimates, and local sync audit logs.
+   - **Real-Time Offline Sync Badge (`OfflineSyncBadge.jsx`)**: Responsive status pill in Header displaying connection mode, queue size, and pulsing conflict alerts.
+   - **Enhanced Offline Banner (`OfflineBanner.jsx`)**: Informs the user of offline mode, queued batches, sync progress during reconnect, and conflict notifications.
+
+### API Contracts
+- `POST /api/attendance/offline-sync`:
+  - Request: `{ batchId, subject, subjectCode, section, date, clientTimestamp, conflictStrategy, records: [{ studentId, status, notes, clientMarkedAt }] }`
+  - Response (Clean): `{ success: true, hasConflicts: false, syncedCount, batchId }`
+  - Response (Conflict): `{ success: true, hasConflicts: true, conflictsCount, conflicts: [...], syncedCount, batchId }`
+- `POST /api/attendance/resolve-conflicts`:
+  - Request: `{ batchId, subject, resolvedConflicts: [{ studentId, chosenStatus, chosenReason }] }`
+  - Response: `{ success: true, resolvedCount, batchId }`
+
+### File Mapping
+- **Database & Services**:
+  - IndexedDB Storage Utility: `client/src/utils/offlineAttendanceDB.js`
+  - Context & Provider: `client/src/context/OfflineSyncContext.jsx`
+  - API Client: `client/src/services/api.js`
+- **Frontend Components**:
+  - Conflict Resolution Modal: `client/src/components/teacher/ConflictResolutionModal.jsx`
+  - Offline Sync Center Modal: `client/src/components/teacher/OfflineSyncCenterModal.jsx`
+  - Status Badge: `client/src/components/common/OfflineSyncBadge.jsx`
+  - Offline Banner: `client/src/components/common/OfflineBanner.jsx`
+  - Teacher Roster Sheet: `client/src/pages/teacher/TakeAttendance.jsx`
+  - Header: `client/src/components/layout/Header.jsx`
+  - App Root: `client/src/App.jsx`
+- **Backend**:
+  - Model: `server/src/models/Attendance.js`
+  - Audit Middleware: `server/src/middleware/auditMiddleware.js`
+  - Controller: `server/src/controllers/attendanceController.js`
+  - Routes: `server/src/routes/attendanceRoutes.js`
+  - Tests: `server/tests/offlineSync.test.js`
+
+---
+
 ## 🔐 Access Control & Feature Matrix Across All Phases
 
 | Feature / Capability | Student | Teacher | Admin | Parent | Implementation Phase |
@@ -1770,6 +1865,12 @@ Phase 33 transforms CampusAttend into an installable, high-performance Progressi
 | **Device Camera Hardware QR Scanner (Dual BarcodeDetector + jsQR)** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
 | **Lens Flip (Back/Front) & Torch Light Controls** | ✅ | ❌ | ❌ | ❌ | Phase 33 |
 | **PWA Install Promotion Banner & iOS Add-to-Home Modal** | ✅ | ✅ | ✅ | ✅ | Phase 33 |
+| **Offline Classroom Attendance Taking (IndexedDB Local Queue)** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Local Roster Pre-Caching & Zero-Network Class Session** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Automatic Internet Return Syncing & Exponential Backoff** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Multi-Strategy Attendance Conflict Resolver (4 Strategies)** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Interactive Side-by-Side Conflict Resolution Console Modal** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Offline Sync Center, Diagnostics & Telemetry Ledger** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
 
 ---
 *Last Updated: September 2026*

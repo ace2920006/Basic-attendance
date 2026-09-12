@@ -25,6 +25,8 @@ This document contains comprehensive flowcharts and system diagrams for the **At
 18. [Phase 30 Automated Defaulter Management & Escalation Pipeline](#18-phase-30-automated-defaulter-management--escalation-pipeline)
 19. [Phase 31 Parent/Guardian Portal & Ward Monitoring Lifecycle](#19-phase-31-parentguardian-portal--ward-monitoring-lifecycle)
 20. [Phase 31 Document Verification & Security Storage Pipeline](#20-phase-31-document-verification--security-storage-pipeline)
+21. [Phase 33 PWA Service Worker & Camera QR Scanning Architecture](#21-phase-33-pwa-service-worker--camera-qr-scanning-architecture)
+22. [Phase 34 Offline Attendance Sync & Multi-Strategy Conflict Resolution Flow](#22-phase-34-offline-attendance-sync--multi-strategy-conflict-resolution-flow)
 
 ---
 
@@ -942,6 +944,76 @@ flowchart TD
         ServerVerify -- Invalid --> ErrorUI["Display Risk Warning / Error Banner <br/> Allow Rescan after 3.0s"]
     end
 ```
+
+---
+
+## 22. Phase 34 Offline Attendance Sync & Multi-Strategy Conflict Resolution Flow
+
+Complete lifecycle showing local offline attendance recording in browser IndexedDB, automatic background reconnection sync, and multi-strategy conflict resolution:
+
+```mermaid
+flowchart TD
+    subgraph OfflineRecordingStage ["1. Classroom Attendance Taking (Local-First)"]
+        TeacherUI["Teacher Opens TakeAttendance.jsx <br/> (Selects Course CS401 & Section A)"] --> CheckCache{"Cached Roster in <br/> IndexedDB rosterCache?"}
+        CheckCache -- Yes --> LoadLocal["Render Pre-Cached Student Roster"]
+        CheckCache -- No --> LoadDefault["Render Default Student Roster <br/> (Pre-cache in IndexedDB)"]
+        
+        LoadLocal --> MarkRoster["Instructor Marks Roster <br/> (Present / Absent / Late / Remarks)"]
+        LoadDefault --> MarkRoster
+        
+        MarkRoster --> ClickSubmit["Click 'Submit Class Attendance'"]
+        ClickSubmit --> CheckOnline{"navigator.onLine <br/> Connectivity Status?"}
+        
+        CheckOnline -- Offline --> QueueItem["Enqueues Batch to IndexedDB: <br/> • Database: CampusAttendOfflineDB <br/> • Store: attendanceQueue <br/> • Stamped with ISO clientTimestamp"]
+        CheckOnline -- Online --> TryDirect["Attempt Direct Server Submission <br/> POST /api/attendance/offline-sync"]
+        TryDirect -- Network Dropout --> QueueItem
+    end
+
+    subgraph AutoSyncPipeline ["2. Reconnection & Auto-Sync Pipeline"]
+        QueueItem --> SavedToast["Display Amber Offline Toast: <br/> 'Records safely queued locally'"]
+        SavedToast --> AwaitNet["Wait for Connection Restored"]
+        AwaitNet --> OnlineEvent["window.addEventListener('online')"]
+        OnlineEvent --> DebounceNet["1.5s Network Stability Debounce"]
+        DebounceNet --> TriggerSync["OfflineSyncContext: syncAllPending()"]
+        TriggerSync --> PostSync["POST /api/attendance/offline-sync <br/> { batchId, records, conflictStrategy: 'detect_only' }"]
+    end
+
+    subgraph ServerConflictEngine ["3. Backend Conflict Detection Engine"]
+        PostSync --> QueryServer["Query Server Database: <br/> • Existing Attendance on date/subject? <br/> • Approved Student Leaves in Leave model?"]
+        QueryServer --> DiffCheck{"Status Difference <br/> or Discrepancy?"}
+        
+        DiffCheck -- No Conflict --> CleanCommit["Commit All Records to MongoDB <br/> isOfflineSynced: true, conflictResolution: 'NONE'"]
+        DiffCheck -- Conflict Detected --> SplitItems["Commit Clean Records & Flag Conflicts: <br/> • Local Record: Status, Timestamp, Notes <br/> • Server Record: Status, Source, Reason"]
+    end
+
+    subgraph ConflictResolutionStrategy ["4. Multi-Strategy Conflict Resolution"]
+        SplitItems --> ReturnConflict["Return HTTP 200: { hasConflicts: true, conflicts: [...] }"]
+        ReturnConflict --> OpenModal["Auto-Launch ConflictResolutionModal.jsx <br/> Side-by-Side Comparison Diff View"]
+        
+        OpenModal --> ChooseStrategy{"Instructor Selects Resolution Strategy"}
+        
+        ChooseStrategy -- Smart Precedence --> SmartLogic["Smart Precedence Applied: <br/> • Approved Leaves > Absent/Present <br/> • Anti-Proxy QR Scan > Unmarked Absent <br/> • Latest Timestamp Breaks Ties"]
+        ChooseStrategy -- Teacher Authority --> LocalWins["Teacher Authority (local_wins): <br/> • Classroom Roster Overwrites Server <br/> • conflictResolution: 'LOCAL_OVERRIDE'"]
+        ChooseStrategy -- Preserve Server --> ServerWins["Server Preserved (server_wins): <br/> • Verified Cloud Record Locked <br/> • conflictResolution: 'SERVER_PRESERVED'"]
+        ChooseStrategy -- Interactive Per-Student --> CustomLogic["Per-Student Toggles Applied <br/> POST /api/attendance/resolve-conflicts <br/> • conflictResolution: 'MANUAL_RESOLVED'"]
+        
+        SmartLogic --> CommitFinal["Commit Final Resolved Records to MongoDB"]
+        LocalWins --> CommitFinal
+        ServerWins --> CommitFinal
+        CustomLogic --> CommitFinal
+    end
+
+    subgraph FinalTelemetry ["5. Telemetry, Auditing & State Sync"]
+        CleanCommit --> AuditLog["Record Audit Log: <br/> action: OFFLINE_ATTENDANCE_SYNC"]
+        CommitFinal --> AuditLog
+        
+        AuditLog --> UpdateLocal["Update Local Queue Item: <br/> syncStatus: 'synced', conflictData: null"]
+        UpdateLocal --> LogHistory["Append to IndexedDB syncHistory Store"]
+        UpdateLocal --> BadgeGreen["OfflineSyncBadge: Display Cloud Checkmark (Synced)"]
+        CommitFinal --> SendAlerts["Trigger Student Notifications & Defaulter Engine"]
+    end
+```
+
 
 
 

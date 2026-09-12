@@ -206,6 +206,11 @@ Granular daily attendance session logs.
 | `reviewedBy` | ObjectId | REF `User` | Reviewing instructor user ID |
 | `reviewedAt` | Date | OPTIONAL | Date of instructor review resolution |
 | `reviewNotes` | String | DEFAULT '' | Instructor review resolution audit notes |
+| `isOfflineSynced` | Boolean | DEFAULT false | Flags if attendance was recorded while offline (Phase 34) |
+| `offlineSyncTimestamp` | Date | OPTIONAL | Server synchronization timestamp (Phase 34) |
+| `offlineClientTimestamp` | Date | OPTIONAL | Client device recording timestamp (Phase 34) |
+| `offlineBatchId` | String | DEFAULT '' | Client-generated offline batch identifier (Phase 34) |
+| `conflictResolution` | String | ENUM (`NONE`, `LOCAL_OVERRIDE`, `SERVER_PRESERVED`, `SMART_MERGED`, `MANUAL_RESOLVED`), DEFAULT `NONE` | Strategy applied to resolve discrepancies during synchronization (Phase 34) |
 
 ---
 
@@ -219,7 +224,7 @@ Master institutional and security audit ledger (Phase 24 Enriched).
 | `userName` | String | REQUIRED | Actor full name |
 | `userEmail` | String | REQUIRED | Actor email address |
 | `userRole` | String | ENUM (`student`, `teacher`, `admin`, `parent`, `system`, `guest`) | Actor role |
-| `action` | String | REQUIRED (Enum: 10 Institutional Actions) | `LOGIN`, `LOGOUT`, `CREATE_STUDENT`, `DELETE_STUDENT`, `MARK_ATTENDANCE`, `EDIT_ATTENDANCE`, `APPROVE_LEAVE`, `REJECT_LEAVE`, `EXPORT_REPORT`, `CHANGE_SETTINGS` |
+| `action` | String | REQUIRED (Enum: Institutional Actions) | `LOGIN`, `LOGOUT`, `CREATE_STUDENT`, `DELETE_STUDENT`, `MARK_ATTENDANCE`, `EDIT_ATTENDANCE`, `APPROVE_LEAVE`, `REJECT_LEAVE`, `EXPORT_REPORT`, `CHANGE_SETTINGS`, `OFFLINE_ATTENDANCE_SYNC` |
 | `resource` | String | REQUIRED | Target resource module (e.g. `AUTH`, `ATTENDANCE`, `LEAVES`, `SETTINGS`, `REPORTS`) |
 | `targetUser` | ObjectId | REF `User`, OPTIONAL | Target Student/User affected by the action |
 | `targetUserName`| String | DEFAULT '' | Target Student/User full display name |
@@ -440,5 +445,63 @@ UserSchema.index({ wardRollNo: 1 });
 UserSchema.index({ email: 1 }, { unique: true });
 AttendanceSchema.index({ student: 1, date: 1 });
 AttendanceSchema.index({ subjectCode: 1, date: 1 });
+AttendanceSchema.index({ isOfflineSynced: 1, offlineBatchId: 1 });
 NotificationSchema.index({ user: 1, read: 1 });
 ```
+
+---
+
+## ⚡ Client-Side IndexedDB Schema (`CampusAttendOfflineDB`)
+
+In addition to the server-side MongoDB database, the system includes a client-side local database in the browser using the native **IndexedDB API** (Database: `CampusAttendOfflineDB`, Version: 1) managed by `client/src/utils/offlineAttendanceDB.js`:
+
+### 1. `attendanceQueue` Store
+Persists attendance recorded by teachers while disconnected from the campus network.
+
+| Property | Type | Index | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | String | PRIMARY KEY | Unique client batch ID (`offline_timestamp_rand`) |
+| `batchId` | String | None | Batch identifier |
+| `subject` | String | INDEX (`subject`) | Course subject name |
+| `subjectCode` | String | None | Course subject code |
+| `section` | String | None | Class division / section |
+| `classId` | String / null | None | Scheduled class ID |
+| `sessionId` | String / null | None | Active attendance session ID |
+| `date` | String | None | Attendance date string (ISO) |
+| `clientTimestamp`| String | None | ISO timestamp when teacher took attendance |
+| `teacherId` | String | None | Instructor user ID |
+| `teacherName` | String | None | Instructor display name |
+| `records` | Array [Object] | None | Enrolled student attendance records `[{ studentId, name, rollNo, status, notes }]` |
+| `syncStatus` | String | INDEX (`syncStatus`) | `pending`, `syncing`, `synced`, `conflict`, `failed` |
+| `conflictData` | Object / null | None | Server-detected conflict payloads for review |
+| `retryCount` | Number | None | Sync retry attempt counter |
+| `lastError` | String / null | None | Last error message if sync failed |
+| `createdAt` | Number | INDEX (`createdAt`) | Epoch timestamp |
+| `updatedAt` | Number | None | Last modified epoch timestamp |
+
+### 2. `rosterCache` Store
+Pre-caches student directories so teachers can mark attendance without network access.
+
+| Property | Type | Index | Description |
+| :--- | :--- | :--- | :--- |
+| `key` | String | PRIMARY KEY | `${subject}_${section}` lowercase lookup key |
+| `subject` | String | None | Course subject code |
+| `section` | String | None | Division / section name |
+| `students` | Array [Object] | None | Cached student roster with profile and contact info |
+| `cachedAt` | Number | None | Epoch timestamp when cached |
+
+### 3. `syncHistory` Store
+Maintains a client-side transparency log of completed synchronization events.
+
+| Property | Type | Index | Description |
+| :--- | :--- | :--- | :--- |
+| `id` | String | PRIMARY KEY | Unique log identifier |
+| `batchId` | String | None | Associated batch ID |
+| `subject` | String | None | Course subject code |
+| `section` | String | None | Section name |
+| `syncedCount` | Number | None | Count of records committed to server |
+| `conflictsResolved` | Number | None | Discrepancies resolved |
+| `strategy` | String | None | Applied resolution strategy (`clean`, `smart_merge`, `local_wins`, etc.) |
+| `syncedAt` | Number | INDEX (`syncedAt`) | Epoch timestamp of sync completion |
+| `message` | String | None | Server result message |
+
