@@ -370,6 +370,21 @@ export const markBulkAttendanceApi = async (bulkData) => {
   });
 };
 
+// Phase 34: Offline Attendance Synchronization & Conflict Resolution APIs
+export const syncOfflineAttendanceApi = async (syncPayload) => {
+  return apiRequest('/attendance/offline-sync', {
+    method: 'POST',
+    body: JSON.stringify(syncPayload)
+  });
+};
+
+export const resolveAttendanceConflictsApi = async (conflictResolutionPayload) => {
+  return apiRequest('/attendance/resolve-conflicts', {
+    method: 'POST',
+    body: JSON.stringify(conflictResolutionPayload)
+  });
+};
+
 export const getAttendanceRecordsApi = async (params = {}) => {
   const queryParams = new URLSearchParams();
   if (params.studentId) queryParams.append('studentId', params.studentId);
