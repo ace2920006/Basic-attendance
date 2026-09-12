@@ -107,6 +107,26 @@ const attendanceSchema = new mongoose.Schema(
     reviewNotes: {
       type: String,
       default: ''
+    },
+    // Offline Attendance Sync & Telemetry (Phase 34)
+    isOfflineSynced: {
+      type: Boolean,
+      default: false
+    },
+    offlineSyncTimestamp: {
+      type: Date
+    },
+    offlineClientTimestamp: {
+      type: Date
+    },
+    offlineBatchId: {
+      type: String,
+      default: ''
+    },
+    conflictResolution: {
+      type: String,
+      enum: ['NONE', 'LOCAL_OVERRIDE', 'SERVER_PRESERVED', 'SMART_MERGED', 'MANUAL_RESOLVED'],
+      default: 'NONE'
     }
   },
   {
