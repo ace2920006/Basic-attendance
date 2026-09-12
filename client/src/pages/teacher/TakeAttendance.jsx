@@ -1,24 +1,45 @@
-import React, { useState } from 'react';
-import { FiCheckCircle, FiXCircle, FiClock, FiSave, FiCheckSquare, FiMessageSquare } from 'react-icons/fi';
+import React, { useState, useEffect } from 'react';
+import {
+  FiCheckCircle,
+  FiXCircle,
+  FiClock,
+  FiSave,
+  FiCheckSquare,
+  FiMessageSquare,
+  FiCloud,
+  FiCloudOff,
+  FiRefreshCw,
+  FiAlertTriangle,
+  FiDatabase,
+  FiCheck
+} from 'react-icons/fi';
 import { QrCode } from 'lucide-react';
 import { mockStudentsList } from '../../data/mockData';
-import { markBulkAttendanceApi } from '../../services/api';
+import { markBulkAttendanceApi, syncOfflineAttendanceApi } from '../../services/api';
+import { cacheRoster, getCachedRoster } from '../../utils/offlineAttendanceDB';
+import { useOfflineSync } from '../../context/OfflineSyncContext';
+import { useAuth } from '../../context/AuthContext';
 import QRAttendanceModal from '../../components/teacher/QRAttendanceModal';
 
 export default function TakeAttendance() {
+  const { user } = useAuth();
+  const {
+    isOnline,
+    queueAttendance,
+    pendingCount,
+    conflictCount,
+    openSyncCenter,
+    openConflictModal,
+    conflictedBatches
+  } = useOfflineSync();
+
   const [selectedSubject, setSelectedSubject] = useState('CS401');
   const [selectedSection, setSelectedSection] = useState('Section A');
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
-  const [students, setStudents] = useState(
-    mockStudentsList.map(s => ({
-      ...s,
-      attendance: 'Present',
-      remarks: ''
-    }))
-  );
-
+  
+  const [students, setStudents] = useState([]);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saveResult, setSaveResult] = useState(null); // { mode: 'online' | 'offline' | 'fallback_offline', message: string }
   const [error, setError] = useState('');
 
   const activeClassMock = {
@@ -29,45 +50,162 @@ export default function TakeAttendance() {
     section: selectedSection
   };
 
+  // Load roster with offline IndexedDB caching
+  useEffect(() => {
+    async function loadRoster() {
+      // 1. Try retrieving from offline cache first
+      const cached = await getCachedRoster(selectedSubject, selectedSection);
+      if (cached && cached.length > 0) {
+        setStudents(cached);
+        return;
+      }
+
+      // 2. Fallback to default list & populate offline cache
+      const initialList = mockStudentsList.map((s) => ({
+        ...s,
+        attendance: 'Present',
+        remarks: ''
+      }));
+
+      setStudents(initialList);
+      // Cache this roster in IndexedDB so it's always available when offline
+      cacheRoster(selectedSubject, selectedSection, initialList);
+    }
+
+    loadRoster();
+  }, [selectedSubject, selectedSection]);
+
   const toggleStatus = (id, newStatus) => {
-    setStudents(students.map(s => s.id === id ? { ...s, attendance: newStatus } : s));
+    setStudents((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, attendance: newStatus } : s))
+    );
   };
 
   const handleRemarkChange = (id, newRemark) => {
-    setStudents(students.map(s => s.id === id ? { ...s, remarks: newRemark } : s));
+    setStudents((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, remarks: newRemark } : s))
+    );
   };
 
   const markAll = (status) => {
-    setStudents(students.map(s => ({ ...s, attendance: status })));
+    setStudents((prev) => prev.map((s) => ({ ...s, attendance: status })));
   };
 
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError('');
+    setSaveResult(null);
 
-    const records = students.map(s => ({
+    const clientTimestamp = new Date().toISOString();
+    const batchId = `offline_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+    const records = students.map((s) => ({
       studentId: s.id,
+      name: s.name,
+      rollNo: s.rollNo,
       subject: selectedSubject,
       subjectCode: selectedSubject,
       status: s.attendance,
-      notes: s.remarks || ''
+      notes: s.remarks || '',
+      clientMarkedAt: clientTimestamp
     }));
 
-    try {
+    // CASE A: TEACHER IS OFFLINE
+    if (!isOnline) {
       try {
-        await markBulkAttendanceApi({
+        await queueAttendance({
+          id: batchId,
+          batchId,
           subject: selectedSubject,
           subjectCode: selectedSubject,
-          date: new Date().toISOString(),
+          section: selectedSection,
+          classId: activeClassMock._id,
+          date: clientTimestamp,
+          clientTimestamp,
+          teacherId: user?._id || 'teacher_local',
+          teacherName: user?.name || 'Faculty',
           records
         });
-      } catch (err) {
-        console.warn('Backend endpoint unavailable, simulating submission:', err);
-      }
 
-      setSaved(true);
-      setTimeout(() => setSaved(false), 4000);
+        // Also update cached roster with latest remarks/attendance
+        await cacheRoster(selectedSubject, selectedSection, students);
+
+        setSaveResult({
+          mode: 'offline',
+          message: `Saved to Offline Queue (IndexedDB)! ${records.length} records safely stored on this device. Attendance will automatically synchronize once internet returns.`
+        });
+        setTimeout(() => setSaveResult(null), 8000);
+      } catch (err) {
+        setError(`Failed to save offline log: ${err.message}`);
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    // CASE B: TEACHER IS ONLINE
+    try {
+      try {
+        const res = await syncOfflineAttendanceApi({
+          batchId,
+          subject: selectedSubject,
+          subjectCode: selectedSubject,
+          section: selectedSection,
+          date: clientTimestamp,
+          clientTimestamp,
+          classId: activeClassMock._id,
+          conflictStrategy: 'detect_only',
+          records
+        });
+
+        if (res?.hasConflicts) {
+          // Conflicts detected directly on submit: queue with conflict status
+          await queueAttendance({
+            id: batchId,
+            batchId,
+            subject: selectedSubject,
+            subjectCode: selectedSubject,
+            section: selectedSection,
+            date: clientTimestamp,
+            clientTimestamp,
+            records
+          });
+
+          setSaveResult({
+            mode: 'conflict',
+            message: `Submission received with ${res.conflictsCount} conflict(s). Please review and resolve discrepancies.`
+          });
+        } else {
+          setSaveResult({
+            mode: 'online',
+            message: `Attendance Sheet for ${selectedSubject} (${selectedSection}) submitted and synchronized with server successfully!`
+          });
+          setTimeout(() => setSaveResult(null), 6000);
+        }
+      } catch (networkErr) {
+        console.warn('Network call failed, falling back to IndexedDB offline queue:', networkErr);
+        // Fallback gracefully to offline IndexedDB queue
+        await queueAttendance({
+          id: batchId,
+          batchId,
+          subject: selectedSubject,
+          subjectCode: selectedSubject,
+          section: selectedSection,
+          classId: activeClassMock._id,
+          date: clientTimestamp,
+          clientTimestamp,
+          teacherId: user?._id || 'teacher_local',
+          teacherName: user?.name || 'Faculty',
+          records
+        });
+
+        setSaveResult({
+          mode: 'fallback_offline',
+          message: `Network drop detected during submission: ${records.length} records automatically captured in local IndexedDB offline queue. Auto-sync will run upon reconnect.`
+        });
+        setTimeout(() => setSaveResult(null), 8000);
+      }
     } catch (err) {
       setError(err.message || 'Failed to submit attendance');
     } finally {
@@ -75,13 +213,74 @@ export default function TakeAttendance() {
     }
   };
 
-  const presentCount = students.filter(s => s.attendance === 'Present').length;
-  const absentCount = students.filter(s => s.attendance === 'Absent').length;
-  const lateCount = students.filter(s => s.attendance === 'Late').length;
+  const presentCount = students.filter((s) => s.attendance === 'Present').length;
+  const absentCount = students.filter((s) => s.attendance === 'Absent').length;
+  const lateCount = students.filter((s) => s.attendance === 'Late').length;
 
   return (
     <div className="space-y-6">
       
+      {/* Phase 34: Offline Sync Live Mode Notification Card */}
+      <div className={`p-4 rounded-2xl border transition-all ${
+        !isOnline
+          ? 'bg-amber-500/10 border-amber-500/30'
+          : pendingCount > 0
+          ? 'bg-blue-500/10 border-blue-500/30'
+          : 'bg-slate-900/60 border-slate-800'
+      }`}>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+              !isOnline
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+            }`}>
+              {!isOnline ? <FiCloudOff className="w-4 h-4" /> : <FiCloud className="w-4 h-4" />}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                  {!isOnline ? 'Offline Attendance Mode Active' : 'Live Cloud Sync Connected'}
+                </h4>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-mono bg-slate-800 text-slate-300 border border-slate-700">
+                  IndexedDB Engine
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {!isOnline
+                  ? 'No internet required. Take attendance normally — records queue locally and auto-sync when connection returns.'
+                  : 'Teacher records stream in real-time. Offline fallback is primed in case of connectivity drops.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {conflictCount > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (conflictedBatches.length > 0) openConflictModal(conflictedBatches[0]);
+                  else openSyncCenter();
+                }}
+                className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-xs font-semibold flex items-center gap-1.5 animate-pulse transition"
+              >
+                <FiAlertTriangle className="w-3.5 h-3.5" />
+                <span>Resolve Conflicts ({conflictCount})</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={openSyncCenter}
+              className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition"
+            >
+              <FiDatabase className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Queue Status {pendingCount > 0 ? `(${pendingCount})` : ''}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Subject & Section Header Bar */}
       <div className="glass-panel p-6 border-slate-800 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -183,10 +382,22 @@ export default function TakeAttendance() {
           </div>
         )}
 
-        {saved && (
-          <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center text-xs font-semibold text-emerald-400 flex items-center justify-center gap-2">
-            <FiCheckCircle className="w-4 h-4" />
-            <span>Attendance Sheet for {selectedSubject} ({selectedSection}) Submitted & Synchronized Successfully!</span>
+        {saveResult && (
+          <div className={`p-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 text-center ${
+            saveResult.mode === 'online'
+              ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400'
+              : saveResult.mode === 'conflict'
+              ? 'bg-amber-500/10 border border-amber-500/30 text-amber-400'
+              : 'bg-indigo-500/10 border border-indigo-500/30 text-indigo-300'
+          }`}>
+            {saveResult.mode === 'online' ? (
+              <FiCheckCircle className="w-4 h-4 flex-shrink-0" />
+            ) : saveResult.mode === 'conflict' ? (
+              <FiAlertTriangle className="w-4 h-4 flex-shrink-0" />
+            ) : (
+              <FiDatabase className="w-4 h-4 flex-shrink-0" />
+            )}
+            <span>{saveResult.message}</span>
           </div>
         )}
 
@@ -200,9 +411,9 @@ export default function TakeAttendance() {
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-white block">{stu.name}</span>
                   <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-semibold ${
-                    stu.attendanceRate >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                    (stu.attendanceRate || 85) >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
                   }`}>
-                    {stu.attendanceRate}% Avg
+                    {stu.attendanceRate || 85}% Avg
                   </span>
                 </div>
                 <span className="text-[11px] text-slate-400">{stu.rollNo} • {stu.email}</span>
@@ -252,7 +463,7 @@ export default function TakeAttendance() {
                   <input
                     type="text"
                     placeholder="Add remarks (e.g. 15m late, sick note)..."
-                    value={stu.remarks}
+                    value={stu.remarks || ''}
                     onChange={(e) => handleRemarkChange(stu.id, e.target.value)}
                     className="input-field pl-8 text-xs py-1.5 bg-slate-950 border-slate-800"
                   />
@@ -264,7 +475,7 @@ export default function TakeAttendance() {
         </div>
 
         {/* Submit Attendance Bar */}
-        <div className="pt-4 border-t border-slate-800 flex justify-between items-center">
+        <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center gap-3">
           <span className="text-xs text-slate-400">
             {presentCount} Present, {absentCount} Absent, {lateCount} Late
           </span>
@@ -272,10 +483,28 @@ export default function TakeAttendance() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="btn btn-primary px-6 py-2.5 text-xs font-semibold shadow-lg shadow-indigo-600/30"
+            className={`btn px-6 py-2.5 text-xs font-semibold flex items-center gap-2 shadow-lg transition ${
+              !isOnline
+                ? 'bg-amber-600 hover:bg-amber-500 text-white shadow-amber-600/30'
+                : 'btn-primary shadow-indigo-600/30'
+            }`}
           >
-            <FiSave className="w-4 h-4" />
-            <span>{saving ? 'Submitting Log...' : 'Submit Class Attendance'}</span>
+            {saving ? (
+              <>
+                <FiRefreshCw className="w-4 h-4 animate-spin" />
+                <span>Recording...</span>
+              </>
+            ) : !isOnline ? (
+              <>
+                <FiDatabase className="w-4 h-4" />
+                <span>Save to Offline Queue ({students.length} Students)</span>
+              </>
+            ) : (
+              <>
+                <FiSave className="w-4 h-4" />
+                <span>Submit Class Attendance</span>
+              </>
+            )}
           </button>
         </div>
 
