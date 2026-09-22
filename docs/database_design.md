@@ -262,7 +262,7 @@ Institutional thresholds engine and 7-status matrix definitions.
 ---
 
 ### 11. `AttendanceSessions`
-Live attendance session instances (Phase 20).
+Live attendance session instances (Phase 20 & Phase 35 Real-Time Classroom Mode).
 
 | Field | Type | Constraints | Description |
 | :--- | :--- | :--- | :--- |
@@ -276,6 +276,7 @@ Live attendance session instances (Phase 20).
 | `teacherName` | String | DEFAULT '' | Faculty instructor name |
 | `department` | String | DEFAULT 'Computer Science' | Department name |
 | `room` | String | DEFAULT '' | Classroom venue |
+| `timeSlot` | String | DEFAULT '10:00 - 11:00' | Lecture time slot for classroom banner display (e.g. `10:00 - 11:00`) (Phase 35) |
 | `startTime` | Date | DEFAULT Date.now | Session start timestamp |
 | `endTime` | Date | OPTIONAL | Session completion timestamp |
 | `mode` | String | ENUM (`QR`, `Manual`, `GPS`, `Hybrid`) | Attendance verification mode |
@@ -283,7 +284,8 @@ Live attendance session instances (Phase 20).
 | `qrSecretToken` | String | DEFAULT '' | Expiring 30s dynamic QR JWT token |
 | `qrExpiresAt` | Date | OPTIONAL | QR token expiration timestamp |
 | `campusLocation` | Object | `{ latitude, longitude, maxRadiusMeters: 100 }` | Session GPS geofence location |
-| `stats` | Object | `{ totalStudents, presentCount, absentCount, lateCount, excusedCount }` | Real-time session stats |
+| `stats` | Object | `{ totalStudents: 55, presentCount: 0, absentCount: 0, lateCount: 0, excusedCount: 0 }` | Real-time session stats driving live `Present: 42 / 55` counters (Phase 35) |
+| `recentCheckins` | Array [Object] | DEFAULT [] | Rolling real-time check-in ticker stream `[{ student, name, rollNo, timestamp, timeStr }]` (Phase 35) |
 
 ---
 

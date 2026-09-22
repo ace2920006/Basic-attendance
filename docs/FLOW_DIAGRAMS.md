@@ -27,6 +27,7 @@ This document contains comprehensive flowcharts and system diagrams for the **At
 20. [Phase 31 Document Verification & Security Storage Pipeline](#20-phase-31-document-verification--security-storage-pipeline)
 21. [Phase 33 PWA Service Worker & Camera QR Scanning Architecture](#21-phase-33-pwa-service-worker--camera-qr-scanning-architecture)
 22. [Phase 34 Offline Attendance Sync & Multi-Strategy Conflict Resolution Flow](#22-phase-34-offline-attendance-sync--multi-strategy-conflict-resolution-flow)
+23. [Phase 35 Real-Time Classroom Mode & Socket.IO Attendance Broadcast Flow](#23-phase-35-real-time-classroom-mode--socketio-attendance-broadcast-flow)
 
 ---
 
@@ -1011,6 +1012,56 @@ flowchart TD
         UpdateLocal --> LogHistory["Append to IndexedDB syncHistory Store"]
         UpdateLocal --> BadgeGreen["OfflineSyncBadge: Display Cloud Checkmark (Synced)"]
         CommitFinal --> SendAlerts["Trigger Student Notifications & Defaulter Engine"]
+    end
+```
+
+---
+
+## 23. Phase 35 Real-Time Classroom Mode & Socket.IO Attendance Broadcast Flow
+
+End-to-end WebSocket communication sequence diagram demonstrating instructor session launch, instant student live banner display, live roll call updates, and live `Present: 42 / 55` progress sync:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Teacher as 👩‍🏫 Instructor (TakeAttendance / Dashboard)
+    participant Server as 🖥️ Express Backend (sessionController)
+    participant Socket as ⚡ Socket.IO Engine (socket.js)
+    actor Student1 as 🎓 Student A (Dashboard)
+    actor Student2 as 🎓 Student B (Layout / Other Page)
+    participant DB as 🗄️ MongoDB (AttendanceSession)
+
+    rect rgb(30, 41, 59)
+        Note over Teacher, DB: 1. Instructor Launches Attendance Session
+        Teacher->>Server: POST /api/sessions/start { classId, subject: "Database Systems", timeSlot: "10:00 - 11:00" }
+        Server->>DB: Create AttendanceSession (status: 'Active', stats: { presentCount: 0, totalStudents: 55 })
+        Server->>Socket: broadcastClassroomEvent('classroom_session_started', sessionData)
+        Socket-->>Student1: Emit 'classroom_session_started'
+        Socket-->>Student2: Emit 'classroom_session_started'
+        Note over Student1, Student2: RealtimeClassroomBanner renders:<br/>🔴 Attendance Session Active<br/>Database Systems (CS401) | 10:00 - 11:00<br/>Present: 0 / 55
+    end
+
+    rect rgb(15, 23, 42)
+        Note over Student1, DB: 2. Real-Time Student Check-In & Live Counter Stream
+        Student1->>Server: POST /api/sessions/:id/checkin { studentId: "CS-042" } (or Scan QR)
+        Server->>DB: Find Session, verify hasCheckedIn == false
+        Server->>DB: Increment stats.presentCount (e.g. 41 -> 42), append to recentCheckins
+        Server-->>Student1: HTTP 200 { success: true, arrivalTime: "10:04 AM", stats: { presentCount: 42, totalStudents: 55 } }
+        Server->>Socket: broadcastClassroomEvent('classroom_attendance_updated', { stats, latestStudent })
+        Socket-->>Student1: Emit 'classroom_attendance_updated'
+        Socket-->>Student2: Emit 'classroom_attendance_updated'
+        Socket-->>Teacher: Emit 'classroom_attendance_updated'
+        Note over Student1, Teacher: Live UI Updates without page reload:<br/>Present: 42 / 55 (76.4%)<br/>✨ Just checked in: Alex Rivera at 10:04 AM
+    end
+
+    rect rgb(30, 41, 59)
+        Note over Teacher, DB: 3. Session Completion & State Reset
+        Teacher->>Server: POST /api/sessions/:id/stop
+        Server->>DB: Update Session status: 'Completed', endTime: now
+        Server->>Socket: broadcastClassroomEvent('classroom_session_ended', { sessionId, stats: { presentCount: 42, totalStudents: 55 } })
+        Socket-->>Student1: Emit 'classroom_session_ended'
+        Socket-->>Student2: Emit 'classroom_session_ended'
+        Note over Student1, Student2: Banner transitions cleanly to Completed state with audio chime
     end
 ```
 

@@ -1,6 +1,6 @@
 # Multi-Role Attendance System - Requirements & Features Specification
 
-This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 34**) for the **Attendance Management System**.
+This document details the functional specifications, feature requirements, and access control matrix across all implementation phases (**Phases 1 through 35**) for the **Attendance Management System**.
 
 ---
 
@@ -49,6 +49,11 @@ This document details the functional specifications, feature requirements, and a
   - **Defaulter Escalation Banner**: Prominent warning banner rendered directly on the Student Dashboard (`/student`) when student attendance falls into any shortage tier (`Warning`, `Serious Warning`, `Admin Alert`, `Parent Alert`).
   - **Mathematical Deficit & Recovery Path**: Explicit guidance computing consecutive lectures needed to clear defaulter status ($x = \lceil \frac{rT - P}{1 - r} \rceil$).
   - **Student-Scoped Status Inspection**: Dedicated endpoint (`GET /api/defaulters/student/:id`) enabling students to monitor their active defaulter tier and full escalation audit history.
+- **Real-Time Classroom Mode (Phase 35)**:
+  - **Instant Live Active Banner**: Automatic appearance of `RealtimeClassroomBanner.jsx` when teacher begins attendance, displaying `🔴 Attendance Session Active`, Subject (`Database Systems`), and Time Slot (`10:00 - 11:00`).
+  - **Live Attendance Counter**: Live updating `Present: 42 / 55` count and animated progress bar without requiring page refreshes.
+  - **1-Click Rapid Check-In**: Student can check in with a single tap or trigger the hardware QR camera scanner.
+  - **Classroom Roll Call Stream**: Live ticker showcasing recent peer check-ins in real time (*"✨ Just checked in: Alex Rivera"*).
 
 ---
 
@@ -94,6 +99,10 @@ This document details the functional specifications, feature requirements, and a
   - **Interactive Conflict Resolver Modal (`ConflictResolutionModal.jsx`)**: Side-by-side diff table comparing teacher offline marks against server records with quick bulk resolvers (*Teacher Authority*, *Server Preserved*, *Smart Precedence*) and per-student custom adjustments.
   - **Offline Sync Center (`OfflineSyncCenterModal.jsx`)**: Comprehensive queue inspector, retry controls, and local storage diagnostics.
   - **Real-Time Status Badge (`OfflineSyncBadge.jsx`)**: Header status pill showing online/offline status, pending batch counts, and pulsing conflict alerts.
+- **Real-Time Classroom Controls (Phase 35)**:
+  - **Live Session Controller (`RealtimeClassroomControls.jsx`)**: One-click Start/Stop controls embedded on `TakeAttendance.jsx` and `TeacherDashboard.jsx`.
+  - **Live Present Tracker**: Real-time gauge tracking check-ins (`Present: 42 / 55`) with instant Socket.IO synchrony.
+  - **Check-In Simulator**: `+ Simulate Student Check-In` button for interactive demos and live testing.
 
 ---
 
@@ -285,15 +294,19 @@ This document details the functional specifications, feature requirements, and a
 | **Multi-Strategy Attendance Conflict Resolver (4 Strategies)** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
 | **Interactive Side-by-Side Conflict Resolution Console Modal** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
 | **Offline Sync Center, Diagnostics & Telemetry Ledger** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Real-Time Classroom Mode (🔴 Active Banner & Live Present Count)** | ✅ | ✅ | ✅ | ❌ | Phase 35 |
+| **Socket.IO Live Roster Roll Call & Check-In Broadcast** | ✅ | ✅ | ✅ | ❌ | Phase 35 |
+| **Interactive Student Check-In & Roll Call Simulation** | ✅ | ✅ | ✅ | ❌ | Phase 35 |
 
 ---
 
 ## 🎨 System Non-Functional Requirements
 
 1. **Security**: Password hashing via `bcryptjs`, stateless session management via signed `JWT` tokens, sliding-window rate limiting, Helmet HTTP headers, recursive XSS sanitization, and non-blocking security audit logging.
-2. **Performance**: Fast REST API response times (< 50ms query latency), real-time WebSockets event broadcasting via Socket.io, and optimized Vite production bundling.
+2. **Performance**: Fast REST API response times (< 50ms query latency), real-time WebSockets event broadcasting via Socket.io (< 50ms propagation across classroom nodes), and optimized Vite production bundling.
 3. **Data Integrity**: MongoDB Mongoose schema validation constraints, singleton active academic year enforcement, unique index rules, and cascade reference safety.
 4. **Responsiveness**: Modern, glassmorphism dark-mode interface built with React 18 and Tailwind CSS, fully responsive across mobile, tablet, and desktop viewports.
 5. **Document Security & Integrity**: Strict multi-tier MIME validation (file extension, HTTP Content-Type, binary magic-byte inspection for `%PDF-`, `\x89PNG`, `0xFF 0xD8 0xFF`), heuristic malware threat detection (EICAR, disguised PE/ELF binaries, embedded script vectors, PDF process launch exploits), non-public isolated storage (`server/secure_uploads/documents/`), SHA-256 tamper-evident integrity hashes, and 15-minute expiring signed access tokens for zero credential leakage.
 6. **Runtime Environment & Engine Support**: Supported on **Node.js 22+** (`v22.x` or higher), **MongoDB** (Local instance or MongoDB Atlas), and **npm** (`v10.x` or higher bundled with Node.js 22+). Includes root orchestration scripts (`install:all`, `dev`, `test`).
 7. **PWA & Offline Mobile Resilience (Phase 33)**: Progressive Web App compliance with W3C Web App Manifest (`standalone` display mode, dark canvas `#020617`, theme color `#4f46e5`), Service Worker caching architecture (`sw.js`) supporting offline shell execution and network-first navigation with graceful fallback (`offline.html`), hardware device camera streaming (`navigator.mediaDevices.getUserMedia`) with dual-engine barcode parsing (native `BarcodeDetector` + pure-JS `jsqr`), and thumb-zone navigation adhering to device safe-area insets (`env(safe-area-inset-bottom)`).
+8. **Real-Time Classroom Responsiveness (Phase 35)**: Socket.IO WebSocket bi-directional transport guaranteeing low latency live roll-call telemetry, active attendance session banner synchronization across all student pages/dashboards, and atomic live tally updates (`Present: 42 / 55`) without page reloads.

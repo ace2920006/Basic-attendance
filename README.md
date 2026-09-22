@@ -6,7 +6,7 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.3-38B2AC.svg?logo=tailwind-css)](https://tailwindcss.com/)
 [![Node.js](https://img.shields.io/badge/Node.js-Express-339933.svg?logo=node.js)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248.svg?logo=mongodb)](https://www.mongodb.com/)
-[![Test Suite](https://img.shields.io/badge/Tests-174%2F174%20Passed-brightgreen.svg)](server/tests)
+[![Test Suite](https://img.shields.io/badge/Tests-179%2F179%20Passed-brightgreen.svg)](server/tests)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 A modern, full-stack **Multi-Role Attendance Management System** designed for educational institutions. Built using **React 18, Vite, Tailwind CSS, Node.js, Express, and MongoDB**, it features tailored dashboards and workflows for **Students**, **Teachers (Faculty)**, **Administrators**, and **Parents/Guardians**.
@@ -49,6 +49,7 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 - 📄 **Document Verification & Security Engine (Phase 31 Part B)**: Enterprise document verification pipeline for student leave applications (`Student ➔ Upload Document ➔ Antivirus Scan ➔ Teacher Review ➔ Admin Verification`). Features strict 5MB size limits, binary magic-byte MIME signature verification (preventing spoofed executables or HTML masquerading as PDF/JPG/PNG), secure isolated storage in `server/secure_uploads/documents/`, heuristic antivirus and malware scanning engine (detecting EICAR signatures, embedded PE/ELF binaries, active script tags, PDF launch exploits, and ClamAV socket support), SHA-256 tamper-evident integrity hashes, 15-minute signed expiring access tokens, and a central Admin Document Verification Console (`/admin/document-verification`) with on-demand re-scanning and official sanctioning.
 - 📱 **Progressive Web App (PWA) & Mobile Experience (Phase 33)**: Transforms CampusAttend into an installable mobile application with modern Web App Manifest, offline shell caching via Service Worker (`sw.js`), network status detector (`useNetworkStatus`), real-time device camera hardware QR scanning (dual native `BarcodeDetector` + pure-JS `jsqr` engine with lens flip & torch controls), thumb-zone mobile bottom navigation (`MobileBottomNav`), and automated install prompt banner (`beforeinstallprompt` & iOS Safari guide).
 - ⚡ **Offline Attendance Sync & Conflict Resolution (Phase 34)**: Enterprise offline-first attendance recording engine for classrooms and campus dead zones. Teachers can take attendance completely offline; records are stored in browser **IndexedDB** (`CampusAttendOfflineDB`) with pre-cached rosters and fallback to `localStorage`. When connectivity returns, attendance auto-syncs via `POST /api/attendance/offline-sync`. Features a comprehensive **Multi-Strategy Conflict Resolution Engine** (Smart Precedence: Institutional Leaves > Anti-Proxy QR > Timestamp; Teacher Classroom Authority Override; Server Preserved; and Interactive Side-by-Side Resolver Modal), an Offline Sync Center (`OfflineSyncCenterModal.jsx`), and real-time header status badge (`OfflineSyncBadge.jsx`).
+- ⚡ **Real-Time Classroom Mode (Phase 35)**: Real-time interactive classroom attendance engine powered by **Socket.IO**. When a teacher starts attendance, connected students immediately see an electric live banner (`🔴 Attendance Session Active - Database Systems 10:00 - 11:00`). As students check in via QR camera scan or one-click verification, the live attendance counter (`Present: 42 / 55`) updates dynamically in real time without refreshing the page, complete with animated progress meters, live classmate roll call stream, and an interactive check-in simulator for demonstration.
 
 ---
 
@@ -186,6 +187,9 @@ A modern, full-stack **Multi-Role Attendance Management System** designed for ed
 | **Multi-Strategy Attendance Conflict Resolver (4 Strategies)** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
 | **Interactive Side-by-Side Conflict Resolution Console Modal** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
 | **Offline Sync Center, Diagnostics & Telemetry Ledger** | ❌ | ✅ | ✅ | ❌ | Phase 34 |
+| **Real-Time Classroom Mode (🔴 Active Banner & Live Present Count)** | ✅ | ✅ | ✅ | ❌ | Phase 35 |
+| **Socket.IO Live Roster Roll Call & Check-In Broadcast** | ✅ | ✅ | ✅ | ❌ | Phase 35 |
+| **Interactive Student Check-In & Roll Call Simulation** | ✅ | ✅ | ✅ | ❌ | Phase 35 |
 
 ---
 
@@ -207,10 +211,10 @@ Basic-attendance/
 │   │   │   ├── common/          # ToastContainer, OfflineBanner, OfflineSyncBadge, CreateAnnouncementModal, ProtectedRoute
 │   │   │   ├── layout/          # Navbar, Sidebar, Header, MobileBottomNav layout wrappers
 │   │   │   ├── pwa/             # PwaInstallBanner.jsx & iOS install guides
-│   │   │   ├── student/         # Student-specific components (StudentQRScannerModal.jsx with camera)
-│   │   │   ├── teacher/         # ConflictResolutionModal, OfflineSyncCenterModal, QRAttendanceModal, CreateTimetableModal
+│   │   │   ├── student/         # Student-specific components (StudentQRScannerModal.jsx, RealtimeClassroomBanner.jsx)
+│   │   │   ├── teacher/         # ConflictResolutionModal, OfflineSyncCenterModal, QRAttendanceModal, RealtimeClassroomControls.jsx, CreateTimetableModal
 │   │   │   └── ui/              # Buttons, Cards, Inputs, Badges, Modals
-│   │   ├── context/             # React State Contexts (AuthContext, NotificationContext, PwaInstallContext, OfflineSyncContext)
+│   │   ├── context/             # React State Contexts (AuthContext, NotificationContext, PwaInstallContext, OfflineSyncContext, RealtimeClassroomContext)
 │   │   ├── hooks/               # Custom hooks (useNetworkStatus.js)
 │   │   ├── utils/               # Offline IndexedDB Manager (offlineAttendanceDB.js)
 │   │   ├── pages/
@@ -230,11 +234,12 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                      # Backend REST API (Node.js + Express + MongoDB)
-│   ├── tests/                   # Automated Jest & Supertest Integration Test Suite (20 Test Suites, 174 Tests)
+│   ├── tests/                   # Automated Jest & Supertest Integration Test Suite (21 Test Suites, 179 Tests)
 │   │   ├── setup.js             # Global MongoDB in-memory test environment setup
 │   │   ├── auth.test.js         # Authentication, Login, Register, JWT, RBAC tests
 │   │   ├── attendance.test.js   # Single/Bulk attendance, stats, defaulter threshold tests
 │   │   ├── offlineSync.test.js  # Phase 34 Offline Attendance Sync & Conflict Resolution tests
+│   │   ├── realtimeClassroom.test.js # Phase 35 Real-Time Classroom Mode Socket.IO tests
 │   │   ├── qr.test.js           # 30s dynamic QR verification & anti-proxy guard tests
 │   │   ├── gps.test.js          # Haversine formula & campus 500m geofence tests
 │   │   ├── reports.test.js      # Daily/Weekly/Monthly/Semester report generator tests
@@ -258,7 +263,7 @@ Basic-attendance/
 │   │   ├── controllers/         # Request handlers (Auth, User, Attendance, Class, Leave, Timetable, Chart, AI, Analytics, Audit, Academic, Rules, Session, AntiProxy, Correction, Defaulter, Parent)
 │   │   ├── middleware/          # Helmet, Rate Limiter, XSS Sanitizer, Input Validation, Audit Logger, JWT auth, RBAC guards, secureUploadMiddleware.js
 │   │   ├── models/              # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection, DefaulterRecord)
-│   │   ├── routes/              # Express API Route definitions (including defaulterRoutes.js, parentRoutes.js, leaveRoutes.js)
+│   │   ├── routes/              # Express API Route definitions (sessionRoutes.js, defaulterRoutes.js, parentRoutes.js, leaveRoutes.js)
 │   │   ├── services/            # Business Services (notificationService.js, defaulterService.js, documentScannerService.js)
 │   │   ├── utils/               # JWT generator, Async handler wrappers, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, teacherAnalyticsEngine.js, adminIntelligenceEngine.js, sendEmail.js
 │   │   ├── app.js               # Express application initialization & security stack setup
@@ -268,15 +273,15 @@ Basic-attendance/
 │   └── package.json
 │
 ├── docs/                        # Complete Documentation Suite
-│   ├── requirements.md          # Functional & Non-Functional Specifications (Phases 1-31)
-│   ├── architecture.md          # System Architecture & Technical Specifications (Phases 1-31)
+│   ├── requirements.md          # Functional & Non-Functional Specifications (Phases 1-35)
+│   ├── architecture.md          # System Architecture & Technical Specifications (Phases 1-35)
 │   ├── database_design.md       # Database ERD & Collection Schema Specifications
 │   ├── FLOW_DIAGRAMS.md         # Mermaid Flowcharts & System Lifecycle Diagrams
-│   └── PHASES.md                # Consolidated Phases Specification (Phases 1-31)
+│   └── PHASES.md                # Consolidated Phases Specification (Phases 1-35)
 │
 ├── .env.example                 # Root Environment Variables Template
 ├── package.json                 # Root Orchestration Scripts (install:all, dev, test)
-├── PHASES.md                    # Root Consolidated Phases Specification (Phases 1-31)
+├── PHASES.md                    # Root Consolidated Phases Specification (Phases 1-35)
 └── README.md                    # Master Project Documentation (This document)
 ```
 

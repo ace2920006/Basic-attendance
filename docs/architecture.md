@@ -37,15 +37,15 @@ Basic-attendance/
 │   │   │   ├── charts/         # Dual-Engine Visual Chart Components (Recharts & Chart.js)
 │   │   │   ├── common/         # ToastContainer, CreateAnnouncementModal, ProtectedRoute
 │   │   │   ├── layout/         # Header, Sidebar, Navbar Layout wrappers
-│   │   │   ├── student/        # Student QR Scanner Modal
-│   │   │   └── teacher/        # Teacher QR Modal, CreateClassModal, CreateTimetableModal
-│   │   ├── context/            # React State Contexts (AuthContext, NotificationContext)
+│   │   │   ├── student/        # Student QR Scanner Modal, RealtimeClassroomBanner.jsx (Phase 35)
+│   │   │   └── teacher/        # Teacher QR Modal, RealtimeClassroomControls.jsx (Phase 35), CreateClassModal
+│   │   ├── context/            # React State Contexts (AuthContext, NotificationContext, RealtimeClassroomContext)
 │   │   ├── pages/              # Role-based Route Pages
-│   │   │   ├── admin/          # Admin Analytics, Academic Engine, Rules Engine, Corrections, Audit Logs (AdminAuditLogs.jsx), Suspicious, AdminIntelligenceDashboard.jsx, AdminDefaulterManagement.jsx, AdminDocumentVerification.jsx
+│   │   │   ├── admin/          # Admin Analytics, Academic Engine, Rules Engine, Corrections, Audit Logs, AdminIntelligenceDashboard, AdminDefaulterManagement, AdminDocumentVerification
 │   │   │   ├── analytics/      # Visual Charts Hub (ChartsPage.jsx)
 │   │   │   ├── auth/           # Login, Register, Password Recovery
 │   │   │   ├── parent/         # Parent/Guardian Portal (ParentLayout, ParentDashboard, ParentAttendance, ParentSubjects, ParentLeaves, ParentWarnings, ParentNotifications)
-│   │   │   ├── student/        # Student Dashboard, Calendar, History, Timetable, Prediction, AiChatPage, NotificationsList.jsx, StudentAnalytics.jsx
+│   │   │   ├── student/        # Student Dashboard, Calendar, History, Timetable, Prediction, AiChatPage, NotificationsList, StudentAnalytics
 │   │   │   └── teacher/        # Teacher Dashboard, Take Attendance, History, Reports, Leave Approval, Corrections
 │   │   ├── services/           # Centralized API Service Client (api.js, socket.js, deviceFingerprint.js)
 │   │   ├── App.jsx             # Main Router Shell & Guarded Routes
@@ -53,7 +53,7 @@ Basic-attendance/
 │   └── package.json
 │
 ├── server/                     # Backend REST API Server (Node.js + Express + MongoDB)
-│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (19 Test Suites, 169 Tests)
+│   ├── tests/                  # Automated Jest & Supertest Integration Test Suite (20 Test Suites, realtimeClassroom.test.js)
 │   ├── uploads/                # Static Uploaded File Attachments (Avatars)
 │   ├── secure_uploads/         # Non-Public Isolated Document Storage (secure_uploads/documents/)
 │   ├── src/
@@ -61,7 +61,7 @@ Basic-attendance/
 │   │   ├── controllers/        # Request Controllers (auth, user, attendance, class, timetable, report, chart, notification, leave, ai, analytics, audit, academic, rules, session, antiProxy, correction, defaulter, parent)
 │   │   ├── middleware/         # Security Stack (Helmet, Rate Limiter, XSS, Input Validation, Audit Logger, JWT Auth, RBAC Authorization, secureUploadMiddleware.js)
 │   │   ├── models/             # Mongoose Schemas (User, Department, Course, Subject, Attendance, Class, Leave, Timetable, Notification, AuditLog, AcademicYear, Semester, Division, StudentEnrollment, AttendanceRule, AttendanceSession, AttendanceCorrection, DefaulterRecord)
-│   │   ├── routes/             # Express API Endpoints (including defaulterRoutes.js, parentRoutes.js, leaveRoutes.js)
+│   │   ├── routes/             # Express API Endpoints (sessionRoutes.js, defaulterRoutes.js, parentRoutes.js, leaveRoutes.js)
 │   │   ├── services/           # Business Services (notificationService.js, defaulterService.js, documentScannerService.js)
 │   │   ├── utils/              # GeoUtils (Haversine formula), JWT Generator, Async Handler, attendanceRulesEngine.js, antiProxyEngine.js, forecastingEngine.js, studentAnalyticsEngine.js, adminIntelligenceEngine.js, sendEmail.js
 │   │   ├── app.js              # Express Application Bootstrap & Security Layer
@@ -69,15 +69,15 @@ Basic-attendance/
 │   └── package.json
 │
 ├── docs/                       # Project Documentation Suite
-│   ├── requirements.md         # Requirements Specifications & Matrix (Phases 1-31)
+│   ├── requirements.md         # Requirements Specifications & Matrix (Phases 1-35)
 │   ├── architecture.md         # System Architecture & Technical Specs (This document)
 │   ├── database_design.md      # Database ERD & Schema Specs
 │   ├── FLOW_DIAGRAMS.md        # Comprehensive System Flow Diagrams (Mermaid)
-│   └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-31)
+│   └── PHASES.md               # Master Consolidated Phase Implementations Specs (Phases 1-35)
 │
 ├── .env.example                # Root Environment Variables Template
 ├── package.json                # Root Orchestration Scripts (install:all, dev, test)
-├── PHASES.md                   # Master Consolidated Phase Implementations Specs (Phases 1-31)
+├── PHASES.md                   # Master Consolidated Phase Implementations Specs (Phases 1-35)
 └── README.md                   # Master Project Documentation
 ```
 
@@ -485,6 +485,66 @@ Phase 33 implements an installable, mobile-optimized architecture supporting off
 
 ---
 
+## ⚡ Phase 35: Real-Time Classroom Mode Architecture (Socket.IO)
+
+### 1. Real-Time WebSocket Infrastructure
+The real-time classroom architecture establishes low-latency (< 50ms) bidirectional event transport between instructors and enrolled students via Socket.IO:
+
+```
+[ Teacher Device / Dashboard ]
+           │
+           │ (HTTP POST /api/sessions/start)
+           ▼
+[ Express Server (sessionController) ]
+           │
+           │ broadcastClassroomEvent('classroom_session_started', sessionData)
+           ▼
+[ Socket.IO Engine (server/src/config/socket.js) ]
+           │
+           ├── Room: `classroom_${classId}`
+           └── Room: `classroom_all` (Campus Broadcast Channel)
+           │
+           ▼
+[ Connected Student Clients (RealtimeClassroomContext.jsx) ]
+           ├── Instant Banner Mount: RealtimeClassroomBanner.jsx
+           ├── Pulsing 🔴 Radar Indicator & Time Slot ('10:00 - 11:00')
+           └── Live Attendance Gauge ('Present: 0 / 55')
+```
+
+### 2. Live Roll Call & Check-In Broadcast Pipeline
+When students check in (via one-click ⚡ Check In Now, 30s Dynamic QR Scan, or instructor manual marking):
+
+```
+[ Student Device ] ── POST /api/sessions/:id/checkin (or /api/attendance/scan-qr)
+                             │
+                             ▼
+[ Attendance / Session Controller ]
+   • Validates active session state & prevents duplicate check-in
+   • Increments presentCount: 41 ➔ 42
+   • Appends check-in entry to session.recentCheckins
+   • Saves session to MongoDB
+                             │
+                             ▼
+[ Socket.IO Broadcaster ]
+   • Event: classroom_attendance_updated
+   • Payload: { sessionId, subject, timeSlot, stats: { presentCount: 42, totalStudents: 55 }, latestStudent: { name, rollNo, time } }
+                             │
+           ┌─────────────────┴─────────────────┐
+           ▼                                   ▼
+[ Student Dashboards & Layout ]     [ Teacher Control Center ]
+ • Animated counter: 42 / 55         • Live Attendance Gauge: 42 / 55
+ • Progress meter: 76.4%             • Recent check-ins stream feed
+ • Roll call ticker toast:           • Real-time roster highlights
+   "✨ Just checked in: Alex Rivera"
+```
+
+### 3. Session Teardown & Clean State Reset
+When the instructor ends the session (`POST /api/sessions/:id/stop`):
+- Emits `classroom_session_ended` with final tally (`{ presentCount: 42, totalStudents: 55 }`).
+- Closes the active session on student clients with celebratory chime and transitions banner to completed state.
+
+---
+
 ## 🔌 API Endpoint Hierarchy
 
 - `/api/auth` $\rightarrow$ Register, Login, Logout, Password Recovery, Token Refresh (Logs `LOGIN`, `LOGOUT`)
@@ -503,7 +563,7 @@ Phase 33 implements an installable, mobile-optimized architecture supporting off
 - `/api/analytics` $\rightarrow$ Admin Intelligence Dashboard (`/admin-intelligence`, `/intelligence`), Teacher classroom analytics (`/teacher/me`, `/teacher/:teacherId`), Student personal analytics dashboard (`/student/me`, `/student/:studentId`), Most absent deficit calculator, Best attendance leaderboard, Dept rankings, Teacher metrics, Daily inspector
 - `/api/academic` $\rightarrow$ Academic hierarchy tree, Academic Years, Dynamic Semesters, Divisions (`IT-A`), Batch Student Promotion Engine
 - `/api/attendance-rules` $\rightarrow$ Institutional rule thresholds, Defaulter policy config, 7-status matrix definitions, Sandbox check-in simulator (Logs `CHANGE_SETTINGS`)
-- `/api/sessions` $\rightarrow$ Attendance Session Engine, Session ID generator, QR/GPS session start & stop lifecycle
+- `/api/sessions` $\rightarrow$ Attendance Session Engine, Session ID generator, QR/GPS session start & stop lifecycle, Real-Time Classroom Mode (`POST /start`, `GET /active`, `POST /:id/checkin`, `POST /:id/simulate-checkin`, `POST /:id/stop`)
 - `/api/anti-proxy` $\rightarrow$ Anti-Proxy Multi-Signal Risk Engine, Phase 22 Attendance Risk Scoring (0-100), 3-Tier Classification (0-30 Normal, 31-60 Review, 61-100 High Risk), Flagged Records Review Console, Bulk Review, Device Clusters, Analytics
 - `/api/corrections` $\rightarrow$ Attendance Modification Workflow, Request submission, Mandatory reasons, Teacher & Admin Review Consoles (Logs `EDIT_ATTENDANCE`)
 - `/api/audit-logs` $\rightarrow$ Institutional Audit Trail Ledger, 10-Action breakdown stats, Multi-column CSV export (Logs `EXPORT_REPORT`)
