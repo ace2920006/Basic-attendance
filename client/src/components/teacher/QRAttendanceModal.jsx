@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { QrCode, RefreshCw, Clock, MapPin, X, Copy, Check, Users, ShieldCheck } from 'lucide-react';
+import { QrCode, RefreshCw, Clock, MapPin, X, Copy, Check, Users, ShieldCheck, Radio, Sparkles } from 'lucide-react';
+import { useRealtimeClassroom } from '../../context/RealtimeClassroomContext';
 
 export default function QRAttendanceModal({ isOpen, onClose, classSession }) {
+  const { livePresent, liveTotal, latestStudent, simulateCheckIn } = useRealtimeClassroom();
   const [sessionData, setSessionData] = useState(null);
   const [token, setToken] = useState('');
   const [expiresAt, setExpiresAt] = useState(null);
@@ -25,6 +27,10 @@ export default function QRAttendanceModal({ isOpen, onClose, classSession }) {
         },
         body: JSON.stringify({
           classId: classSession._id,
+          subject: classSession.subject,
+          subjectCode: classSession.subjectCode,
+          timeSlot: classSession.timeSlot || '10:00 - 11:00',
+          totalStudents: classSession.studentsCount || 55,
           mode: 'QR',
           latitude: 28.6139,
           longitude: 77.2090,
