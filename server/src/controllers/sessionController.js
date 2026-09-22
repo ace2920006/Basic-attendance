@@ -5,6 +5,7 @@ const AttendanceSession = require('../models/AttendanceSession');
 const Class = require('../models/Class');
 const Attendance = require('../models/Attendance');
 const { getSystemRules } = require('../utils/attendanceRulesEngine');
+const { broadcastClassroomEvent } = require('../config/socket');
 
 // Helper to generate a unique readable Session ID
 const generateSessionIdCode = () => {
@@ -13,30 +14,48 @@ const generateSessionIdCode = () => {
   return `SESS-${dateStr}-${randomHex}`;
 };
 
-// @desc    Start a new Attendance Session for a Class
+// @desc    Start a new Attendance Session for a Class (Real-Time Classroom Mode)
 // @route   POST /api/sessions/start
 // @access  Private (Teacher/Admin)
 const startSession = asyncHandler(async (req, res) => {
-  const { classId, mode, latitude, longitude, maxRadiusMeters } = req.body;
+  const { classId, subject, subjectCode, division, timeSlot, room, totalStudents, mode, latitude, longitude, maxRadiusMeters } = req.body;
 
-  if (!classId) {
-    res.status(400);
-    throw new Error('Please provide a classId to start an attendance session');
+  let classItem = null;
+  if (classId) {
+    classItem = await Class.findById(classId);
   }
 
-  const classItem = await Class.findById(classId);
+  // Fallback to find or create class representation for seamless ad-hoc sessions
   if (!classItem) {
-    res.status(404);
-    throw new Error('Class session not found');
+    const targetCode = (subjectCode || 'CS401').toUpperCase();
+    classItem = await Class.findOne({ subjectCode: targetCode });
+    if (!classItem) {
+      classItem = await Class.create({
+        subject: subject || 'Database Systems',
+        subjectCode: targetCode,
+        section: division || 'Sec A',
+        room: room || '302-B',
+        timeSlot: timeSlot || '10:00 - 11:00',
+        department: req.user.department || 'Computer Science',
+        instructor: req.user.name,
+        instructorId: req.user._id,
+        studentsCount: Number(totalStudents) || 55
+      });
+    }
   }
 
   const rules = await getSystemRules();
   const validitySeconds = Math.max(15, Math.round((rules.qrValidityMinutes || 1) * 60));
   const defaultGpsRadius = rules.gpsRadiusMeters || 100;
 
-  // Complete any prior active session for this class
+  // Complete any prior active session for this class or teacher
   await AttendanceSession.updateMany(
-    { class: classId, status: 'Active' },
+    {
+      $or: [
+        { class: classItem._id, status: 'Active' },
+        { teacher: req.user._id, status: 'Active' }
+      ]
+    },
     { status: 'Completed', endTime: new Date() }
   );
 
@@ -49,27 +68,32 @@ const startSession = asyncHandler(async (req, res) => {
     maxRadiusMeters: Number(maxRadiusMeters) || classItem.campusLocation?.maxRadiusMeters || defaultGpsRadius
   };
 
+  const chosenTimeSlot = timeSlot || classItem.timeSlot || '10:00 - 11:00';
+  const chosenTotalStudents = Number(totalStudents) || classItem.studentsCount || 55;
+
   const newSession = await AttendanceSession.create({
     sessionId: sessionIdCode,
     class: classItem._id,
-    subject: classItem.subject,
-    subjectCode: classItem.subjectCode,
-    division: classItem.section || 'Sec A',
+    subject: subject || classItem.subject || 'Database Systems',
+    subjectCode: (subjectCode || classItem.subjectCode || 'CS401').toUpperCase(),
+    division: division || classItem.section || 'Sec A',
+    timeSlot: chosenTimeSlot,
     teacher: req.user._id,
     teacherName: req.user.name,
     department: classItem.department || req.user.department || 'Computer Science',
-    room: classItem.room || '',
+    room: room || classItem.room || '302-B',
     startTime: new Date(),
     mode: mode || 'QR',
     status: 'Active',
     campusLocation,
     stats: {
-      totalStudents: classItem.studentsCount || 40,
+      totalStudents: chosenTotalStudents,
       presentCount: 0,
       absentCount: 0,
       lateCount: 0,
       excusedCount: 0
-    }
+    },
+    recentCheckins: []
   });
 
   const qrSecretToken = jwt.sign(
@@ -77,8 +101,8 @@ const startSession = asyncHandler(async (req, res) => {
       sessionId: newSession._id,
       sessionIdCode: newSession.sessionId,
       classId: classItem._id,
-      subjectCode: classItem.subjectCode,
-      subject: classItem.subject,
+      subjectCode: newSession.subjectCode,
+      subject: newSession.subject,
       nonce
     },
     process.env.JWT_SECRET,
@@ -96,6 +120,31 @@ const startSession = asyncHandler(async (req, res) => {
   classItem.campusLocation = campusLocation;
   await classItem.save();
 
+  // Real-Time Classroom Mode: Broadcast live to all connected students via Socket.IO
+  const broadcastPayload = {
+    sessionId: newSession.sessionId,
+    sessionIdMongo: newSession._id,
+    classId: classItem._id,
+    subject: newSession.subject,
+    subjectCode: newSession.subjectCode,
+    division: newSession.division,
+    timeSlot: newSession.timeSlot,
+    room: newSession.room,
+    teacherName: newSession.teacherName,
+    department: newSession.department,
+    startTime: newSession.startTime,
+    mode: newSession.mode,
+    status: 'Active',
+    stats: {
+      totalStudents: newSession.stats.totalStudents,
+      presentCount: newSession.stats.presentCount
+    },
+    qrSecretToken: qrSecretToken,
+    qrExpiresAt: newSession.qrExpiresAt
+  };
+
+  broadcastClassroomEvent('classroom_session_started', broadcastPayload);
+
   res.status(201).json({
     success: true,
     message: 'Attendance Session started successfully',
@@ -105,7 +154,7 @@ const startSession = asyncHandler(async (req, res) => {
   });
 });
 
-// @desc    Get active attendance session for a class or teacher
+// @desc    Get active attendance session for a class or teacher or student
 // @route   GET /api/sessions/active
 // @access  Private
 const getActiveSession = asyncHandler(async (req, res) => {
@@ -128,10 +177,23 @@ const getActiveSession = asyncHandler(async (req, res) => {
     });
   }
 
+  let hasCheckedIn = false;
+  let studentAttendance = null;
+
+  if (req.user.role === 'student') {
+    studentAttendance = await Attendance.findOne({
+      student: req.user._id,
+      sessionId: session._id
+    });
+    hasCheckedIn = !!studentAttendance;
+  }
+
   res.json({
     success: true,
     active: true,
-    data: session
+    data: session,
+    hasCheckedIn,
+    studentAttendance
   });
 });
 
