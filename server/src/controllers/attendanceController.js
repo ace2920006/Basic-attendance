@@ -401,6 +401,7 @@ const Class = require('../models/Class');
 const AttendanceSession = require('../models/AttendanceSession');
 const { getDistanceInMeters } = require('../utils/geoUtils');
 const { evaluateAttendanceRisk } = require('../utils/antiProxyEngine');
+const { broadcastClassroomEvent } = require('../config/socket');
 
 // @desc    Scan QR Code & mark attendance with Anti-Proxy Multi-Signal Verification
 // @route   POST /api/attendance/scan-qr
@@ -535,11 +536,52 @@ const scanQRAttendance = asyncHandler(async (req, res) => {
   classItem.marked = true;
   await classItem.save();
 
-  // Update active AttendanceSession stats if linked
-  if (decoded.sessionId && sessionInfo) {
-    await AttendanceSession.findByIdAndUpdate(decoded.sessionId, {
-      $inc: { 'stats.presentCount': 1 }
-    });
+  // Update active AttendanceSession stats and broadcast live classroom mode update
+  const activeSessionId = decoded.sessionId || (sessionInfo ? sessionInfo._id : null);
+  if (activeSessionId) {
+    const checkinEntry = {
+      student: req.user._id,
+      name: req.user.name,
+      rollNo: req.user.rollNo || '',
+      status: 'Present',
+      time: record.arrivalTime || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      timestamp: new Date()
+    };
+
+    const updatedSession = await AttendanceSession.findByIdAndUpdate(
+      activeSessionId,
+      {
+        $inc: { 'stats.presentCount': 1 },
+        $push: {
+          recentCheckins: {
+            $each: [checkinEntry],
+            $slice: -25
+          }
+        }
+      },
+      { new: true }
+    );
+
+    if (updatedSession) {
+      broadcastClassroomEvent('classroom_attendance_updated', {
+        sessionId: updatedSession.sessionId,
+        sessionIdMongo: updatedSession._id,
+        classId: classItem._id,
+        subject: updatedSession.subject,
+        subjectCode: updatedSession.subjectCode,
+        timeSlot: updatedSession.timeSlot || classItem.timeSlot || '10:00 - 11:00',
+        stats: {
+          presentCount: updatedSession.stats.presentCount,
+          totalStudents: updatedSession.stats.totalStudents || 55
+        },
+        latestStudent: {
+          id: req.user._id,
+          name: req.user.name,
+          rollNo: req.user.rollNo,
+          time: checkinEntry.time
+        }
+      });
+    }
   }
 
   // Update student device profile
