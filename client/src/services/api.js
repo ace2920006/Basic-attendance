@@ -1062,6 +1062,3 @@ export const simulateCheckInApi = async (sessionId, payload = {}) => {
   });
 };
 
-export const getSessionDetailsApi = async (sessionId) => {
-  return apiRequest(`/sessions/${sessionId}`, { method: 'GET' });
-};

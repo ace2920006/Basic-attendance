@@ -19,6 +19,7 @@ import {
 import StatCard from '../../components/common/StatCard';
 import { teacherTodaysClasses, currentUser } from '../../data/mockData';
 import CreateClassModal from '../../components/teacher/CreateClassModal';
+import RealtimeClassroomControls from '../../components/teacher/RealtimeClassroomControls';
 import { getClassesApi, deleteClassApi, getTeacherAnalyticsApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
@@ -59,8 +60,9 @@ export default function TeacherDashboard() {
           subjectCode: c.subjectCode,
           section: c.section,
           time: c.timeSlot,
+          timeSlot: c.timeSlot,
           room: c.room,
-          studentsCount: c.studentsCount || 40,
+          studentsCount: c.studentsCount || 55,
           marked: c.marked,
           present: c.present || 0,
           absent: c.absent || 0,
@@ -111,6 +113,9 @@ export default function TeacherDashboard() {
           <span>Create New Class</span>
         </button>
       </div>
+
+      {/* Phase 35: Real-Time Classroom Mode Controls */}
+      <RealtimeClassroomControls defaultClass={classes[0]} />
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
