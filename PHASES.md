@@ -39,7 +39,8 @@ This document provides a single, unified reference for all project implementatio
 32. [Phase 32 – Document Verification](#-phase-32-document-verification-)
 33. [Phase 33 – PWA / Mobile Experience](#-phase-33-pwa--mobile-experience-)
 34. [Phase 34 – Offline Attendance Sync](#-phase-34--offline-attendance-sync)
-35. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
+35. [Phase 35 – Real-Time Classroom Mode](#-phase-35--real-time-classroom-mode-)
+36. [Access Control & Feature Matrix Across All Phases](#-access-control--feature-matrix-across-all-phases)
 
 ---
 
@@ -1734,6 +1735,122 @@ Database Persistence (Attendance & AuditLog with Telemetry)
   - Controller: `server/src/controllers/attendanceController.js`
   - Routes: `server/src/routes/attendanceRoutes.js`
   - Tests: `server/tests/offlineSync.test.js`
+
+---
+
+## 📌 Phase 35 – Real-Time Classroom Mode ⚡
+
+### Core Requirements & Features
+1. **Real-Time WebSocket Engine (Socket.IO)**:
+   - Dedicated WebSocket lifecycle management integrating client (`client/src/services/socket.js`, `client/src/context/RealtimeClassroomContext.jsx`) and server (`server/src/config/socket.js`).
+   - Centralized broadcast handler `broadcastClassroomEvent(eventName, payload)` broadcasting immediately to connected students across classrooms, dashboards, and mobile devices.
+   - Core WebSocket Events:
+     - `classroom_session_started`: Broadcasts immediately upon instructor attendance launch with subject, lecture time slot, division, room, instructor name, and initial stats.
+     - `classroom_attendance_updated`: Real-time streaming update dispatched on every student check-in (via QR scan, direct check-in, or instructor roll call), instantly synchronizing present counts and rolling check-in feeds.
+     - `classroom_session_ended`: Broadcasts when session is stopped, cleanly resetting student active indicators.
+
+2. **Instant Student Classroom Visibility**:
+   - **Active Live Banner (`RealtimeClassroomBanner.jsx`)**:
+     - Immediately appears at the top of the Student Dashboard when attendance starts:
+       ```
+       🔴 Attendance Session Active
+       Database Systems (CS401)
+       10:00 - 11:00 • Room 302-B • Sec A
+       ```
+     - Features pulsing electric red live radar badge and ambient glowing outline.
+     - Sticky floating alert in `StudentLayout.jsx` guaranteeing active session visibility even when browsing Calendar, Analytics, or Leave records.
+   - **Interactive Student Check-In**:
+     - One-click **⚡ Check In Now** button for rapid classroom roll call.
+     - Dual-mode QR scanner trigger opening the device camera hardware scanner.
+     - Instant visual confirmation with verified arrival timestamp: `✅ Marked Present (10:04 AM)`.
+
+3. **Live Present Counter & Progress Meter**:
+   - Live updated metric:
+     ```
+     Present: 42 / 55
+     ```
+   - Dynamically recalculating percentage and animated progress bar with smooth CSS transitions without page reloads.
+   - Live roll call ticker displaying the latest classmate check-in event in real time (*"✨ Just checked in: Alex Rivera (CS-2026-042) at 10:04 AM"*).
+
+4. **Faculty Live Classroom Control Center**:
+   - **Real-Time Controls Widget (`RealtimeClassroomControls.jsx`)**:
+     - Embedded directly on `TeacherDashboard.jsx` and `TakeAttendance.jsx`.
+     - One-click start/stop controls for live classroom sessions.
+     - Live attendance gauge monitoring student submissions live.
+     - Interactive **"+ Simulate Student Check-In"** button allowing instant simulation of student check-ins for interactive demonstration and automated testing.
+     - Live roll call roster feed showing recent check-in timestamps.
+
+### Socket.IO Event Schema
+- `classroom_session_started`:
+  ```json
+  {
+    "sessionId": "SESS-20260922-A1B2C3",
+    "sessionIdMongo": "664fa1...",
+    "classId": "664fa0...",
+    "subject": "Database Systems",
+    "subjectCode": "CS401",
+    "division": "Sec A",
+    "timeSlot": "10:00 - 11:00",
+    "room": "302-B",
+    "teacherName": "Prof. Alan Turing",
+    "status": "Active",
+    "stats": { "presentCount": 0, "totalStudents": 55 }
+  }
+  ```
+- `classroom_attendance_updated`:
+  ```json
+  {
+    "sessionId": "SESS-20260922-A1B2C3",
+    "subject": "Database Systems",
+    "timeSlot": "10:00 - 11:00",
+    "stats": { "presentCount": 42, "totalStudents": 55 },
+    "latestStudent": {
+      "id": "664f9...",
+      "name": "Alex Rivera",
+      "rollNo": "CS-2026-042",
+      "time": "10:04 AM"
+    }
+  }
+  ```
+- `classroom_session_ended`:
+  ```json
+  {
+    "sessionId": "SESS-20260922-A1B2C3",
+    "subject": "Database Systems",
+    "endTime": "2026-09-22T10:15:00.000Z",
+    "status": "Completed",
+    "stats": { "presentCount": 42, "totalStudents": 55 }
+  }
+  ```
+
+### API Contracts
+- `POST /api/sessions/start`: Starts live attendance session & emits `classroom_session_started`.
+- `GET /api/sessions/active`: Retrieves active session & verifies student check-in status (`hasCheckedIn`).
+- `POST /api/sessions/:id/checkin`: Student check-in, increments present count, & emits `classroom_attendance_updated`.
+- `POST /api/sessions/:id/simulate-checkin`: Simulates check-in for real-time testing.
+- `POST /api/sessions/:id/stop`: Ends session & emits `classroom_session_ended`.
+
+### File Mapping
+- **Context & Real-Time Engine**:
+  - `client/src/context/RealtimeClassroomContext.jsx`
+  - `client/src/services/socket.js`
+  - `client/src/services/api.js`
+- **Frontend Components**:
+  - Student Live Banner: `client/src/components/student/RealtimeClassroomBanner.jsx`
+  - Student Portal: `client/src/pages/student/StudentDashboard.jsx`
+  - Student Layout: `client/src/pages/student/StudentLayout.jsx`
+  - Teacher Controls: `client/src/components/teacher/RealtimeClassroomControls.jsx`
+  - QR Attendance Modal: `client/src/components/teacher/QRAttendanceModal.jsx`
+  - Teacher Take Attendance: `client/src/pages/teacher/TakeAttendance.jsx`
+  - Teacher Dashboard: `client/src/pages/teacher/TeacherDashboard.jsx`
+  - App Provider Root: `client/src/App.jsx`
+- **Backend**:
+  - Model: `server/src/models/AttendanceSession.js`
+  - Socket Config & Broadcaster: `server/src/config/socket.js`
+  - Session Controller: `server/src/controllers/sessionController.js`
+  - Session Routes: `server/src/routes/sessionRoutes.js`
+  - Attendance Controller: `server/src/controllers/attendanceController.js`
+  - Tests: `server/tests/realtimeClassroom.test.js`
 
 ---
 
