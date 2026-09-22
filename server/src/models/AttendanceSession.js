@@ -46,6 +46,11 @@ const attendanceSessionSchema = new mongoose.Schema(
       type: String,
       default: ''
     },
+    timeSlot: {
+      type: String,
+      default: '10:00 - 11:00',
+      trim: true
+    },
     startTime: {
       type: Date,
       default: Date.now
@@ -85,12 +90,25 @@ const attendanceSessionSchema = new mongoose.Schema(
       }
     },
     stats: {
-      totalStudents: { type: Number, default: 0 },
+      totalStudents: { type: Number, default: 55 },
       presentCount: { type: Number, default: 0 },
       absentCount: { type: Number, default: 0 },
       lateCount: { type: Number, default: 0 },
       excusedCount: { type: Number, default: 0 }
-    }
+    },
+    recentCheckins: [
+      {
+        student: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'User'
+        },
+        name: { type: String, default: '' },
+        rollNo: { type: String, default: '' },
+        status: { type: String, default: 'Present' },
+        time: { type: String, default: '' },
+        timestamp: { type: Date, default: Date.now }
+      }
+    ]
   },
   {
     timestamps: true
