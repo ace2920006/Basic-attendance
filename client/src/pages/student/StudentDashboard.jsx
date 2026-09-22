@@ -20,6 +20,7 @@ import { QrCode } from 'lucide-react';
 import AttendanceCard from './AttendanceCard';
 import NotificationsList from './NotificationsList';
 import StudentQRScannerModal from '../../components/student/StudentQRScannerModal';
+import RealtimeClassroomBanner from '../../components/student/RealtimeClassroomBanner';
 import { 
   currentUser, 
   studentTodaysClasses, 
@@ -53,6 +54,9 @@ export default function StudentDashboard() {
   return (
     <div className="space-y-6">
       
+      {/* Phase 35: Real-Time Classroom Mode Live Banner */}
+      <RealtimeClassroomBanner />
+
       {/* Top Welcome Banner */}
       <div className="glass-panel p-6 border-slate-800 bg-gradient-to-r from-slate-900/90 via-indigo-950/40 to-slate-900/90 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">

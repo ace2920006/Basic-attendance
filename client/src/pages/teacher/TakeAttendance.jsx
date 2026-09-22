@@ -20,6 +20,7 @@ import { cacheRoster, getCachedRoster } from '../../utils/offlineAttendanceDB';
 import { useOfflineSync } from '../../context/OfflineSyncContext';
 import { useAuth } from '../../context/AuthContext';
 import QRAttendanceModal from '../../components/teacher/QRAttendanceModal';
+import RealtimeClassroomControls from '../../components/teacher/RealtimeClassroomControls';
 
 export default function TakeAttendance() {
   const { user } = useAuth();
@@ -47,7 +48,9 @@ export default function TakeAttendance() {
     subject: 'Database Systems',
     subjectCode: selectedSubject,
     room: '302-B',
-    section: selectedSection
+    section: selectedSection,
+    timeSlot: '10:00 - 11:00',
+    studentsCount: 55
   };
 
   // Load roster with offline IndexedDB caching
@@ -280,6 +283,9 @@ export default function TakeAttendance() {
           </div>
         </div>
       </div>
+
+      {/* Phase 35: Real-Time Classroom Mode Controls */}
+      <RealtimeClassroomControls defaultClass={activeClassMock} />
 
       {/* Subject & Section Header Bar */}
       <div className="glass-panel p-6 border-slate-800 space-y-4">

@@ -261,6 +261,46 @@ export default function QRAttendanceModal({ isOpen, onClose, classSession }) {
           </div>
         </div>
 
+        {/* Real-Time Live Check-Ins Gauge: Present: 42 / 55 */}
+        <div className="mb-4 p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              </span>
+              <span className="text-xs font-bold text-slate-300">Live Attendance Roll Call:</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black text-emerald-400 font-mono">
+                Present: {livePresent} / {liveTotal}
+              </span>
+              <button
+                type="button"
+                onClick={() => simulateCheckIn()}
+                className="text-[10px] px-2 py-0.5 rounded font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-500/30 transition flex items-center gap-1"
+                title="Simulate student check-in to test live counter"
+              >
+                <Sparkles className="w-2.5 h-2.5 text-amber-300" />
+                <span>+ Simulate</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden border border-slate-700/50">
+            <div
+              className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-500 ease-out"
+              style={{ width: `${liveTotal > 0 ? Math.min(100, Math.round((livePresent / liveTotal) * 100)) : 0}%` }}
+            />
+          </div>
+
+          {latestStudent && (
+            <p className="text-[11px] text-emerald-400/90 font-medium truncate pt-0.5">
+              ✨ Just checked in: <strong>{latestStudent.name}</strong> ({latestStudent.rollNo}) at {latestStudent.time}
+            </p>
+          )}
+        </div>
+
         {/* Security & Verification Metadata */}
         <div className="grid grid-cols-2 gap-3 text-xs mb-5">
           <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 flex items-center space-x-2">

@@ -85,20 +85,24 @@ import { OfflineSyncProvider } from './context/OfflineSyncContext';
 import ConflictResolutionModal from './components/teacher/ConflictResolutionModal';
 import OfflineSyncCenterModal from './components/teacher/OfflineSyncCenterModal';
 
+// Phase 35 Real-Time Classroom Mode
+import { RealtimeClassroomProvider } from './context/RealtimeClassroomContext';
+
 export default function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
         <PwaInstallProvider>
           <OfflineSyncProvider>
-            <Router>
-              <OfflineBanner />
-              <ToastContainer />
-              <PwaInstallBanner />
-              <ConflictResolutionModal />
-              <OfflineSyncCenterModal />
-              <AiChatWidget />
-              <Routes>
+            <RealtimeClassroomProvider>
+              <Router>
+                <OfflineBanner />
+                <ToastContainer />
+                <PwaInstallBanner />
+                <ConflictResolutionModal />
+                <OfflineSyncCenterModal />
+                <AiChatWidget />
+                <Routes>
             {/* Public & Authentication */}
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<LoginPage />} />
@@ -206,6 +210,7 @@ export default function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>
+            </RealtimeClassroomProvider>
           </OfflineSyncProvider>
         </PwaInstallProvider>
       </NotificationProvider>
