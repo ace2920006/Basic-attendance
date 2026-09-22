@@ -6,6 +6,8 @@ const {
   getActiveSession,
   getSessionQRToken,
   stopSession,
+  checkInSession,
+  simulateCheckIn,
   getSessionDetails,
   getAttendanceSessions
 } = require('../controllers/sessionController');
@@ -18,5 +20,7 @@ router.get('/', getAttendanceSessions);
 router.get('/:id', getSessionDetails);
 router.get('/:id/qr-token', getSessionQRToken);
 router.post('/:id/stop', authorize('teacher', 'admin'), stopSession);
+router.post('/:id/checkin', checkInSession);
+router.post('/:id/simulate-checkin', simulateCheckIn);
 
 module.exports = router;

@@ -278,7 +278,7 @@ const stopSession = asyncHandler(async (req, res) => {
   session.status = 'Completed';
   session.endTime = new Date();
   session.stats = {
-    totalStudents: session.stats?.totalStudents || 40,
+    totalStudents: session.stats?.totalStudents || 55,
     presentCount,
     absentCount,
     lateCount,
@@ -287,15 +287,221 @@ const stopSession = asyncHandler(async (req, res) => {
   await session.save();
 
   // Deactivate QR on Class item
-  await Class.findByIdAndUpdate(session.class, {
-    qrActive: false,
-    qrSecretToken: ''
+  if (session.class) {
+    await Class.findByIdAndUpdate(session.class, {
+      qrActive: false,
+      qrSecretToken: ''
+    });
+  }
+
+  // Real-Time Classroom Mode: Broadcast live to all connected clients via Socket.IO
+  broadcastClassroomEvent('classroom_session_ended', {
+    sessionId: session.sessionId,
+    sessionIdMongo: session._id,
+    classId: session.class,
+    subject: session.subject,
+    subjectCode: session.subjectCode,
+    timeSlot: session.timeSlot || '10:00 - 11:00',
+    endTime: session.endTime,
+    status: 'Completed',
+    stats: session.stats
   });
 
   res.json({
     success: true,
     message: 'Attendance Session completed successfully',
     data: session
+  });
+});
+
+// @desc    Student checks in to active Real-Time Classroom session
+// @route   POST /api/sessions/:id/checkin
+// @access  Private (Student)
+const checkInSession = asyncHandler(async (req, res) => {
+  const session = await AttendanceSession.findById(req.params.id);
+  if (!session) {
+    res.status(404);
+    throw new Error('Attendance Session not found');
+  }
+
+  if (session.status !== 'Active') {
+    res.status(400);
+    throw new Error('This Attendance Session is no longer active');
+  }
+
+  // Check if student already checked in
+  const existingRecord = await Attendance.findOne({
+    student: req.user._id,
+    sessionId: session._id
+  });
+
+  if (existingRecord) {
+    return res.status(200).json({
+      success: true,
+      message: 'You have already checked in for this session',
+      alreadyCheckedIn: true,
+      data: existingRecord,
+      stats: session.stats
+    });
+  }
+
+  const arrivalTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  // Record Attendance
+  const record = await Attendance.create({
+    student: req.user._id,
+    subject: session.subject,
+    subjectCode: session.subjectCode,
+    status: 'Present',
+    date: new Date(),
+    arrivalTime,
+    verificationMethod: session.mode === 'QR' ? 'QR' : 'Classroom_Live',
+    classId: session.class,
+    sessionId: session._id,
+    markedBy: session.teacher || req.user._id
+  });
+
+  const checkinEntry = {
+    student: req.user._id,
+    name: req.user.name,
+    rollNo: req.user.rollNo || '',
+    status: 'Present',
+    time: arrivalTime,
+    timestamp: new Date()
+  };
+
+  const updatedSession = await AttendanceSession.findByIdAndUpdate(
+    session._id,
+    {
+      $inc: { 'stats.presentCount': 1 },
+      $push: {
+        recentCheckins: {
+          $each: [checkinEntry],
+          $slice: -25
+        }
+      }
+    },
+    { new: true }
+  );
+
+  // Update linked Class doc if present
+  if (session.class) {
+    await Class.findByIdAndUpdate(session.class, {
+      $inc: { present: 1 },
+      marked: true
+    });
+  }
+
+  // Real-Time Classroom Mode: Broadcast live counter update via Socket.IO
+  broadcastClassroomEvent('classroom_attendance_updated', {
+    sessionId: session.sessionId,
+    sessionIdMongo: session._id,
+    classId: session.class,
+    subject: session.subject,
+    subjectCode: session.subjectCode,
+    timeSlot: session.timeSlot || '10:00 - 11:00',
+    stats: {
+      presentCount: updatedSession.stats.presentCount,
+      totalStudents: updatedSession.stats.totalStudents || 55
+    },
+    latestStudent: {
+      id: req.user._id,
+      name: req.user.name,
+      rollNo: req.user.rollNo,
+      time: arrivalTime
+    }
+  });
+
+  res.status(201).json({
+    success: true,
+    message: 'Checked in successfully! Attendance marked Present.',
+    data: record,
+    stats: updatedSession.stats,
+    hasCheckedIn: true
+  });
+});
+
+// @desc    Simulate student check-in for real-time live testing & demonstration
+// @route   POST /api/sessions/:id/simulate-checkin
+// @access  Private (Teacher/Admin/Student)
+const simulateCheckIn = asyncHandler(async (req, res) => {
+  const session = await AttendanceSession.findById(req.params.id);
+  if (!session) {
+    res.status(404);
+    throw new Error('Attendance Session not found');
+  }
+
+  if (session.status !== 'Active') {
+    res.status(400);
+    throw new Error('Cannot simulate check-in on an inactive session');
+  }
+
+  const { studentName, rollNo } = req.body;
+  const mockNames = [
+    'Alex Rivera',
+    'Maya Lin',
+    'David Kumar',
+    'Sarah Chen',
+    'James Wilson',
+    'Amina Yusuf',
+    'Carlos Gomez',
+    'Elena Rostov',
+    'Priya Patel',
+    'Liam O\'Connor',
+    'Chloe Bennett',
+    'Jordan Taylor'
+  ];
+
+  const randomName = studentName || mockNames[Math.floor(Math.random() * mockNames.length)];
+  const randomRoll = rollNo || `CS-2026-0${Math.floor(10 + Math.random() * 89)}`;
+  const arrivalTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+  const checkinEntry = {
+    name: randomName,
+    rollNo: randomRoll,
+    status: 'Present',
+    time: arrivalTime,
+    timestamp: new Date()
+  };
+
+  const updatedSession = await AttendanceSession.findByIdAndUpdate(
+    session._id,
+    {
+      $inc: { 'stats.presentCount': 1 },
+      $push: {
+        recentCheckins: {
+          $each: [checkinEntry],
+          $slice: -25
+        }
+      }
+    },
+    { new: true }
+  );
+
+  // Real-Time Classroom Mode: Broadcast live counter update via Socket.IO
+  broadcastClassroomEvent('classroom_attendance_updated', {
+    sessionId: session.sessionId,
+    sessionIdMongo: session._id,
+    classId: session.class,
+    subject: session.subject,
+    subjectCode: session.subjectCode,
+    timeSlot: session.timeSlot || '10:00 - 11:00',
+    stats: {
+      presentCount: updatedSession.stats.presentCount,
+      totalStudents: updatedSession.stats.totalStudents || 55
+    },
+    latestStudent: {
+      name: randomName,
+      rollNo: randomRoll,
+      time: arrivalTime
+    }
+  });
+
+  res.status(200).json({
+    success: true,
+    message: `Simulated check-in for ${randomName} recorded live`,
+    stats: updatedSession.stats,
+    latestStudent: checkinEntry
   });
 });
 
@@ -364,6 +570,8 @@ module.exports = {
   getActiveSession,
   getSessionQRToken,
   stopSession,
+  checkInSession,
+  simulateCheckIn,
   getSessionDetails,
   getAttendanceSessions
 };
