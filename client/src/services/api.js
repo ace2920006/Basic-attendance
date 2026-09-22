@@ -1027,5 +1027,41 @@ export const getParentNotificationsApi = async (studentId = '') => {
   return apiRequest(endpoint, { method: 'GET' });
 };
 
+// ==========================================
+// Phase 35: Real-Time Classroom Mode APIs
+// ==========================================
 
+export const startClassroomSessionApi = async (sessionData) => {
+  return apiRequest('/sessions/start', {
+    method: 'POST',
+    body: JSON.stringify(sessionData)
+  });
+};
 
+export const getActiveClassroomSessionApi = async (classId = '') => {
+  const endpoint = classId ? `/sessions/active?classId=${encodeURIComponent(classId)}` : '/sessions/active';
+  return apiRequest(endpoint, { method: 'GET' });
+};
+
+export const stopClassroomSessionApi = async (sessionId) => {
+  return apiRequest(`/sessions/${sessionId}/stop`, {
+    method: 'POST'
+  });
+};
+
+export const checkInClassroomSessionApi = async (sessionId) => {
+  return apiRequest(`/sessions/${sessionId}/checkin`, {
+    method: 'POST'
+  });
+};
+
+export const simulateCheckInApi = async (sessionId, payload = {}) => {
+  return apiRequest(`/sessions/${sessionId}/simulate-checkin`, {
+    method: 'POST',
+    body: JSON.stringify(payload)
+  });
+};
+
+export const getSessionDetailsApi = async (sessionId) => {
+  return apiRequest(`/sessions/${sessionId}`, { method: 'GET' });
+};
